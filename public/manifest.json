@@ -1,0 +1,17 @@
+{
+  "name": "Imperio del Barrio",
+  "short_name": "Imperio",
+  "description": "El tycoon del barrio dominicano",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1E1B2E",
+  "theme_color": "#FFE135",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text y='50' font-size='50'>🏘️</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
