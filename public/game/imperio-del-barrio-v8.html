@@ -2649,6 +2649,7 @@ function renderBusiness(biz) {
       </button>
       <div class="biz-cost-tag">${fmt(cost)}</div>
       ${isOpen ? `<button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">💬 Negociar</button>` : ''}
+      ${isOpen && BIZ_ANIMATIONS[biz.id] ? `<button class="btn-live" onclick="openBizAnim('${biz.id}')">🎬 En vivo</button>` : ''}
     </div>
   </div>`;
 }
