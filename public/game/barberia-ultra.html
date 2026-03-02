@@ -167,6 +167,85 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%}
 
 <script>
 // ══════════════════════════════════════════════════════════
+// PARENT GAME BRIDGE — postMessage bidireccional
+// ══════════════════════════════════════════════════════════
+let _parentMoney = 0; // dinero real del juego principal
+
+// Recibir dinero del padre cuando se abre la ventana
+window.addEventListener('message', e => {
+  if (!e.data) return;
+
+  // El padre nos manda el estado inicial
+  if (e.data.type === 'bizInit') {
+    _parentMoney = e.data.money || 0;
+    G.money = _parentMoney;
+    G.upg.sillas.lv = e.data.chairLevel || 1;
+    G.upg.velocidad.lv = e.data.speedLevel || 1;
+    G.upg.precio.lv = e.data.priceLevel || 1;
+    G.upg.marketing.lv = e.data.marketingLevel || 1;
+    initSlots();
+    updateHUD();
+    nlog(`💰 Caja sincronizada: $${Math.floor(_parentMoney).toLocaleString()}`,'good');
+  }
+
+  // El padre nos confirma una compra (dinero descontado)
+  if (e.data.type === 'purchaseOk') {
+    G.money = e.data.newMoney;
+    G.upg[e.data.upg].lv++;
+    if (e.data.upg === 'sillas') {
+      initSlots();
+      promoteWait();
+      nlog(`🪑 ¡${nChairs()} sillas instaladas!`,'good');
+      // Flash visual en las sillas nuevas
+      _chairFlash = nChairs() - 1;
+      _chairFlashTimer = 2;
+    } else if (e.data.upg === 'velocidad') nlog(`⚡ Ciclo: ${cutDur().toFixed(1)}s`,'good');
+    else if (e.data.upg === 'precio') nlog(`💵 Precio: $${price()}`,'good');
+    else if (e.data.upg === 'marketing') nlog(`📢 Cliente cada ${spawnInt().toFixed(1)}s`,'good');
+    checkAchievements();
+    updateHUD();
+  }
+
+  // El padre rechaza la compra (sin fondos)
+  if (e.data.type === 'purchaseDenied') {
+    nlog('💸 ¡No tienes suficiente dinero!','bad');
+  }
+});
+
+// Variables para flash de silla nueva
+let _chairFlash = -1;
+let _chairFlashTimer = 0;
+
+// Pedir compra al padre
+function requestPurchase(upg) {
+  const cost = upgCost(upg);
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'bizPurchase', upg, cost }, '*');
+    nlog(`💳 Procesando compra...`);
+  } else {
+    // Modo standalone (sin iframe): funciona solo
+    buyUpgStandalone(upg);
+  }
+}
+
+// Fallback standalone (cuando no está en iframe)
+function buyUpgStandalone(k) {
+  const cost = upgCost(k);
+  if (G.money < cost) { nlog('💸 No tienes suficiente','bad'); return; }
+  G.money -= cost;
+  G.upg[k].lv++;
+  addXP(cost * .2);
+  if (k === 'sillas') { initSlots(); promoteWait(); nlog(`🪑 ¡${nChairs()} sillas instaladas!`,'good'); _chairFlash = nChairs()-1; _chairFlashTimer = 2; }
+  else if (k === 'velocidad') nlog(`⚡ Ciclo: ${cutDur().toFixed(1)}s`,'good');
+  else if (k === 'precio') nlog(`💵 Precio: $${price()}`,'good');
+  else if (k === 'marketing') nlog(`📢 Cliente cada ${spawnInt().toFixed(1)}s`,'good');
+  checkAchievements();
+}
+
+// Enviar ganancias al padre periódicamente
+let _earnedSinceSync = 0;
+
+// ══════════════════════════════════════════════════════════
 // AUDIO ENGINE (Web Audio API – no files needed)
 // ══════════════════════════════════════════════════════════
 const AC = new (window.AudioContext||window.webkitAudioContext)();
@@ -427,6 +506,11 @@ function onServiceDone(c){
   G.served++; G.streak++;
   G.combo++; if(G.combo>G.maxCombo)G.maxCombo=G.combo;
   lastWasVIP=c.isVIP;
+
+  // Sync earnings to parent game in real time
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'bizEarned', earned: inc, xp: inc * 0.25 }, '*');
+  }
 
   // Reputation
   G.rep=Math.min(100,G.rep+.5+c.happiness*.5);
@@ -771,6 +855,21 @@ function drawChair(i,fy,stY,shH){
   const active=i<nChairs();
   ctx.globalAlpha=active?1:.18;
   const cx=chairX(i),s=CW/1280;
+
+  // NEW CHAIR FLASH GLOW
+  if (i === _chairFlash && _chairFlashTimer > 0 && active) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, _chairFlashTimer) * 0.6;
+    ctx.beginPath();
+    ctx.ellipse(cx, fy - 50*s, 55*s, 55*s, 0, 0, Math.PI*2);
+    const gr = ctx.createRadialGradient(cx, fy-50*s, 5, cx, fy-50*s, 55*s);
+    gr.addColorStop(0,'rgba(255,220,0,0.9)');
+    gr.addColorStop(1,'rgba(255,220,0,0)');
+    ctx.fillStyle = gr;
+    ctx.fill();
+    ctx.restore();
+    ctx.globalAlpha = active ? 1 : .18;
+  }
   // Mirror
   const mw=CW*.052,mh=shH*.34,mx=cx-mw/2,my=stY+shH*.09;
   rr(mx-3,my-3,mw+6,mh+6,[8,8,4,4],'#8B7355','#5D4307',2);
@@ -1089,15 +1188,7 @@ function nlog(msg,type=''){
 // ACTIONS
 // ══════════════════════════════════════════════════════════
 function buyUpg(k){
-  const cost=upgCost(k);
-  if(G.money<cost){nlog('💸 No tienes suficiente','bad');return;}
-  G.money-=cost;G.upg[k].lv++;
-  addXP(cost*.2);
-  if(k==='sillas'){initSlots();promoteWait();nlog(`🪑 ¡${nChairs()} sillas instaladas!`,'good');}
-  else if(k==='velocidad')nlog(`⚡ Ciclo: ${cutDur().toFixed(1)}s`,'good');
-  else if(k==='precio')nlog(`💵 Precio: $${price()}`,'good');
-  else if(k==='marketing')nlog(`📢 Cliente cada ${spawnInt().toFixed(1)}s`,'good');
-  checkAchievements();
+  requestPurchase(k);
 }
 
 function activateBoost(){
@@ -1133,10 +1224,17 @@ let lastT=performance.now();
 function loop(now){
   const dt=Math.min((now-lastT)/1000,.1);lastT=now;
   update(dt);
+  // Tick chair flash
+  if (_chairFlashTimer > 0) _chairFlashTimer -= dt;
   ctx.clearRect(0,0,CW,CH);
   draw(now);
   updateHUD();
   requestAnimationFrame(loop);
+}
+
+// Tell parent we're ready (so parent can send bizInit)
+if (window.parent && window.parent !== window) {
+  window.parent.postMessage({ type: 'bizReady' }, '*');
 }
 
 // ══════════════════════════════════════════════════════════
