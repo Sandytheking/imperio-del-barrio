@@ -350,107 +350,193 @@ header {
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
-/* ═══ BUSINESS CARDS ═══ */
-.biz-grid { display: flex; flex-direction: column; gap: 14px; }
+/* ═══ BUSINESS CARDS — REDESIGN VIVO ═══ */
+.biz-grid { display: flex; flex-direction: column; gap: 16px; }
 
 .biz-card {
   background: white;
   border: var(--outline);
-  border-radius: 20px;
+  border-radius: 22px;
   box-shadow: var(--shadow);
-  padding: 16px;
-  display: grid;
-  grid-template-columns: 68px 1fr;
-  gap: 12px;
-  align-items: start;
-  transition: transform 0.15s, box-shadow 0.15s;
-  animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) backwards;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
+  animation: popIn 0.45s cubic-bezier(0.34,1.56,0.64,1) backwards;
   position: relative;
+}
+.biz-card:hover { transform: translate(-3px,-4px); box-shadow: 8px 9px 0 var(--ink); }
+.biz-card.locked { opacity: 0.5; filter: grayscale(0.6); }
+
+/* Hero banner top */
+.biz-hero {
+  position: relative;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
   overflow: hidden;
 }
-.biz-card:hover { transform: translate(-2px,-3px); box-shadow: 7px 8px 0 var(--ink); }
-.biz-card.locked { opacity: 0.55; filter: grayscale(0.5); }
-
-/* Colored stripe on left */
-.biz-card::before {
-  content: '';
+.biz-hero-bg {
   position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 8px;
-  border-radius: 20px 0 0 20px;
-  background: var(--stripe-color, var(--sky));
+  inset: 0;
+  opacity: 0.18;
+}
+.biz-hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.08) 0px,
+    rgba(255,255,255,0.08) 2px,
+    transparent 2px,
+    transparent 12px
+  );
 }
 
-.biz-avatar {
-  width: 64px; height: 64px;
-  border-radius: 16px;
-  border: 3px solid var(--ink);
+.biz-icon-big {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  border: 3px solid rgba(0,0,0,0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
-  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 1.9rem;
   flex-shrink: 0;
   position: relative;
-  overflow: hidden;
+  z-index: 1;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(4px);
 }
 
-.biz-body {}
-.biz-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 2px; }
-.biz-name {
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.05rem;
-  color: var(--ink);
-  line-height: 1.1;
+.biz-hero-info {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
 }
-.biz-lvl-badge {
-  background: var(--sun);
-  color: var(--ink);
-  font-weight: 900;
-  font-size: 0.6rem;
-  padding: 2px 8px;
-  border-radius: 99px;
-  border: 2px solid var(--ink);
+.biz-hero-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.1rem;
+  color: white;
+  text-shadow: 1px 2px 4px rgba(0,0,0,0.4);
+  line-height: 1.1;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.biz-hero-original {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.7);
+  font-weight: 700;
+}
+.biz-hero-desc {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.8);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.biz-hero-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
   flex-shrink: 0;
 }
-.biz-desc { font-size: 0.7rem; color: #888; font-weight: 700; margin-bottom: 8px; }
+.biz-lvl-badge {
+  background: rgba(255,255,255,0.25);
+  color: white;
+  font-weight: 900;
+  font-size: 0.65rem;
+  padding: 3px 9px;
+  border-radius: 99px;
+  border: 2px solid rgba(255,255,255,0.4);
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+}
+.btn-rename {
+  background: rgba(255,255,255,0.2);
+  border: 1.5px solid rgba(255,255,255,0.35);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 3px 7px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  color: white;
+}
+.btn-rename:hover { background: rgba(255,255,255,0.35); }
 
-/* Progress */
-.biz-prog-wrap { margin-bottom: 8px; }
-.biz-prog-bg {
-  height: 10px;
+/* Body section */
+.biz-body-section {
+  padding: 12px 16px 14px;
+}
+
+/* Progress area */
+.biz-prog-wrap { margin-bottom: 10px; }
+.biz-prog-track {
+  height: 12px;
   background: #f0f0f0;
   border-radius: 99px;
   border: 2px solid var(--ink);
   overflow: hidden;
+  position: relative;
 }
 .biz-prog-fill {
   height: 100%;
   border-radius: 99px;
   transition: width 0.2s linear;
+  position: relative;
+  overflow: hidden;
+}
+.biz-prog-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 1.2s linear infinite;
 }
 .biz-income-line {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 4px;
-  font-size: 0.65rem;
+  margin-top: 5px;
+  font-size: 0.67rem;
   font-weight: 900;
 }
-.bil-income { color: var(--grass); }
-.bil-time { color: #aaa; }
+.bil-income {
+  color: var(--grass);
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.78rem;
+}
+.bil-time { color: #bbb; }
+.biz-earned-float { color: #9B5DE5; font-size: 0.6rem; }
 
+/* Stats chips */
+.biz-stats-row { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.biz-stat-chip {
+  background: #f8f8f8;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 99px;
+  padding: 3px 9px;
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: #888;
+}
+
+/* Footer actions */
 .biz-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-
 .biz-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 
 .btn-buy {
   background: var(--grass);
   color: white;
   font-family: 'Fredoka One', cursive;
-  font-size: 0.8rem;
-  padding: 7px 16px;
+  font-size: 0.82rem;
+  padding: 8px 18px;
   border: 2px solid var(--ink);
   border-radius: 99px;
   cursor: pointer;
@@ -465,9 +551,10 @@ header {
 .btn-buy.maxed { background: var(--purple); }
 
 .biz-cost-tag {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 900;
-  color: #888;
+  color: #999;
+  font-family: 'Fredoka One', cursive;
 }
 .lock-tag {
   background: #eee;
@@ -481,6 +568,81 @@ header {
   align-items: center;
   gap: 4px;
 }
+
+/* Closed biz — invitation style */
+.biz-card.closed-biz .biz-body-section {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(0,0,0,0.018) 8px,
+    rgba(0,0,0,0.018) 16px
+  );
+}
+
+/* Pulse when earning */
+@keyframes earnPulse {
+  0% { box-shadow: var(--shadow); }
+  50% { box-shadow: 6px 6px 0 var(--ink), 0 0 20px rgba(45,198,83,0.4); }
+  100% { box-shadow: var(--shadow); }
+}
+.biz-card.earning { animation: earnPulse 0.5s ease; }
+
+/* Income fly-up text */
+.income-pop {
+  position: absolute;
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.9rem;
+  color: #2DC653;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+  pointer-events: none;
+  z-index: 200;
+  animation: incomeFloat 1.2s ease forwards;
+}
+@keyframes incomeFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; transform: translateY(-32px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-50px) scale(0.9); }
+}
+
+/* Rename modal */
+#renameModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.75);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#renameModal.open { display: flex; }
+.rename-card {
+  background: #1E1B2E;
+  border: 3px solid #FFE135;
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  text-align: center;
+  animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.rename-title { font-family: 'Fredoka One', cursive; font-size: 1.4rem; color: #FFE135; margin-bottom: 6px; }
+.rename-sub { font-size: 0.75rem; color: #aaa; font-weight: 700; margin-bottom: 18px; }
+.rename-input {
+  width: 100%; padding: 11px 14px; border-radius: 12px;
+  border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1);
+  color: white; font-family: 'Fredoka One', cursive; font-size: 1rem;
+  outline: none; margin-bottom: 14px; text-align: center;
+}
+.rename-input:focus { border-color: #FFE135; }
+.rename-preview { font-size: 0.75rem; color: #aaa; margin-bottom: 16px; font-weight: 700; }
+.rename-preview span { color: #FFE135; }
+.rename-btns { display: flex; gap: 10px; }
+.btn-rename-confirm { flex: 1; background: #FFE135; color: #1E1B2E; border: 2px solid #1E1B2E; border-radius: 12px; font-family: 'Fredoka One', cursive; font-size: 0.95rem; padding: 10px; cursor: pointer; }
+.btn-rename-cancel { flex: 1; background: rgba(255,71,87,0.2); color: #FF4757; border: 2px solid #FF4757; border-radius: 12px; font-family: 'Fredoka One', cursive; font-size: 0.95rem; padding: 10px; cursor: pointer; }
+.btn-rename-reset { background: none; border: none; color: #666; font-size: 0.7rem; cursor: pointer; margin-top: 10px; font-weight: 700; text-decoration: underline; }
 
 /* ═══ UPGRADES ═══ */
 .upg-grid {
@@ -1446,6 +1608,10 @@ body.night-mode .night-stars { opacity: 0.35; }
 .xp-circle-fill { fill: none; stroke: #B24BF3; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
 .xp-circle-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 0.6rem; color: white; }
 
+/* ═══ HEADER SAFE AREA (avoid overlap with React HUD top-right) ═══ */
+header { padding-right: 200px !important; }
+@media (max-width: 500px) { header { padding-right: 160px !important; } }
+
 /* ═══ TAB TRANSITIONS ═══ */
 .tab-panel { opacity: 0; transform: translateY(8px); transition: opacity 0.22s ease, transform 0.22s ease; pointer-events: none; }
 .tab-panel.active { opacity: 1; transform: translateY(0); pointer-events: all; }
@@ -1725,6 +1891,23 @@ body.night-mode .night-stars { opacity: 0.35; }
 
 <!-- Notifications -->
 <div class="notif-box" id="notifBox"></div>
+
+<!-- Rename Business Modal -->
+<div id="renameModal">
+  <div class="rename-card">
+    <div style="font-size:2rem;margin-bottom:8px" id="renameBizIcon">💈</div>
+    <div class="rename-title">✏️ Renombrar Negocio</div>
+    <div class="rename-sub" id="renameOriginalName">Nombre original</div>
+    <input class="rename-input" id="renameInput" type="text" maxlength="30" placeholder="Dale un nombre épico..." />
+    <div class="rename-preview">Vista previa: <span id="renamePreview">...</span></div>
+    <div class="rename-btns">
+      <button class="btn-rename-cancel" onclick="closeRenameModal()">✕ Cancelar</button>
+      <button class="btn-rename-confirm" onclick="confirmRename()">✅ Guardar</button>
+    </div>
+    <br>
+    <button class="btn-rename-reset" onclick="resetBizName()">↩ Restaurar nombre original</button>
+  </div>
+</div>
 
 <!-- Bottom nav -->
 <nav class="bottom-nav" id="bottomNav" style="display:none">
@@ -2185,33 +2368,48 @@ function renderBusiness(biz) {
   const isOpen = lvl > 0;
   const hasAnim = !!BIZ_ANIMATIONS[biz.id];
   const stats = G.bizStats[biz.id] || {};
+  const customName = G.bizNames && G.bizNames[biz.id];
+  const displayName = customName || biz.name;
 
-  const delay = BUSINESSES.indexOf(biz) * 0.05;
+  const delay = BUSINESSES.indexOf(biz) * 0.06;
 
-  return `<div class="biz-card ${locked ? 'locked' : ''}" style="--stripe-color:${biz.color}; animation-delay:${delay}s">
-    <div class="biz-avatar" style="background:${biz.bg}">${biz.icon}</div>
-    <div class="biz-body">
-      <div class="biz-header">
-        <div class="biz-name">${biz.name}</div>
-        ${isOpen ? `<div class="biz-lvl-badge">Nv.${lvl}</div>` : ''}
+  return `<div class="biz-card ${locked ? 'locked' : ''} ${!isOpen ? 'closed-biz' : ''}" id="bizcard-${biz.id}" style="animation-delay:${delay}s">
+
+    <!-- HERO BANNER -->
+    <div class="biz-hero" style="background:${biz.color}">
+      <div class="biz-hero-bg" style="background:${biz.color}"></div>
+      <div class="biz-hero-pattern"></div>
+      <div class="biz-icon-big">${biz.icon}</div>
+      <div class="biz-hero-info">
+        <div class="biz-hero-name">${displayName}</div>
+        ${customName ? `<div class="biz-hero-original">📛 ${biz.name}</div>` : ''}
+        <div class="biz-hero-desc">${biz.desc}</div>
       </div>
-      <div class="biz-desc">${biz.desc}</div>
+      <div class="biz-hero-right">
+        ${isOpen ? `<div class="biz-lvl-badge">⭐ Nv.${lvl}</div>` : ''}
+        ${isOpen ? `<button class="btn-rename" onclick="openRenameModal('${biz.id}')" title="Renombrar">✏️</button>` : ''}
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="biz-body-section">
       ${isOpen ? `
         <div class="biz-prog-wrap">
-          <div class="biz-prog-bg">
+          <div class="biz-prog-track">
             <div class="biz-prog-fill" id="prog-${biz.id}" style="width:${prog*100}%;background:${biz.color}"></div>
           </div>
           <div class="biz-income-line">
-            <span class="bil-income">+${fmt(income)} / ciclo</span>
-            <span class="bil-time">${cycle.toFixed(1)}s ⏱</span>
-            <span class="biz-earned-float" id="bizearned-${biz.id}">${stats.totalEarned ? fmt(stats.totalEarned) + ' total' : ''}</span>
+            <span class="bil-income">💰 +${fmt(income)} / ciclo</span>
+            <span class="bil-time">⏱ ${cycle.toFixed(1)}s</span>
+            <span class="biz-earned-float" id="bizearned-${biz.id}">${stats.totalEarned ? '💎 ' + fmt(stats.totalEarned) : ''}</span>
           </div>
         </div>
         ${stats.cycles ? `<div class="biz-stats-row">
-          <div class="biz-stat-chip">🔄 <span>${stats.cycles || 0}</span> ciclos</div>
-          ${stats.totalEarned ? `<div class="biz-stat-chip">💰 <span>${fmt(stats.totalEarned)}</span> ganado</div>` : ''}
+          <div class="biz-stat-chip">🔄 ${stats.cycles} ciclos</div>
+          ${stats.totalEarned ? `<div class="biz-stat-chip">📈 ${fmt(stats.totalEarned)} total</div>` : ''}
         </div>` : ''}
-      ` : ''}
+      ` : `<div style="font-size:0.72rem;color:#bbb;font-weight:700;margin-bottom:10px;text-align:center;padding:4px 0">🔓 Ábrelo por ${fmt(cost)} para empezar a generar ingresos</div>`}
+
       <div class="biz-footer">
         <div class="biz-actions">
           ${locked
@@ -2221,7 +2419,7 @@ function renderBusiness(biz) {
                   ${!isOpen ? '🔓 Abrir' : '⬆️ Mejorar'}
                 </button>
                 <div class="biz-cost-tag">${fmt(cost)}</div>
-                ${isOpen ? `<button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${biz.name}',${income.toFixed(2)})">💬 Negociar</button>` : ''}
+                ${isOpen ? `<button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">💬 Negociar</button>` : ''}
                 ${isOpen && hasAnim ? `<button class="btn-live" onclick="openBizAnim('${biz.id}')">🎬 Ver en vivo</button>` : ''}
               </div>`
           }
@@ -3516,6 +3714,61 @@ function finishNegotiate() {
 }
 
 // ═══════════════════════════════════════════════
+// RENAME BUSINESS
+// ═══════════════════════════════════════════════
+let _renameBizId = null;
+
+function openRenameModal(bizId) {
+  const biz = BUSINESSES.find(b => b.id === bizId);
+  if (!biz) return;
+  _renameBizId = bizId;
+  const currentName = (G.bizNames && G.bizNames[bizId]) || biz.name;
+  document.getElementById('renameBizIcon').textContent = biz.icon;
+  document.getElementById('renameOriginalName').textContent = `Original: ${biz.name}`;
+  const input = document.getElementById('renameInput');
+  input.value = currentName;
+  document.getElementById('renamePreview').textContent = currentName;
+  input.oninput = () => {
+    document.getElementById('renamePreview').textContent = input.value.trim() || biz.name;
+  };
+  document.getElementById('renameModal').classList.add('open');
+  setTimeout(() => { input.focus(); input.select(); }, 100);
+}
+function closeRenameModal() {
+  document.getElementById('renameModal').classList.remove('open');
+  _renameBizId = null;
+}
+function confirmRename() {
+  if (!_renameBizId) return;
+  const biz = BUSINESSES.find(b => b.id === _renameBizId);
+  const newName = document.getElementById('renameInput').value.trim();
+  if (!newName) { notify('⚠️ El nombre no puede estar vacío'); return; }
+  if (!G.bizNames) G.bizNames = {};
+  G.bizNames[_renameBizId] = newName === biz.name ? undefined : newName;
+  notify(`✅ ¡"${newName}" tiene identidad propia!`);
+  closeRenameModal();
+  renderAll();
+  saveGame();
+}
+function resetBizName() {
+  if (!_renameBizId) return;
+  const biz = BUSINESSES.find(b => b.id === _renameBizId);
+  if (!G.bizNames) G.bizNames = {};
+  delete G.bizNames[_renameBizId];
+  notify(`↩ Nombre restaurado: ${biz.name}`);
+  closeRenameModal();
+  renderAll();
+  saveGame();
+}
+document.getElementById('renameModal').addEventListener('click', function(e) {
+  if (e.target === this) closeRenameModal();
+});
+document.getElementById('renameInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') confirmRename();
+  if (e.key === 'Escape') closeRenameModal();
+});
+
+// ═══════════════════════════════════════════════
 // NIGHT/DAY MODE
 // ═══════════════════════════════════════════════
 function updateDayNight() {
@@ -3671,6 +3924,7 @@ const hadSave = loadGame();
 if (!G.zoneHistory) G.zoneHistory = [G.zone || 'centro'];
 if (!G.achievements) G.achievements = {};
 if (G.soundOn === undefined) G.soundOn = true;
+if (!G.bizNames) G.bizNames = {};
 if (!G.gems) G.gems = 0;
 if (!G.bizStats) G.bizStats = {};
 if (!G.dailyObjClaimed) G.dailyObjClaimed = {};
