@@ -187,6 +187,61 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%}
 
 <script>
 // ══════════════════════════════════════════════
+// PARENT GAME BRIDGE — postMessage bidireccional
+// ══════════════════════════════════════════════
+const MAX_CHAIRS_SALON = 4;
+let _chairFlashSalon = -1, _chairFlashTimerSalon = 0;
+let _paused = false;
+
+window.addEventListener('message', e => {
+  if (!e.data) return;
+  if (e.data.type === 'bizInit') {
+    G.money = e.data.money || 0;
+    G.upg.sillas.lv = e.data.chairLevel || 1;
+    G.upg.vel.lv = e.data.speedLevel || 1;
+    G.upg.precio.lv = e.data.priceLevel || 1;
+    G.upg.mkt.lv = e.data.marketingLevel || 1;
+    initSlots(); updateHUD();
+    nlog(`💰 Caja: $${Math.floor(G.money).toLocaleString()}`,'good');
+  }
+  if (e.data.type === 'purchaseOk') {
+    G.money = e.data.newMoney;
+    G.upg[e.data.upg].lv++;
+    const k = e.data.upg;
+    if(k==='sillas'){initSlots();promoteWait();nlog(`💺 ¡${nChairs()} sillas!`,'good');_chairFlashSalon=nChairs()-1;_chairFlashTimerSalon=2;}
+    else if(k==='vel')nlog(`⚡ Ciclo ${cutDur().toFixed(1)}s`,'good');
+    else if(k==='precio')nlog(`💵 Precio $${basePrice()}`,'good');
+    else if(k==='mkt')nlog(`📢 Cliente cada ${spawnInt().toFixed(1)}s`,'good');
+    else if(k==='tinte'){initSlots();nlog(`🎨 Tinte!`,'special');}
+    else if(k==='mani'){initSlots();nlog(`💅 Manicure!`,'special');}
+    checkAchievements(); updateHUD();
+  }
+  if (e.data.type === 'purchaseDenied') nlog('💸 Sin fondos','bad');
+  if (e.data.type === 'bizClose') _paused = true;
+}, true);
+
+function requestPurchase(k) {
+  const cost = upgCost(k);
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'bizPurchase', upg: k, cost }, '*');
+    nlog('💳 Procesando...');
+  } else { buyUpgStandalone(k); }
+}
+function buyUpgStandalone(k) {
+  const cost = upgCost(k);
+  if (G.money < cost) { nlog('💸 No tienes suficiente','bad'); return; }
+  G.money -= cost; G.upg[k].lv++; addXP(cost * .2);
+  if(k==='sillas'){initSlots();promoteWait();nlog(`💺 ¡${nChairs()} sillas!`,'good');_chairFlashSalon=nChairs()-1;_chairFlashTimerSalon=2;}
+  else if(k==='vel')nlog(`⚡ Ciclo ${cutDur().toFixed(1)}s`,'good');
+  else if(k==='precio')nlog(`💵 Precio $${basePrice()}`,'good');
+  else if(k==='mkt')nlog(`📢 Cliente cada ${spawnInt().toFixed(1)}s`,'good');
+  else if(k==='tinte'){initSlots();}
+  else if(k==='mani'){initSlots();}
+  checkAchievements();
+}
+document.addEventListener('visibilitychange', () => { _paused = document.hidden; });
+
+// ══════════════════════════════════════════════
 // AUDIO
 // ══════════════════════════════════════════════
 const AC=new(window.AudioContext||window.webkitAudioContext)();
@@ -441,6 +496,11 @@ function onDone(c){
   addXP(inc*.22);G.served++;G.streak++;G.combo++;
   if(G.combo>G.maxCombo)G.maxCombo=G.combo;
   G.rep=Math.min(100,G.rep+.4+c.happiness*.5);
+
+  // Sync earnings to parent game
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'bizEarned', earned: inc, xp: inc * 0.22 }, '*');
+  }
 
   // Free station
   if(c.chairIdx>=0){chairs[c.chairIdx].occ=false;chairs[c.chairIdx].cid=null;c.chairIdx=-1;}
@@ -1102,12 +1162,14 @@ function updateHUD(){
     mani:{st:`${nMani()} mesas`,nx:`${Math.min(nMani()+1,2)} mesas`},
   };
   Object.keys(G.upg).forEach(k=>{
-    const cost=upgCost(k),can=G.money>=cost;
+    const cost=upgCost(k);
+    const atMax = k==='sillas' && nChairs()>=MAX_CHAIRS_SALON;
+    const can = !atMax && G.money>=cost;
     const lel=document.getElementById(`lv-${k}`);if(lel)lel.textContent=`Nv.${G.upg[k].lv}`;
     const sel=document.getElementById(`st-${k}`);if(sel)sel.innerHTML=`<b>${defs[k]?.st||''}</b>`;
-    const nel=document.getElementById(`nx-${k}`);if(nel)nel.innerHTML=`<b>${defs[k]?.nx||''}</b>`;
-    const cel=document.getElementById(`cs-${k}`);if(cel)cel.textContent=cost.toLocaleString();
-    const bel=document.getElementById(`bn-${k}`);if(bel)bel.disabled=!can;
+    const nel=document.getElementById(`nx-${k}`);if(nel)nel.innerHTML=`<b>${atMax&&k==='sillas'?'¡Máximo!':defs[k]?.nx||''}</b>`;
+    const cel=document.getElementById(`cs-${k}`);if(cel)cel.textContent=atMax&&k==='sillas'?'MAX':cost.toLocaleString();
+    const bel=document.getElementById(`bn-${k}`);if(bel){bel.disabled=!can||atMax;if(atMax&&k==='sillas')bel.textContent='💺 ¡Salón Completo!';}
   });
 }
 
@@ -1115,16 +1177,7 @@ function updateHUD(){
 // ACTIONS
 // ══════════════════════════════════════════════
 function buyUpg(k){
-  const cost=upgCost(k);
-  if(G.money<cost){nlog('💸 No tienes suficiente','bad');return;}
-  G.money-=cost;G.upg[k].lv++;addXP(cost*.2);
-  if(k==='sillas'){initSlots();promoteWait();nlog(`💺 ¡${nChairs()} sillas!`,'good');}
-  else if(k==='vel')nlog(`⚡ Ciclo ${cutDur().toFixed(1)}s`,'good');
-  else if(k==='precio')nlog(`💵 Precio $${basePrice()}`,'good');
-  else if(k==='mkt')nlog(`📢 Cliente cada ${spawnInt().toFixed(1)}s`,'good');
-  else if(k==='tinte'){initSlots();nlog(`🎨 ¡Estación de tinte ${nDye()} abierta!`,'special');flash('#DA70D6');}
-  else if(k==='mani'){initSlots();nlog(`💅 ¡Mesa de manicure ${nMani()} lista!`,'special');flash('#00CED133');}
-  checkAchievements();
+  requestPurchase(k);
 }
 
 function buyBoost(){
@@ -1152,12 +1205,19 @@ function doPrestige(){
 // ══════════════════════════════════════════════
 let lastT=performance.now();
 function loop(now){
+  if (_paused) { lastT = now; requestAnimationFrame(loop); return; }
   const dt=Math.min((now-lastT)/1000,.1);lastT=now;
   update(dt);
+  if (_chairFlashTimerSalon > 0) _chairFlashTimerSalon -= dt;
   ctx.clearRect(0,0,CW,CH);
   draw(now);
   updateHUD();
   requestAnimationFrame(loop);
+}
+
+// Tell parent we're ready
+if (window.parent && window.parent !== window) {
+  window.parent.postMessage({ type: 'bizReady' }, '*');
 }
 
 // ══════════════════════════════════════════════

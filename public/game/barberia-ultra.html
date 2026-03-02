@@ -1147,12 +1147,16 @@ function updateHUD(){
     marketing:{st:`cada ${spawnInt().toFixed(1)}s`,nx:`cada ${Math.max(2.2,spawnInt()-1.2).toFixed(1)}s`},
   };
   Object.keys(G.upg).forEach(k=>{
-    const cost=upgCost(k),can=G.money>=cost;
+    const cost=upgCost(k);
+    const atMax = k==='sillas' && nChairs()>=MAX_CHAIRS;
+    const can = !atMax && G.money>=cost;
     document.getElementById(`lv-${k}`).textContent=`Nv.${G.upg[k].lv}`;
     document.getElementById(`st-${k}`).innerHTML=`<b>${defs[k].st}</b>`;
-    document.getElementById(`nx-${k}`).innerHTML=`<b>${defs[k].nx}</b>`;
-    document.getElementById(`cs-${k}`).textContent=cost.toLocaleString();
-    document.getElementById(`bn-${k}`).disabled=!can;
+    document.getElementById(`nx-${k}`).innerHTML=`<b>${atMax && k==='sillas' ? '¡Máximo!' : defs[k].nx}</b>`;
+    document.getElementById(`cs-${k}`).textContent=atMax && k==='sillas' ? 'MAX' : cost.toLocaleString();
+    const btn=document.getElementById(`bn-${k}`);
+    btn.disabled = !can || atMax;
+    if(atMax && k==='sillas') btn.textContent='🪑 ¡Barbería Completa!';
   });
 
   // Combo badge
@@ -1221,7 +1225,10 @@ function showPrestige(){
 // MAIN LOOP
 // ══════════════════════════════════════════════════════════
 let lastT=performance.now();
+let _paused = false;
+
 function loop(now){
+  if (_paused) { lastT = now; requestAnimationFrame(loop); return; }
   const dt=Math.min((now-lastT)/1000,.1);lastT=now;
   update(dt);
   // Tick chair flash
@@ -1231,6 +1238,14 @@ function loop(now){
   updateHUD();
   requestAnimationFrame(loop);
 }
+
+// Pause when tab/iframe loses visibility
+document.addEventListener('visibilitychange', () => { _paused = document.hidden; });
+
+// Pause when parent sends close signal
+window.addEventListener('message', e => {
+  if (e.data?.type === 'bizClose') _paused = true;
+}, true);
 
 // Tell parent we're ready (so parent can send bizInit)
 if (window.parent && window.parent !== window) {
