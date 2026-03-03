@@ -2128,10 +2128,11 @@ body.night-mode .night-stars { opacity: 0.35; }
 .gem-display { background: linear-gradient(135deg,#00C9A7,#0080C0); border: var(--outline); border-radius: 99px; padding: 4px 12px; box-shadow: var(--shadow-sm); text-align: center; cursor: pointer; }
 .gem-label { font-size: 0.55rem; color: rgba(255,255,255,0.8); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
 .gem-amount { font-family: 'Fredoka One',cursive; font-size: 1.1rem; color: white; line-height: 1; }
-#gemShopOverlay { display:none; position:fixed; inset:0; z-index:600; background:rgba(0,0,0,0.82); backdrop-filter:blur(6px); align-items:center; justify-content:center; }
+#gemShopOverlay { display:none; position:fixed; inset:0; z-index:600; background:rgba(0,0,0,0.88); backdrop-filter:blur(6px); align-items:flex-end; justify-content:center; }
 #gemShopOverlay.open { display:flex; }
-.gem-shop-card { background: linear-gradient(135deg,#1E1B2E,#0d3a2d); border: 4px solid #00C9A7; border-radius: 24px; padding: 28px 24px; max-width: 360px; width: 92%; color: white; text-align: center; }
-.gem-shop-title { font-family:'Boogaloo',cursive; font-size:1.8rem; color:#00C9A7; margin-bottom: 16px; }
+.gem-shop-card { background: linear-gradient(180deg,#1E1B2E,#0d2e2a); border: 3px solid #00C9A7; border-bottom:none; border-radius: 24px 24px 0 0; padding: 20px 20px 32px; max-width: 480px; width:100%; max-height:88vh; display:flex; flex-direction:column; color: white; text-align: center; }
+.gem-shop-title { font-family:'Boogaloo',cursive; font-size:1.5rem; color:#00C9A7; margin-bottom: 4px; }
+#gemShopItems { overflow-y:auto; flex:1; padding-right:2px; }
 .gem-item { background: rgba(255,255,255,0.08); border: 2px solid rgba(0,201,167,0.3); border-radius: 14px; padding: 12px; margin-bottom: 10px; display:flex; align-items:center; gap: 12px; text-align: left; }
 .gem-item-icon { font-size: 1.8rem; }
 .gem-item-name { font-family:'Fredoka One',cursive; font-size: 0.9rem; }
@@ -2365,6 +2366,10 @@ body.night-mode .night-stars { opacity: 0.35; }
       <span class="sec-btn-icon">📤</span>
       <div><div>Compartir</div><div class="sec-btn-sub">Muestra tu Imperio</div></div>
     </button>
+    <button class="sec-btn" onclick="openGuildPanel();closeSecondaryPanel()">
+      <span class="sec-btn-icon">🤝</span>
+      <div><div>Mi Clan</div><div class="sec-btn-sub" id="secGuildName">Sin clan — crea o únete</div></div>
+    </button>
     <div class="sec-divider"></div>
     <button class="sec-btn" onclick="openGemShop();closeSecondaryPanel()">
       <span class="sec-btn-icon">💎</span>
@@ -2585,17 +2590,52 @@ body.night-mode .night-stars { opacity: 0.35; }
 </div>
 
 <!-- Gem Shop Overlay -->
-<div id="gemShopOverlay">
+<div id="gemShopOverlay" onclick="if(event.target===this)document.getElementById('gemShopOverlay').classList.remove('open')">
   <div class="gem-shop-card">
     <div class="gem-shop-title">💎 Tienda de Gemas</div>
-    <div id="gemBalance" style="font-family:'Fredoka One',cursive;font-size:1rem;color:#00C9A7;margin-bottom:16px">0 💎</div>
+    <div id="gemBalance" style="font-family:'Fredoka One',cursive;font-size:0.9rem;color:#00C9A7;margin-bottom:12px">0 💎</div>
     <div id="gemShopItems"></div>
-    <button onclick="document.getElementById('gemShopOverlay').classList.remove('open')" style="margin-top:12px;background:#FF4757;color:white;border:2px solid #1E1B2E;border-radius:99px;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:8px 24px;cursor:pointer">Cerrar</button>
+    <button onclick="document.getElementById('gemShopOverlay').classList.remove('open')" style="margin-top:12px;flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:2px solid rgba(255,255,255,0.1);border-radius:12px;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px;cursor:pointer;width:100%">Cerrar</button>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════════
-     GEM SOURCES BOTTOM SHEET
+     GUILD / CLAN PANEL
+══════════════════════════════════════════════ -->
+<div id="guildOverlay" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;">
+  <div style="background:linear-gradient(180deg,#1a0d2e,#0d1a2e);border:3px solid #FFD700;border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px 32px;width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;gap:0;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;">
+      <div>
+        <div style="font-family:'Boogaloo',cursive;font-size:1.4rem;color:#FFD700;">🤝 Clanes del Barrio</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);font-weight:900;">Compite en equipo con tus amigos</div>
+      </div>
+      <button onclick="closeGuildPanel()" style="background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.1);border-radius:99px;color:rgba(255,255,255,0.5);font-family:'Fredoka One',cursive;font-size:0.8rem;padding:5px 12px;cursor:pointer;">✕</button>
+    </div>
+    <div id="guildContent" style="overflow-y:auto;flex:1;"></div>
+  </div>
+</div>
+
+<!-- Tutorial Overlay -->
+<div id="tutorialOverlay" style="display:none;position:fixed;inset:0;z-index:990;pointer-events:none;">
+  <div id="tutorialSpotlight" style="position:absolute;inset:0;background:rgba(0,0,0,0.75);pointer-events:all;"></div>
+  <div id="tutorialCard" style="position:absolute;bottom:110px;left:50%;transform:translateX(-50%);z-index:991;background:linear-gradient(135deg,#1E1B2E,#2d1a4a);border:3px solid #FFE135;border-radius:20px;padding:16px 20px;max-width:310px;width:90%;box-shadow:0 8px 30px rgba(0,0,0,0.6);pointer-events:all;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+      <div id="tutEmoji" style="font-size:2rem;flex-shrink:0;">👋</div>
+      <div>
+        <div id="tutStep" style="font-size:0.6rem;color:rgba(255,225,53,0.6);font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Paso 1 de 7</div>
+        <div id="tutTitle" style="font-family:'Fredoka One',cursive;font-size:1rem;color:#FFE135;margin-bottom:4px;">Bienvenido al Imperio</div>
+        <div id="tutMsg" style="font-size:0.75rem;color:rgba(255,255,255,0.8);font-weight:700;line-height:1.4;">Mensaje del tutorial</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div style="flex:1;display:flex;gap:4px;" id="tutDots"></div>
+      <button id="tutSkip" onclick="skipTutorial()" style="background:transparent;border:none;color:rgba(255,255,255,0.3);font-size:0.65rem;cursor:pointer;">Saltar</button>
+      <button id="tutNext" onclick="nextTutorialStep()" style="background:#FFE135;border:2px solid #1E1B2E;border-radius:99px;color:#1E1B2E;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:6px 16px;cursor:pointer;">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+
 ══════════════════════════════════════════════ -->
 <div id="gemSourcesOverlay" onclick="e => e.target===this&&closeGemSources()">
   <div class="gem-sources-sheet" onclick="event.stopPropagation()">
@@ -2750,47 +2790,98 @@ const LEVELS = [
 ];
 
 const BUSINESSES = [
-  { id: 'barberia', name: 'Barbería Los Manos', icon: '💈', color: '#FF6348', bg: '#FFF0EC',
-    desc: 'Cortes clásicos del barrio', baseCost: 50, baseIncome: 0.8, baseCycle: 4, unlockLevel: 0 },
-  { id: 'colmado', name: 'Colmado Don Beto', icon: '🏪', color: '#FFD200', bg: '#FFFCE0',
-    desc: 'El alma del barrio 24/7', baseCost: 400, baseIncome: 3.5, baseCycle: 6, unlockLevel: 1 },
-  { id: 'salon', name: 'Salón Bella Imagen', icon: '💇', color: '#FF4FAD', bg: '#FFF0F8',
-    desc: 'Belleza dominicana de verdad', baseCost: 2000, baseIncome: 15, baseCycle: 8, unlockLevel: 2 },
-  { id: 'motoconcho', name: 'Mototaxi Express', icon: '🛵', color: '#2DC653', bg: '#F0FFF4',
-    desc: 'El transporte del pueblo', baseCost: 8000, baseIncome: 55, baseCycle: 10, unlockLevel: 3 },
-  { id: 'taller', name: 'Taller Mecánico El Gordo', icon: '🔧', color: '#5BC8F5', bg: '#F0FAFF',
-    desc: 'Los carros no mienten', baseCost: 30000, baseIncome: 200, baseCycle: 15, unlockLevel: 4 },
-  { id: 'gym', name: 'Gym Poder Total 💪', icon: '💪', color: '#E74C3C', bg: '#FFF0EE',
-    desc: 'Hierro, sudor y resultados', baseCost: 80000, baseIncome: 600, baseCycle: 18, unlockLevel: 4 },
-  { id: 'restaurante', name: 'Restaurante La Mamá', icon: '🍽️', color: '#FF8C42', bg: '#FFF5EE',
-    desc: 'Sancocho y sazón artesanal', baseCost: 120000, baseIncome: 700, baseCycle: 20, unlockLevel: 5 },
-  { id: 'lavado', name: 'Lavado de Carros Shine', icon: '🚗', color: '#3498DB', bg: '#EAF4FB',
-    desc: 'Brillante como nuevo', baseCost: 300000, baseIncome: 1800, baseCycle: 22, unlockLevel: 5 },
-  { id: 'ferreteria', name: 'Ferretería El Maestro', icon: '🏗️', color: '#A8DADC', bg: '#F0FAFA',
-    desc: 'Todo pa\' la construcción', baseCost: 500000, baseIncome: 2500, baseCycle: 25, unlockLevel: 6 },
-  { id: 'bambu', name: 'Bar El Bambú VIP', icon: '🍻', color: '#9B5DE5', bg: '#F5F0FF',
-    desc: 'Frío, música y negocios', baseCost: 2000000, baseIncome: 9000, baseCycle: 30, unlockLevel: 7 },
+  { id: 'barberia',    name: 'Barbería Los Manos',       icon: '💈', color: '#FF6348', bg: '#FFF0EC',
+    desc: 'Cortes clásicos del barrio',           baseCost: 50,          baseIncome: 0.8,    baseCycle: 4,  unlockLevel: 0 },
+  { id: 'colmado',     name: 'Colmado Don Beto',          icon: '🏪', color: '#FFD200', bg: '#FFFCE0',
+    desc: 'El alma del barrio 24/7',              baseCost: 400,         baseIncome: 3.5,    baseCycle: 6,  unlockLevel: 1 },
+  { id: 'salon',       name: 'Salón Bella Imagen',        icon: '💇', color: '#FF4FAD', bg: '#FFF0F8',
+    desc: 'Belleza dominicana de verdad',         baseCost: 2000,        baseIncome: 15,     baseCycle: 8,  unlockLevel: 2 },
+  { id: 'motoconcho',  name: 'Mototaxi Express',          icon: '🛵', color: '#2DC653', bg: '#F0FFF4',
+    desc: 'El transporte del pueblo',             baseCost: 8000,        baseIncome: 55,     baseCycle: 10, unlockLevel: 3 },
+  { id: 'cafeteria',   name: 'Cafetín del Barrio',        icon: '☕', color: '#C47A3A', bg: '#FFF8F0',
+    desc: 'Café, mangú y chistes locales',        baseCost: 18000,       baseIncome: 120,    baseCycle: 9,  unlockLevel: 3 },
+  { id: 'taller',      name: 'Taller Mecánico El Gordo',  icon: '🔧', color: '#5BC8F5', bg: '#F0FAFF',
+    desc: 'Los carros no mienten',                baseCost: 30000,       baseIncome: 200,    baseCycle: 15, unlockLevel: 4 },
+  { id: 'farmacia',    name: 'Farmacia San Rafael',       icon: '💊', color: '#E74C3C', bg: '#FFF0EE',
+    desc: 'Salud para el barrio entero',          baseCost: 55000,       baseIncome: 380,    baseCycle: 12, unlockLevel: 4 },
+  { id: 'gym',         name: 'Gym Poder Total 💪',        icon: '💪', color: '#E74C3C', bg: '#FFF0EE',
+    desc: 'Hierro, sudor y resultados',           baseCost: 80000,       baseIncome: 600,    baseCycle: 18, unlockLevel: 4 },
+  { id: 'restaurante', name: 'Restaurante La Mamá',       icon: '🍽️', color: '#FF8C42', bg: '#FFF5EE',
+    desc: 'Sancocho y sazón artesanal',           baseCost: 120000,      baseIncome: 700,    baseCycle: 20, unlockLevel: 5 },
+  { id: 'lavado',      name: 'Lavado de Carros Shine',    icon: '🚗', color: '#3498DB', bg: '#EAF4FB',
+    desc: 'Brillante como nuevo',                 baseCost: 300000,      baseIncome: 1800,   baseCycle: 22, unlockLevel: 5 },
+  { id: 'ferreteria',  name: 'Ferretería El Maestro',     icon: '🏗️', color: '#A8DADC', bg: '#F0FAFA',
+    desc: "Todo pa' la construcción",             baseCost: 500000,      baseIncome: 2500,   baseCycle: 25, unlockLevel: 6 },
+  { id: 'discoteca',   name: 'Discoteca El Callejón',     icon: '🎵', color: '#B24BF3', bg: '#F5F0FF',
+    desc: 'La mejor noche del barrio',            baseCost: 1200000,     baseIncome: 6500,   baseCycle: 28, unlockLevel: 6 },
+  { id: 'bambu',       name: 'Bar El Bambú VIP',          icon: '🍻', color: '#9B5DE5', bg: '#F5F0FF',
+    desc: 'Frío, música y negocios',              baseCost: 2000000,     baseIncome: 9000,   baseCycle: 30, unlockLevel: 7 },
+  { id: 'supermercado',name: 'Supermercado La Nacional',  icon: '🛒', color: '#00B4D8', bg: '#E8F8FF',
+    desc: 'Suple a todo el vecindario',           baseCost: 5000000,     baseIncome: 22000,  baseCycle: 35, unlockLevel: 7 },
+  { id: 'hotelito',    name: 'Hotel & Spa Coral',         icon: '🏨', color: '#F4A261', bg: '#FFF8F0',
+    desc: 'Turismo de lujo en el barrio',         baseCost: 12000000,    baseIncome: 55000,  baseCycle: 40, unlockLevel: 8 },
+  { id: 'plaza',       name: 'Plaza Comercial Imperio',   icon: '🏬', color: '#2DC653', bg: '#F0FFF4',
+    desc: 'Tu propio mini-mall',                  baseCost: 35000000,    baseIncome: 150000, baseCycle: 50, unlockLevel: 9 },
+  { id: 'banco',       name: 'Banco del Barrio',          icon: '🏦', color: '#FFD700', bg: '#FFFBDE',
+    desc: '💰 El dinero trabaja para ti',         baseCost: 100000000,   baseIncome: 500000, baseCycle: 60, unlockLevel: 10 },
+  { id: 'banco_central',name:'Banco Central Imperio',     icon: '🏛️', color: '#C9A200', bg: '#FFFDE0',
+    desc: '👑 El pináculo financiero',            baseCost: 500000000,   baseIncome: 2000000,baseCycle: 90, unlockLevel: 12 },
 ];
 
 const UPGRADES = [
-  { id: 'letrero', name: 'Letrero LED 💡', icon: '💡', bg: '#FFF3CD',
-    desc: 'Duplica clientes de la barbería', cost: 800, mult: 2, target: 'barberia' },
-  { id: 'nevera', name: 'Nevera Nueva ❄️', icon: '❄️', bg: '#D1ECF1',
-    desc: 'x2 ventas del colmado', cost: 5000, mult: 2, target: 'colmado' },
-  { id: 'instagram', name: 'Instagram 📸', icon: '📸', bg: '#F8D7DA',
-    desc: 'x2 clientes del salón', cost: 20000, mult: 2, target: 'salon' },
-  { id: 'casco', name: 'Cascos Premium 🪖', icon: '🪖', bg: '#D4EDDA',
-    desc: 'x2 ingresos mototaxi', cost: 80000, mult: 2, target: 'motoconcho' },
-  { id: 'wifi', name: 'WiFi del Barrio 📶', icon: '📶', bg: '#E2D9F3',
-    desc: 'Todos los negocios x1.5', cost: 200000, mult: 1.5, target: 'all' },
-  { id: 'offlineBoost', name: 'Modo 24/7 🌙', icon: '🌙', bg: '#F0E8FF',
-    desc: '100% offline earnings (vs 50%)', cost: 1000000, mult: 1, target: 'none' },
-  { id: 'franquicia', name: 'Franquicia 📋', icon: '📋', bg: '#FFF0EC',
-    desc: 'x1.5 todo el restaurante', cost: 800000, mult: 1.5, target: 'restaurante' },
-  { id: 'marca', name: 'Tu Propia Marca 👑', icon: '👑', bg: '#FFF3CD',
-    desc: 'Todo el barrio x1.5', cost: 2000000, mult: 1.5, target: 'all' },
-  { id: 'empire', name: 'Imperio Total 🌟', icon: '🌟', bg: '#F5F0FF',
-    desc: 'Multiplicador x2 a TODO', cost: 8000000, mult: 2, target: 'all' },
+  // ── Por negocio ──────────────────────────────────────────────────
+  { id: 'letrero',    name: 'Letrero LED 💡',          icon: '💡', bg: '#FFF3CD',
+    desc: 'x2 ingresos barbería',               cost: 800,        mult: 2,   target: 'barberia' },
+  { id: 'nevera',     name: 'Nevera Nueva ❄️',          icon: '❄️', bg: '#D1ECF1',
+    desc: 'x2 ventas del colmado',              cost: 5000,       mult: 2,   target: 'colmado' },
+  { id: 'instagram',  name: 'Instagram 📸',             icon: '📸', bg: '#F8D7DA',
+    desc: 'x2 clientes del salón',             cost: 20000,      mult: 2,   target: 'salon' },
+  { id: 'casco',      name: 'Cascos Premium 🪖',         icon: '🪖', bg: '#D4EDDA',
+    desc: 'x2 ingresos mototaxi',              cost: 80000,      mult: 2,   target: 'motoconcho' },
+  { id: 'maquinacafe',name: 'Máquina Espresso ☕',       icon: '☕', bg: '#FFF0DC',
+    desc: 'x2.5 ingresos cafetín',             cost: 45000,      mult: 2.5, target: 'cafeteria' },
+  { id: 'herramientas',name:'Herramientas Pro 🔩',       icon: '🔩', bg: '#E8F4FD',
+    desc: 'x2 ingresos taller',                cost: 120000,     mult: 2,   target: 'taller' },
+  { id: 'seguro',     name: 'Seguro Médico 🩺',          icon: '🩺', bg: '#FDECEA',
+    desc: 'x2.5 ingresos farmacia',            cost: 180000,     mult: 2.5, target: 'farmacia' },
+  { id: 'saunagym',   name: 'Sauna & Jacuzzi 🛁',        icon: '🛁', bg: '#FFE5E5',
+    desc: 'x2 ingresos gym',                   cost: 250000,     mult: 2,   target: 'gym' },
+  { id: 'franquicia', name: 'Franquicia 📋',             icon: '📋', bg: '#FFF0EC',
+    desc: 'x1.5 restaurante',                  cost: 800000,     mult: 1.5, target: 'restaurante' },
+  { id: 'robotlavado',name: 'Lavado Robótico 🤖',        icon: '🤖', bg: '#E8F4FD',
+    desc: 'x2 ingresos lavado',                cost: 1000000,    mult: 2,   target: 'lavado' },
+  { id: 'almacen',    name: 'Almacén Ferretero 📦',      icon: '📦', bg: '#E8F8FF',
+    desc: 'x2 ingresos ferretería',            cost: 1500000,    mult: 2,   target: 'ferreteria' },
+  { id: 'djresidente',name: 'DJ Residente 🎧',           icon: '🎧', bg: '#F0E8FF',
+    desc: 'x3 discoteca los fines de semana',  cost: 3000000,    mult: 3,   target: 'discoteca' },
+  { id: 'bartop',     name: 'Bar Top-Shelf 🍾',          icon: '🍾', bg: '#F5F0FF',
+    desc: 'x2 Bar El Bambú',                   cost: 4000000,    mult: 2,   target: 'bambu' },
+  { id: 'selfcheckout',name:'Auto-Caja 🛒',              icon: '🛒', bg: '#E0F8FF',
+    desc: 'x2 supermercado',                   cost: 10000000,   mult: 2,   target: 'supermercado' },
+  { id: 'spa5stars',  name: 'Spa 5 Estrellas ⭐',        icon: '⭐', bg: '#FFF5E0',
+    desc: 'x2.5 hotel',                        cost: 25000000,   mult: 2.5, target: 'hotelito' },
+  { id: 'anchor',     name: 'Tienda Ancla 🏬',           icon: '🏬', bg: '#F0FFF4',
+    desc: 'x2 plaza comercial',                cost: 70000000,   mult: 2,   target: 'plaza' },
+  { id: 'intereses',  name: 'Tasas de Interés 📊',       icon: '📊', bg: '#FFFBDE',
+    desc: 'x2 Banco del Barrio',               cost: 200000000,  mult: 2,   target: 'banco' },
+  { id: 'bancocent2', name: 'Reserva Federal 🏛️',        icon: '🏛️', bg: '#FFF9D0',
+    desc: 'x2 Banco Central',                  cost: 800000000,  mult: 2,   target: 'banco_central' },
+
+  // ── Globales ──────────────────────────────────────────────────────
+  { id: 'wifi',       name: 'WiFi del Barrio 📶',        icon: '📶', bg: '#E2D9F3',
+    desc: 'Todos los negocios x1.5',           cost: 200000,     mult: 1.5, target: 'all' },
+  { id: 'offlineBoost',name:'Modo 24/7 🌙',              icon: '🌙', bg: '#F0E8FF',
+    desc: '100% offline earnings',             cost: 1000000,    mult: 1,   target: 'none' },
+  { id: 'marca',      name: 'Tu Propia Marca 👑',        icon: '👑', bg: '#FFF3CD',
+    desc: 'Todo el barrio x1.5',               cost: 2000000,    mult: 1.5, target: 'all' },
+  { id: 'empire',     name: 'Imperio Total 🌟',          icon: '🌟', bg: '#F5F0FF',
+    desc: 'Multiplicador x2 a TODO',           cost: 8000000,    mult: 2,   target: 'all' },
+  { id: 'corporate',  name: 'Corporación S.A. 💼',       icon: '💼', bg: '#E8F4FD',
+    desc: 'Todo el Imperio x2.5',              cost: 50000000,   mult: 2.5, target: 'all' },
+  { id: 'oligarca',   name: 'Oligarca del Barrio 🛩️',   icon: '🛩️', bg: '#FFF3CD',
+    desc: 'Todos los negocios x3',             cost: 300000000,  mult: 3,   target: 'all' },
+  { id: 'megaempire', name: 'Mega Imperio 👑',           icon: '🌐', bg: '#F0FFF4',
+    desc: 'El Imperio completo x5',            cost: 1000000000, mult: 5,   target: 'all' },
 ];
 
 const ZONES = [
@@ -4032,7 +4123,15 @@ const BIZ_STORIES = {
   restaurante: ['🍽️ La mamá cocinó el mejor sancocho del año','😄 Mesa llena toda la tarde, récord histórico','🔥 El delivery suena sin parar hoy','⭐ Blogger gastronómico visitó y quedó encantado','🏆 Mejor restaurante del barrio 3 meses seguidos','👨‍🍳 Receta secreta nueva, ventas se triplicaron','🌟 Reseña en la revista del barrio esta semana'],
   lavado:      ['🚗 Veinte carros brillantes antes del mediodía','✨ Un Ferrari quedó como espejo, cliente VIP volvió','😄 Cliente habitual trajo a toda la familia','🔥 Línea de espera: señal de que estás haciendo bien','⭐ Foto viral del antes/después en redes','💧 Nuevo producto especial, resultados épicos','🏆 Premio "Servicio Destacado" del vecindario'],
   ferreteria:  ['🏗️ Proveedor nuevo con mejores precios desbloqueado','😄 Constructor compró todo el stock de cemento','🔥 Obra grande en la zona, ventas disparadas','⭐ Arquitecto del barrio nos recomienda a todos','🏆 Venta más grande en la historia del negocio','🔩 Kit especial lanzado, agotado en 2 horas','🧱 Nuevo catálogo de productos, clientes emocionados'],
-  bambu:       ['🍻 Viernes lleno hasta afuera, todo el barrio aquí','🎵 DJ nuevo trajo el doble de clientes','😄 Mesa VIP reservada para toda la semana','🔥 Cóctel especial se convirtió en viral','⭐ Mejor bar del año según la revista local','🎉 Evento privado anoche: noche de récord total','🌙 El after más solicitado del mes'],
+  bambu:        ['🍻 Viernes lleno hasta afuera, todo el barrio aquí','🎵 DJ nuevo trajo el doble de clientes','😄 Mesa VIP reservada para toda la semana','🔥 Cóctel especial se convirtió en viral','⭐ Mejor bar del año según la revista local','🎉 Evento privado anoche: noche de récord total','🌙 El after más solicitado del mes'],
+  cafeteria:    ['☕ Cola de 10 personas para el café de la mañana','🍳 Mangú especial agotado antes del mediodía','😄 Cliente habitual trajo a todos sus compañeros','🔥 El cafetín más visitado del barrio esta semana','⭐ Receta de café nuevo: todos piden doble','🥐 Panadería fresca llegó, ventas se triplicaron','🎶 Música en vivo hoy, clientes no se quieren ir'],
+  farmacia:     ['💊 Medicamento difícil de conseguir, solo aquí','😄 Cliente agradeció con flores por el buen servicio','🔥 Temporada de gripe: ventas al máximo','⭐ Farmacéutico recomendado por tres doctores del barrio','🩺 Servicio de presión arterial gratis, colas largas','💉 Vacuna nueva llegó primero a tu farmacia','🌡️ El termómetro más preciso del vecindario'],
+  discoteca:    ['🎵 DJ internacional esta noche, lleno total','💃 Competencia de baile: récord de asistencia','🔥 Lista de VIP llena para todo el mes','⭐ Reseña en la revista de entretenimiento dominicana','🎉 Cumpleaños masivo reservó toda la discoteca','🎧 Nuevo equipo de sonido, la vibra es diferente','🌟 La discoteca más hablada de la zona'],
+  supermercado: ['🛒 Inventario nuevo llegó: pasillos llenos de clientes','😄 Familia entera hizo la compra del mes','🔥 Ofertas del miércoles: ventas récord','⭐ Clasificado #1 en calidad/precio del barrio','🥩 Sección de carnes renovada: clientes encantados','🧺 App de delivery lanzada: pedidos sin parar','📦 Nuevo proveedor: mejores productos al mismo precio'],
+  hotelito:     ['🏨 Todas las habitaciones reservadas este fin','💆 Spa de lujo: lista de espera de 2 semanas','😄 Luna de miel perfecta: reseña de 5 estrellas','🔥 Temporada alta: precios premium justificados','⭐ Mencionado en Travel & Leisure del Caribe','🌊 Vista al mar desde el penthouse, hype en redes','🍹 Cócteles del bar del hotel virales en TikTok'],
+  plaza:        ['🏬 Nueva tienda ancla abrió: 500 visitantes hoy','🛍️ Sábado de ventas: estacionamiento lleno','😄 Evento familiar atrajo familias de todo Santiago','🔥 Black Friday del barrio: ventas históricas','⭐ Plaza más moderna de la zona norte','🎪 Food court lleno toda la tarde','🌟 Cobertura en noticias locales: orgullo del barrio'],
+  banco:        ['🏦 Primer cliente millonario atendido hoy','💰 Préstamos aprobados: más negocios en el barrio crecen','😄 Tasa de interés competitiva: clientes agradecidos','🔥 Semana de apertura de cuentas: récord histórico','⭐ Banco más confiable de la comunidad','📊 Inversiones rindiendo frutos: clientes contentos','💎 Servicio VIP de banca privada lanzado con éxito'],
+  banco_central:['🏛️ Decisión de tasa de interés que impacta todo el barrio','💴 Reservas internacionales en máximo histórico','😄 Presidente del país visitó tus instalaciones','🔥 Imperio financiero reconocido a nivel nacional','⭐ Institución más sólida del sistema dominicano','🌎 Corresponsalía con bancos del exterior aprobada','👑 El poder monetario del barrio en tus manos'],
 };
 
 const BIZ_LOGOS = ['💈','🏪','💇','🛵','🔧','💪','🍽️','🚗','🏗️','🍻','⭐','🏆','💎','🔑','🌟','👑','🔥','💰','🎯','🚀','🏅','⚡','🦁','🎪','🛍️','🏠','💡','🎨'];
@@ -6518,6 +6617,8 @@ function openSecondaryPanel() {
   // Update dynamic content
   const gemsEl = document.getElementById('secGemsCount');
   if (gemsEl) gemsEl.textContent = `${G.gems || 0} gemas disponibles`;
+  const guildEl = document.getElementById('secGuildName');
+  if (guildEl) guildEl.textContent = G.guildName ? `${G.guildEmoji||'🤝'} ${G.guildName}` : 'Sin clan — crea o únete';
   updateSoundBtn();
 }
 function closeSecondaryPanel() {
@@ -6839,16 +6940,294 @@ window.buyGemItem = function(id) {
   };
 })();
 
-// ═══════════════════════════════════════════════════════════════════
-// STATE MIGRATION for new fields
-// ═══════════════════════════════════════════════════════════════════
-if (!G.seasonXP)      G.seasonXP = 0;
-if (!G.seasonClaimed) G.seasonClaimed = {};
-if (!G.storyClaimed)  G.storyClaimed = {};
-if (!G.pwaInstalled)  G.pwaInstalled = false;
-if (!G.shieldActive)  G.shieldActive = false;
 
-// Render missions on first load
-setTimeout(renderStoryMissions, 200);
+// ═══════════════════════════════════════════════════════════════════
+// GUILD / CLAN SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+
+const GUILD_EMOJIS = ['🏘️','⚔️','🔥','💎','🦁','👑','🌟','💪','🛡️','🚀','🎯','🌴'];
+
+function openGuildPanel() {
+  renderGuildPanel();
+  document.getElementById('guildOverlay').style.display = 'flex';
+}
+function closeGuildPanel() {
+  document.getElementById('guildOverlay').style.display = 'none';
+}
+
+function renderGuildPanel() {
+  const el = document.getElementById('guildContent');
+  if (!el) return;
+
+  // If player is in a guild
+  if (G.guildName) {
+    const members = JSON.parse(localStorage.getItem('guild_' + G.guildCode) || '[]');
+    const totalEarned = members.reduce((s,m) => s + (m.totalEarned||0), 0);
+    const sortedMembers = [...members].sort((a,b) => (b.totalEarned||0) - (a.totalEarned||0));
+
+    el.innerHTML = `
+      <div style="background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,215,0,0.05));border:2px solid rgba(255,215,0,0.3);border-radius:16px;padding:16px;margin-bottom:14px;text-align:center;">
+        <div style="font-size:2.8rem;margin-bottom:4px;">${G.guildEmoji||'🤝'}</div>
+        <div style="font-family:'Boogaloo',cursive;font-size:1.3rem;color:#FFD700;">${G.guildName}</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);font-weight:900;margin:4px 0;">Código: <span style="color:#FFD700;letter-spacing:3px;">${G.guildCode}</span></div>
+        <div style="font-size:0.75rem;color:#2DC653;font-weight:900;">${members.length} miembro${members.length!==1?'s':''} · Total: ${fmt(totalEarned)}</div>
+        <button onclick="copyGuildCode()" style="margin-top:8px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.4);border-radius:99px;color:#FFD700;font-family:'Fredoka One',cursive;font-size:0.75rem;padding:5px 14px;cursor:pointer;">📋 Invitar amigos</button>
+      </div>
+
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">🏆 Ranking del Clan</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+        ${sortedMembers.slice(0,10).map((m,i) => {
+          const isMe = m.username === (G.companyName||'Jugador');
+          const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:${isMe?'rgba(255,215,0,0.1)':'rgba(255,255,255,0.04)'};border:1px solid ${isMe?'rgba(255,215,0,0.3)':'rgba(255,255,255,0.06)'};">
+            <span style="font-size:1rem;width:24px;text-align:center;">${medal}</span>
+            <span style="font-size:1.2rem;">${m.avatar||'😎'}</span>
+            <div style="flex:1;">
+              <div style="font-family:'Fredoka One',cursive;font-size:0.82rem;color:${isMe?'#FFD700':'white'};">${m.username||'Jugador'}</div>
+              <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);font-weight:900;">Nv.${(m.level||0)+1}</div>
+            </div>
+            <div style="font-family:'Fredoka One',cursive;font-size:0.82rem;color:#2DC653;">${fmt(m.totalEarned||0)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button onclick="syncGuildData()" style="flex:1;background:rgba(45,198,83,0.15);border:2px solid rgba(45,198,83,0.4);border-radius:12px;color:#2DC653;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px;cursor:pointer;">🔄 Actualizar</button>
+        <button onclick="leaveGuild()" style="background:rgba(255,71,87,0.1);border:2px solid rgba(255,71,87,0.3);border-radius:12px;color:rgba(255,71,87,0.7);font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px 14px;cursor:pointer;">Salir</button>
+      </div>`;
+    return;
+  }
+
+  // No guild yet — show create/join
+  el.innerHTML = `
+    <div style="text-align:center;padding:10px 0 18px;">
+      <div style="font-size:3rem;margin-bottom:8px;">🤝</div>
+      <div style="font-family:'Fredoka One',cursive;color:rgba(255,255,255,0.6);font-size:0.9rem;margin-bottom:4px;">Únete a un clan con tus amigos</div>
+      <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);font-weight:900;">Compitan en ranking grupal y compartan el dominio del barrio</div>
+    </div>
+
+    <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">🔥 Crear un Clan Nuevo</div>
+    <div style="background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:14px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;" id="guildEmojiPicker">
+        ${GUILD_EMOJIS.map(e => `<button onclick="selectGuildEmoji('${e}')" id="ge_${e}" style="font-size:1.4rem;width:38px;height:38px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;transition:all 0.15s;">${e}</button>`).join('')}
+      </div>
+      <input id="guildNameInput" maxlength="24" placeholder="Nombre del clan (ej: Los Campeones)" style="width:100%;background:rgba(255,255,255,0.07);border:2px solid rgba(255,255,255,0.12);border-radius:10px;color:white;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px 12px;box-sizing:border-box;outline:none;margin-bottom:8px;" />
+      <button onclick="createGuild()" style="width:100%;background:linear-gradient(135deg,#FFD700,#FFA500);border:2px solid #1E1B2E;border-radius:12px;color:#1E1B2E;font-family:'Fredoka One',cursive;font-size:0.95rem;padding:10px;cursor:pointer;">⚔️ Crear Clan</button>
+    </div>
+
+    <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">🔗 Unirse con Código</div>
+    <div style="background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
+      <input id="guildJoinInput" maxlength="8" placeholder="Código del clan (ej: LEON1234)" style="width:100%;background:rgba(255,255,255,0.07);border:2px solid rgba(255,255,255,0.12);border-radius:10px;color:white;font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 12px;box-sizing:border-box;outline:none;letter-spacing:3px;margin-bottom:8px;text-transform:uppercase;" />
+      <button onclick="joinGuild()" style="width:100%;background:rgba(45,198,83,0.2);border:2px solid #2DC653;border-radius:12px;color:#2DC653;font-family:'Fredoka One',cursive;font-size:0.95rem;padding:10px;cursor:pointer;">🚀 Unirse al Clan</button>
+    </div>`;
+}
+
+let _selectedGuildEmoji = '🏘️';
+function selectGuildEmoji(e) {
+  _selectedGuildEmoji = e;
+  document.querySelectorAll('[id^="ge_"]').forEach(b => {
+    b.style.borderColor = b.id === 'ge_' + e ? '#FFD700' : 'rgba(255,255,255,0.1)';
+    b.style.background  = b.id === 'ge_' + e ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.04)';
+  });
+}
+
+function createGuild() {
+  const name = document.getElementById('guildNameInput')?.value?.trim();
+  if (!name || name.length < 2) { notify('⚠️ Escribe un nombre para el clan'); return; }
+  const code = (_selectedGuildEmoji.codePointAt(0) % 900 + 100).toString() + name.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);
+  G.guildName  = name;
+  G.guildCode  = code;
+  G.guildEmoji = _selectedGuildEmoji;
+  syncGuildData();
+  saveGame();
+  notify(`⚔️ ¡Clan "${name}" creado! Código: ${code}`);
+  renderGuildPanel();
+  const secEl = document.getElementById('secGuildName');
+  if (secEl) secEl.textContent = `${_selectedGuildEmoji} ${name}`;
+}
+
+function joinGuild() {
+  const code = document.getElementById('guildJoinInput')?.value?.trim().toUpperCase();
+  if (!code || code.length < 4) { notify('⚠️ Ingresa el código del clan'); return; }
+  const existing = JSON.parse(localStorage.getItem('guild_' + code) || '[]');
+  if (existing.length === 0) { notify('❌ Código inválido o clan vacío'); return; }
+  const first = existing[0];
+  G.guildCode  = code;
+  G.guildName  = first.guildName || 'Clan';
+  G.guildEmoji = first.guildEmoji || '🤝';
+  syncGuildData();
+  saveGame();
+  notify(`🎉 ¡Te uniste al clan "${G.guildName}"!`);
+  renderGuildPanel();
+}
+
+function syncGuildData() {
+  if (!G.guildCode) return;
+  const key = 'guild_' + G.guildCode;
+  const members = JSON.parse(localStorage.getItem(key) || '[]');
+  const myData = {
+    username:    G.companyName || 'Jugador',
+    avatar:      G.avatar || '😎',
+    totalEarned: G.totalEarned || 0,
+    level:       G.level || 0,
+    guildName:   G.guildName,
+    guildEmoji:  G.guildEmoji,
+    lastSeen:    Date.now(),
+  };
+  const idx = members.findIndex(m => m.username === myData.username);
+  if (idx >= 0) members[idx] = myData;
+  else members.push(myData);
+  // Keep last 20 members, prune old ones (>7 days)
+  const cutoff = Date.now() - 7 * 24 * 3600000;
+  const updated = members.filter(m => m.lastSeen > cutoff).slice(0, 20);
+  localStorage.setItem(key, JSON.stringify(updated));
+}
+
+function leaveGuild() {
+  if (!confirm('¿Seguro que quieres salir del clan?')) return;
+  G.guildName = null;
+  G.guildCode = null;
+  G.guildEmoji = null;
+  saveGame();
+  renderGuildPanel();
+  notify('👋 Saliste del clan');
+}
+
+function copyGuildCode() {
+  const code = G.guildCode || '';
+  const emoji = G.guildEmoji || '🤝';
+  const name = G.guildName || 'mi clan';
+  const txt = `${emoji} ¡Únete a mi clan "${name}" en Imperio del Barrio! Código: ${code} #ImperioDelBarrio`;
+  if (navigator.share) {
+    navigator.share({ title: 'Imperio del Barrio', text: txt }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(txt).catch(() => {});
+    notify('📋 ¡Código copiado!');
+  }
+}
+
+// Sync guild data on game saves
+const _origSaveForGuild = window.saveGame;
+if (_origSaveForGuild) {
+  window.saveGame = function() {
+    _origSaveForGuild();
+    if (G.guildCode) syncGuildData();
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// IMPROVED TUTORIAL SYSTEM (replaces old tooltip style)
+// ═══════════════════════════════════════════════════════════════════
+
+const TUTORIAL_V2 = [
+  {
+    emoji: '👋',
+    title: '¡Bienvenido al Imperio!',
+    msg: 'Eres el nuevo dueño del barrio. Empieza abriendo tu primera barbería con los $500 que tienes. ¡Toca el botón 🔓 Abrir!',
+  },
+  {
+    emoji: '💈',
+    title: 'Tu primer negocio',
+    msg: 'La barbería produce dinero automáticamente cada pocos segundos. Mejórala con ⬆️ Mejorar para ganar más por ciclo.',
+  },
+  {
+    emoji: '💎',
+    title: 'Las Gemas',
+    msg: 'Las gemas 💎 son la moneda premium. Gánalas gratis completando logros, objetivos diarios, jugando mini-juegos y compartiendo el juego. ¡Toca ✨ Ganar!',
+  },
+  {
+    emoji: '🎮',
+    title: 'Mini-juegos de Negociación',
+    msg: 'Cada negocio tiene un botón 🎮 Jugar. Úsalo para acceder a 5 mini-juegos distintos que te dan dinero bonus según tu puntuación.',
+  },
+  {
+    emoji: '⬆️',
+    title: 'Sube de Nivel',
+    msg: 'Cada vez que gastas dinero en negocios y mejoras, ganas XP. Subir de nivel desbloquea nuevos negocios y zonas del mapa.',
+  },
+  {
+    emoji: '🗺️',
+    title: 'Zonas de la Ciudad',
+    msg: 'Hay 6 zonas con diferentes multiplicadores. La Zona Premium da 6.5x ingresos. Ve al tab 🗺️ Ciudad para explorar.',
+  },
+  {
+    emoji: '🤝',
+    title: 'Clanes',
+    msg: '¡Crea o únete a un clan con amigos! Compitan en el ranking grupal. Ve a ⚙️ Más → Mi Clan para empezar.',
+  },
+];
+
+let _tutV2Step = 0;
+let _tutV2Active = false;
+
+function startTutorialV2() {
+  if (G.tutorialV2Done || _tutV2Active) return;
+  _tutV2Active = true;
+  _tutV2Step = 0;
+  showTutorialV2Step();
+}
+
+function showTutorialV2Step() {
+  const overlay = document.getElementById('tutorialOverlay');
+  if (!overlay) return;
+  if (_tutV2Step >= TUTORIAL_V2.length) {
+    endTutorialV2(); return;
+  }
+  const step = TUTORIAL_V2[_tutV2Step];
+  overlay.style.display = 'block';
+  document.getElementById('tutEmoji').textContent = step.emoji;
+  document.getElementById('tutTitle').textContent = step.title;
+  document.getElementById('tutMsg').textContent = step.msg;
+  document.getElementById('tutStep').textContent = `Paso ${_tutV2Step+1} de ${TUTORIAL_V2.length}`;
+
+  // Dots
+  document.getElementById('tutDots').innerHTML = TUTORIAL_V2.map((_,i) =>
+    `<div style="width:6px;height:6px;border-radius:99px;background:${i===_tutV2Step?'#FFE135':'rgba(255,255,255,0.2)'}"></div>`
+  ).join('');
+
+  // Last step: change button text
+  const nextBtn = document.getElementById('tutNext');
+  if (nextBtn) nextBtn.textContent = _tutV2Step === TUTORIAL_V2.length - 1 ? '¡Listo! 🎉' : 'Siguiente →';
+
+  // Reward gems on start
+  if (_tutV2Step === 0) { addGems(5); notify('🎁 +5 💎 de bienvenida!'); }
+}
+
+function nextTutorialStep() {
+  _tutV2Step++;
+  if (_tutV2Step >= TUTORIAL_V2.length) { endTutorialV2(); return; }
+  showTutorialV2Step();
+}
+
+function skipTutorial() {
+  endTutorialV2();
+}
+
+function endTutorialV2() {
+  _tutV2Active = false;
+  G.tutorialV2Done = true;
+  saveGame();
+  const overlay = document.getElementById('tutorialOverlay');
+  if (overlay) overlay.style.display = 'none';
+  notify('🎓 Tutorial completo. ¡Construye tu Imperio!');
+}
+
+// ── State migration + auto-start ────────────────────────────────────
+if (!G.guildName)      G.guildName  = null;
+if (!G.guildCode)      G.guildCode  = null;
+if (!G.guildEmoji)     G.guildEmoji = null;
+if (!G.tutorialV2Done) G.tutorialV2Done = false;
+
+// Start tutorial for new players (delay so game loads first)
+setTimeout(() => {
+  if (!G.tutorialV2Done && (G.totalEarned || 0) < 1000) {
+    startTutorialV2();
+  }
+}, 2500);
+
+// Sync guild every 2 minutes while playing
+setInterval(() => { if (G.guildCode) syncGuildData(); }, 120000);
+
+
 
 </script>
