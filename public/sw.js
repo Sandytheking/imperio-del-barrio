@@ -23,6 +23,8 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
+  // Only cache http/https — ignore chrome-extension:// and others
+  if (!e.request.url.startsWith('http')) return;
   e.respondWith(
     fetch(e.request).then(function(res) {
       var clone = res.clone();
