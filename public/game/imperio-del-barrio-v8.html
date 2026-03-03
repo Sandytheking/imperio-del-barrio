@@ -2779,14 +2779,42 @@ body.night-mode .night-stars { opacity: 0.35; }
 // DATA
 // ═══════════════════════════════════════════════
 const LEVELS = [
-  { name: 'Principiante', xp: 1000 },
-  { name: 'Emprendedor', xp: 3000 },
-  { name: 'Comerciante', xp: 8000 },
-  { name: 'Empresario', xp: 20000 },
-  { name: 'Magnate', xp: 50000 },
-  { name: 'Tycoon', xp: 150000 },
-  { name: 'Leyenda', xp: 500000 },
-  { name: 'Barrio Boss', xp: 2000000 },
+  // ── Early game ───────────────────────────────────────────────────
+  { name: 'Principiante',      xp: 1000      },  // Lv 1
+  { name: 'Emprendedor',       xp: 2500      },  // Lv 2
+  { name: 'Comerciante',       xp: 6000      },  // Lv 3
+  { name: 'Tendero',           xp: 12000     },  // Lv 4
+  { name: 'Empresario',        xp: 25000     },  // Lv 5
+  // ── Mid game ─────────────────────────────────────────────────────
+  { name: 'Emprendedor Pro',   xp: 50000     },  // Lv 6
+  { name: 'Inversionista',     xp: 100000    },  // Lv 7
+  { name: 'Magnate Junior',    xp: 200000    },  // Lv 8
+  { name: 'Magnate',           xp: 400000    },  // Lv 9
+  { name: 'Ejecutivo',         xp: 700000    },  // Lv 10
+  // ── Late game ────────────────────────────────────────────────────
+  { name: 'Director',          xp: 1200000   },  // Lv 11
+  { name: 'CEO',               xp: 2000000   },  // Lv 12
+  { name: 'Tycoon',            xp: 3500000   },  // Lv 13
+  { name: 'Tycoon Elite',      xp: 6000000   },  // Lv 14
+  { name: 'Oligarca',          xp: 10000000  },  // Lv 15
+  // ── Endgame ──────────────────────────────────────────────────────
+  { name: 'Plutócrata',        xp: 18000000  },  // Lv 16
+  { name: 'Mogul',             xp: 30000000  },  // Lv 17
+  { name: 'Visionario',        xp: 50000000  },  // Lv 18
+  { name: 'Titán',             xp: 80000000  },  // Lv 19
+  { name: 'Leyenda',           xp: 130000000 },  // Lv 20
+  // ── Prestigio ────────────────────────────────────────────────────
+  { name: 'Leyenda del Sur',   xp: 200000000 },  // Lv 21
+  { name: 'Leyenda del Norte', xp: 320000000 },  // Lv 22
+  { name: 'Leyenda Nacional',  xp: 500000000 },  // Lv 23
+  { name: 'Ícono del Caribe',  xp: 800000000 },  // Lv 24
+  { name: 'Barrio Boss',       xp: 1200000000},  // Lv 25
+  // ── Legendario ───────────────────────────────────────────────────
+  { name: 'Barrio Boss II',    xp: 2000000000},  // Lv 26
+  { name: 'Barrio Boss III',   xp: 3500000000},  // Lv 27
+  { name: 'El Fundador',       xp: 6000000000},  // Lv 28
+  { name: 'El Patriarca',      xp:10000000000},  // Lv 29
+  { name: 'Rey del Barrio 👑', xp: Infinity  },  // Lv 30 — techo final
 ];
 
 const BUSINESSES = [
@@ -2920,12 +2948,34 @@ const BIZ_ANIMATIONS = {
 const LEVEL_STORIES = [
   '🏘️ Comenzaste con una barbería y $500. El barrio te observa...',
   '💡 La gente habla de ti. Tu local tiene vida. ¡Sigue creciendo!',
-  '📰 El periódico del barrio escribió sobre tu colmado. ¡Eres noticia!',
+  '📰 El periódico del barrio escribió sobre ti. ¡Eres noticia!',
   '🤝 Empresarios de otras zonas quieren hacer negocios contigo.',
-  '🏆 Tu nombre resuena en toda la ciudad. El barrio te pertenece.',
-  '💎 Zonas premium abren sus puertas para ti. La élite te llama.',
-  '🌎 Tu imperio trasciende el barrio. Eres leyenda en la región.',
-  '👑 ¡Barrio Boss! Nadie en la historia del barrio llegó tan lejos.',
+  '🏆 Tu nombre resuena en la ciudad. Cinco negocios en pie.',
+  '💎 Las zonas premium te abren la puerta. La élite te llama.',
+  '🌎 Tu Imperio trasciende el barrio. Eres leyenda en la región.',
+  '👑 Lv 8: Tu primer Ascenso Social está al alcance.',
+  '🚀 Lv 9: Los inversionistas te buscan. El banco pronto es tuyo.',
+  '🏦 Lv 10: CEO del barrio. El Banco del Barrio te espera.',
+  '📊 Lv 11: Director de tu propio imperio corporativo.',
+  '🏢 Lv 12: La Plaza Comercial está en tus planes.',
+  '💼 Lv 13: Tycoon — tu nombre cotiza en la bolsa del barrio.',
+  '🛩️ Lv 14: Tycoon Elite — el Jet Privado ya no es un sueño.',
+  '💰 Lv 15: Oligarca — el Banco Central Imperio te espera.',
+  '🌍 Lv 16: Plutócrata — tu riqueza ya se mide en billones.',
+  '🏛️ Lv 17: Mogul — los gobiernos te consultan.',
+  '🔭 Lv 18: Visionario — tu visión remodela el barrio entero.',
+  '⚡ Lv 19: Titán — nada en este barrio es inalcanzable.',
+  '🌟 Lv 20: ¡Leyenda! El Ascenso a Corporación Global se acerca.',
+  '🏅 Lv 21: Leyenda del Sur — mitad del camino al pináculo.',
+  '🌐 Lv 22: Leyenda del Norte — tu influencia no tiene fronteras.',
+  '🇩🇴 Lv 23: Leyenda Nacional — toda la República te conoce.',
+  '🌴 Lv 24: Ícono del Caribe — tu legado trasciende fronteras.',
+  '👑 Lv 25: Barrio Boss — el título máximo del barrio es tuyo.',
+  '💫 Lv 26: Barrio Boss II — los récords ya no existen para ti.',
+  '🔥 Lv 27: Barrio Boss III — tu legado es eterno.',
+  '🏗️ Lv 28: El Fundador — construiste algo que durará generaciones.',
+  '🫅 Lv 29: El Patriarca — el barrio lleva tu apellido.',
+  '🌈 Lv 30: REY DEL BARRIO. La historia del Imperio está completa.',
 ];
 
 // ═══════════════════════════════════════════════
@@ -3106,17 +3156,30 @@ function totalClientes() {
   return BUSINESSES.reduce((s, b) => s + bizLevel(b.id) * 12, 0);
 }
 
-function xpRequired(lvl) { return LEVELS[Math.min(lvl, LEVELS.length-1)].xp; }
+function xpRequired(lvl) {
+  const entry = LEVELS[Math.min(lvl, LEVELS.length - 1)];
+  return entry ? entry.xp : Infinity;
+}
 
 function addXP(amount) {
-  G.xp += amount;
+  // Apply XP boost if active
+  const xpMult = (G.xpBoostEnd && Date.now() < G.xpBoostEnd) ? 2 : 1;
+  G.xp += amount * xpMult;
+
   while (G.level < LEVELS.length - 1 && G.xp >= xpRequired(G.level)) {
-    G.xp -= xpRequired(G.level);
+    const needed = xpRequired(G.level);
+    if (needed === Infinity) break;          // Lv30 — already at cap
+    G.xp -= needed;
     G.level++;
-    // 💎 Gemas por subir de nivel
-    const gemBonus = G.level >= 20 ? 5 : G.level >= 10 ? 3 : G.level >= 5 ? 2 : 1;
+    // 💎 Gemas por subir de nivel — escala con el nivel
+    const gemBonus = G.level >= 25 ? 10
+                   : G.level >= 20 ? 7
+                   : G.level >= 15 ? 5
+                   : G.level >= 10 ? 3
+                   : G.level >= 5  ? 2 : 1;
     addGems(gemBonus);
-    notify(`🎉 ¡Nivel ${G.level+1}! +${gemBonus} 💎`);
+    addSeasonXP?.(20);
+    notify(`🎉 ¡Nivel ${G.level + 1} — ${LEVELS[G.level]?.name || ''}! +${gemBonus} 💎`);
     navigator.vibrate?.([100, 50, 100]);
     checkStoryBanner();
     playSound('levelup');
@@ -6351,21 +6414,34 @@ updateDayNight();
 // XP CIRCLE
 // ═══════════════════════════════════════════════
 function updateXPCircle() {
+  const isMaxLevel = G.level >= LEVELS.length - 1;
   const req = xpRequired(G.level);
-  const pct = Math.min(G.xp / req, 1);
-  // Legacy circle (hidden)
+  const pct = isMaxLevel ? 1 : Math.min(G.xp / req, 1);
+
+  // Legacy circle
   const circumference = 2 * Math.PI * 17;
   const offset = circumference * (1 - pct);
   const circle = document.getElementById('xpCircle');
   const lbl = document.getElementById('xpCircleLbl');
   if (circle) circle.style.strokeDashoffset = offset;
   if (lbl) lbl.textContent = `${G.level + 1}`;
-  // New slim bar
+
+  // Slim XP bar
   const fill = document.getElementById('hdrXpFill');
   if (fill) fill.style.width = (pct * 100) + '%';
-  // Level chip
+
+  // Level chip — show name at higher levels, MAX at cap
   const chip = document.getElementById('hdrLevelChip');
-  if (chip) chip.textContent = `⭐ Nv.${G.level + 1}`;
+  if (chip) {
+    const lvName = LEVELS[G.level]?.name || '';
+    if (isMaxLevel) {
+      chip.textContent = `👑 Rey del Barrio`;
+      chip.style.background = 'linear-gradient(135deg,#FFD700,#FF8C00)';
+    } else {
+      chip.textContent = `⭐ Nv.${G.level + 1} ${G.level >= 8 ? '· ' + lvName : ''}`;
+      chip.style.background = '';
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -6942,11 +7018,30 @@ window.buyGemItem = function(id) {
 
 
 // ═══════════════════════════════════════════════════════════════════
-// GUILD / CLAN SYSTEM
+// GUILD / CLAN SYSTEM — respaldado por Supabase
+// El juego corre en un iframe, así que usamos postMessage para
+// pedirle al parent React que ejecute las llamadas a Supabase.
 // ═══════════════════════════════════════════════════════════════════
 
 const GUILD_EMOJIS = ['🏘️','⚔️','🔥','💎','🦁','👑','🌟','💪','🛡️','🚀','🎯','🌴'];
 
+// ── postMessage helpers ───────────────────────────────────────────
+function _guildRequest(action, payload) {
+  return new Promise((resolve) => {
+    const id = 'guild_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const handler = (e) => {
+      if (!e.data || e.data.type !== 'GUILD_RESPONSE' || e.data.id !== id) return;
+      window.removeEventListener('message', handler);
+      resolve(e.data.result);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: 'GUILD_REQUEST', id, action, payload }, '*');
+    // Timeout fallback — 5s
+    setTimeout(() => { window.removeEventListener('message', handler); resolve(null); }, 5000);
+  });
+}
+
+// ── Panel ─────────────────────────────────────────────────────────
 function openGuildPanel() {
   renderGuildPanel();
   document.getElementById('guildOverlay').style.display = 'flex';
@@ -6955,28 +7050,29 @@ function closeGuildPanel() {
   document.getElementById('guildOverlay').style.display = 'none';
 }
 
-function renderGuildPanel() {
+async function renderGuildPanel() {
   const el = document.getElementById('guildContent');
   if (!el) return;
+  el.innerHTML = `<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.4);font-family:'Fredoka One',cursive;">Cargando...</div>`;
 
-  // If player is in a guild
-  if (G.guildName) {
-    const members = JSON.parse(localStorage.getItem('guild_' + G.guildCode) || '[]');
-    const totalEarned = members.reduce((s,m) => s + (m.totalEarned||0), 0);
-    const sortedMembers = [...members].sort((a,b) => (b.totalEarned||0) - (a.totalEarned||0));
+  if (G.guildCode) {
+    // Fetch members from Supabase
+    const data = await _guildRequest('getMembers', { code: G.guildCode });
+    const members = (data?.members || []);
+    const guild   = data?.guild || { name: G.guildName, emoji: G.guildEmoji, total_earned: 0 };
 
     el.innerHTML = `
       <div style="background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,215,0,0.05));border:2px solid rgba(255,215,0,0.3);border-radius:16px;padding:16px;margin-bottom:14px;text-align:center;">
-        <div style="font-size:2.8rem;margin-bottom:4px;">${G.guildEmoji||'🤝'}</div>
-        <div style="font-family:'Boogaloo',cursive;font-size:1.3rem;color:#FFD700;">${G.guildName}</div>
+        <div style="font-size:2.8rem;margin-bottom:4px;">${guild.emoji||G.guildEmoji||'🤝'}</div>
+        <div style="font-family:'Boogaloo',cursive;font-size:1.3rem;color:#FFD700;">${guild.name||G.guildName}</div>
         <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);font-weight:900;margin:4px 0;">Código: <span style="color:#FFD700;letter-spacing:3px;">${G.guildCode}</span></div>
-        <div style="font-size:0.75rem;color:#2DC653;font-weight:900;">${members.length} miembro${members.length!==1?'s':''} · Total: ${fmt(totalEarned)}</div>
+        <div style="font-size:0.75rem;color:#2DC653;font-weight:900;">${members.length} miembro${members.length!==1?'s':''} · Total: ${fmt(guild.total_earned||0)}</div>
         <button onclick="copyGuildCode()" style="margin-top:8px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.4);border-radius:99px;color:#FFD700;font-family:'Fredoka One',cursive;font-size:0.75rem;padding:5px 14px;cursor:pointer;">📋 Invitar amigos</button>
       </div>
 
       <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">🏆 Ranking del Clan</div>
       <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
-        ${sortedMembers.slice(0,10).map((m,i) => {
+        ${members.map((m, i) => {
           const isMe = m.username === (G.companyName||'Jugador');
           const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
           return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:${isMe?'rgba(255,215,0,0.1)':'rgba(255,255,255,0.04)'};border:1px solid ${isMe?'rgba(255,215,0,0.3)':'rgba(255,255,255,0.06)'};">
@@ -6984,41 +7080,41 @@ function renderGuildPanel() {
             <span style="font-size:1.2rem;">${m.avatar||'😎'}</span>
             <div style="flex:1;">
               <div style="font-family:'Fredoka One',cursive;font-size:0.82rem;color:${isMe?'#FFD700':'white'};">${m.username||'Jugador'}</div>
-              <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);font-weight:900;">Nv.${(m.level||0)+1}</div>
+              <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);font-weight:900;">Nv.${(m.level||0)+1} · ${(m.social_stage||0) > 0 ? ['🏠','🏡','🏖️','🏙️','🛩️','🌎'][(m.social_stage||1)-1] : '🏘️'}</div>
             </div>
-            <div style="font-family:'Fredoka One',cursive;font-size:0.82rem;color:#2DC653;">${fmt(m.totalEarned||0)}</div>
+            <div style="font-family:'Fredoka One',cursive;font-size:0.82rem;color:#2DC653;">${fmt(m.total_earned||0)}</div>
           </div>`;
-        }).join('')}
+        }).join('') || '<div style="text-align:center;color:rgba(255,255,255,0.3);font-size:0.8rem;padding:16px;">Sin miembros aún</div>'}
       </div>
 
       <div style="display:flex;gap:8px;">
-        <button onclick="syncGuildData()" style="flex:1;background:rgba(45,198,83,0.15);border:2px solid rgba(45,198,83,0.4);border-radius:12px;color:#2DC653;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px;cursor:pointer;">🔄 Actualizar</button>
-        <button onclick="leaveGuild()" style="background:rgba(255,71,87,0.1);border:2px solid rgba(255,71,87,0.3);border-radius:12px;color:rgba(255,71,87,0.7);font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px 14px;cursor:pointer;">Salir</button>
+        <button onclick="renderGuildPanel()" style="flex:1;background:rgba(45,198,83,0.15);border:2px solid rgba(45,198,83,0.4);border-radius:12px;color:#2DC653;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px;cursor:pointer;">🔄 Actualizar</button>
+        <button onclick="leaveGuildAction()" style="background:rgba(255,71,87,0.1);border:2px solid rgba(255,71,87,0.3);border-radius:12px;color:rgba(255,71,87,0.7);font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px 14px;cursor:pointer;">Salir</button>
       </div>`;
     return;
   }
 
-  // No guild yet — show create/join
+  // No guild — show create/join UI
   el.innerHTML = `
     <div style="text-align:center;padding:10px 0 18px;">
       <div style="font-size:3rem;margin-bottom:8px;">🤝</div>
       <div style="font-family:'Fredoka One',cursive;color:rgba(255,255,255,0.6);font-size:0.9rem;margin-bottom:4px;">Únete a un clan con tus amigos</div>
-      <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);font-weight:900;">Compitan en ranking grupal y compartan el dominio del barrio</div>
+      <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);font-weight:900;">Compitan en ranking grupal y dominen el barrio juntos</div>
     </div>
 
     <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">🔥 Crear un Clan Nuevo</div>
     <div style="background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:14px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;" id="guildEmojiPicker">
-        ${GUILD_EMOJIS.map(e => `<button onclick="selectGuildEmoji('${e}')" id="ge_${e}" style="font-size:1.4rem;width:38px;height:38px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;transition:all 0.15s;">${e}</button>`).join('')}
+        ${GUILD_EMOJIS.map(e => `<button onclick="selectGuildEmoji('${e}')" id="ge_${e}" style="font-size:1.4rem;width:38px;height:38px;border-radius:10px;border:2px solid ${e==='🏘️'?'#FFD700':'rgba(255,255,255,0.1)'};background:${e==='🏘️'?'rgba(255,215,0,0.2)':'rgba(255,255,255,0.04)'};cursor:pointer;">${e}</button>`).join('')}
       </div>
       <input id="guildNameInput" maxlength="24" placeholder="Nombre del clan (ej: Los Campeones)" style="width:100%;background:rgba(255,255,255,0.07);border:2px solid rgba(255,255,255,0.12);border-radius:10px;color:white;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px 12px;box-sizing:border-box;outline:none;margin-bottom:8px;" />
-      <button onclick="createGuild()" style="width:100%;background:linear-gradient(135deg,#FFD700,#FFA500);border:2px solid #1E1B2E;border-radius:12px;color:#1E1B2E;font-family:'Fredoka One',cursive;font-size:0.95rem;padding:10px;cursor:pointer;">⚔️ Crear Clan</button>
+      <button onclick="createGuildAction()" style="width:100%;background:linear-gradient(135deg,#FFD700,#FFA500);border:2px solid #1E1B2E;border-radius:12px;color:#1E1B2E;font-family:'Fredoka One',cursive;font-size:0.95rem;padding:10px;cursor:pointer;">⚔️ Crear Clan</button>
     </div>
 
     <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">🔗 Unirse con Código</div>
     <div style="background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
-      <input id="guildJoinInput" maxlength="8" placeholder="Código del clan (ej: LEON1234)" style="width:100%;background:rgba(255,255,255,0.07);border:2px solid rgba(255,255,255,0.12);border-radius:10px;color:white;font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 12px;box-sizing:border-box;outline:none;letter-spacing:3px;margin-bottom:8px;text-transform:uppercase;" />
-      <button onclick="joinGuild()" style="width:100%;background:rgba(45,198,83,0.2);border:2px solid #2DC653;border-radius:12px;color:#2DC653;font-family:'Fredoka One',cursive;font-size:0.95rem;padding:10px;cursor:pointer;">🚀 Unirse al Clan</button>
+      <input id="guildJoinInput" maxlength="10" placeholder="Código del clan" style="width:100%;background:rgba(255,255,255,0.07);border:2px solid rgba(255,255,255,0.12);border-radius:10px;color:white;font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 12px;box-sizing:border-box;outline:none;letter-spacing:3px;margin-bottom:8px;text-transform:uppercase;" />
+      <button onclick="joinGuildAction()" style="width:100%;background:rgba(45,198,83,0.2);border:2px solid #2DC653;border-radius:12px;color:#2DC653;font-family:'Fredoka One',cursive;font-size:0.95rem;padding:10px;cursor:pointer;">🚀 Unirse al Clan</button>
     </div>`;
 }
 
@@ -7031,14 +7127,16 @@ function selectGuildEmoji(e) {
   });
 }
 
-function createGuild() {
+async function createGuildAction() {
   const name = document.getElementById('guildNameInput')?.value?.trim();
   if (!name || name.length < 2) { notify('⚠️ Escribe un nombre para el clan'); return; }
-  const code = (_selectedGuildEmoji.codePointAt(0) % 900 + 100).toString() + name.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);
+  const code = name.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4) + (Math.floor(Math.random()*9000)+1000);
+  notify('⏳ Creando clan...');
+  const result = await _guildRequest('create', { name, emoji: _selectedGuildEmoji, code, gameState: G });
+  if (result?.error) { notify('❌ ' + result.error); return; }
   G.guildName  = name;
   G.guildCode  = code;
   G.guildEmoji = _selectedGuildEmoji;
-  syncGuildData();
   saveGame();
   notify(`⚔️ ¡Clan "${name}" creado! Código: ${code}`);
   renderGuildPanel();
@@ -7046,58 +7144,37 @@ function createGuild() {
   if (secEl) secEl.textContent = `${_selectedGuildEmoji} ${name}`;
 }
 
-function joinGuild() {
+async function joinGuildAction() {
   const code = document.getElementById('guildJoinInput')?.value?.trim().toUpperCase();
   if (!code || code.length < 4) { notify('⚠️ Ingresa el código del clan'); return; }
-  const existing = JSON.parse(localStorage.getItem('guild_' + code) || '[]');
-  if (existing.length === 0) { notify('❌ Código inválido o clan vacío'); return; }
-  const first = existing[0];
+  notify('⏳ Buscando clan...');
+  const result = await _guildRequest('join', { code, gameState: G });
+  if (!result || result.error) { notify('❌ ' + (result?.error || 'Código inválido')); return; }
   G.guildCode  = code;
-  G.guildName  = first.guildName || 'Clan';
-  G.guildEmoji = first.guildEmoji || '🤝';
-  syncGuildData();
+  G.guildName  = result.guild?.name  || 'Clan';
+  G.guildEmoji = result.guild?.emoji || '🤝';
   saveGame();
-  notify(`🎉 ¡Te uniste al clan "${G.guildName}"!`);
+  notify(`🎉 ¡Te uniste a "${G.guildName}"!`);
   renderGuildPanel();
+  const secEl = document.getElementById('secGuildName');
+  if (secEl) secEl.textContent = `${G.guildEmoji} ${G.guildName}`;
 }
 
-function syncGuildData() {
-  if (!G.guildCode) return;
-  const key = 'guild_' + G.guildCode;
-  const members = JSON.parse(localStorage.getItem(key) || '[]');
-  const myData = {
-    username:    G.companyName || 'Jugador',
-    avatar:      G.avatar || '😎',
-    totalEarned: G.totalEarned || 0,
-    level:       G.level || 0,
-    guildName:   G.guildName,
-    guildEmoji:  G.guildEmoji,
-    lastSeen:    Date.now(),
-  };
-  const idx = members.findIndex(m => m.username === myData.username);
-  if (idx >= 0) members[idx] = myData;
-  else members.push(myData);
-  // Keep last 20 members, prune old ones (>7 days)
-  const cutoff = Date.now() - 7 * 24 * 3600000;
-  const updated = members.filter(m => m.lastSeen > cutoff).slice(0, 20);
-  localStorage.setItem(key, JSON.stringify(updated));
-}
-
-function leaveGuild() {
+async function leaveGuildAction() {
   if (!confirm('¿Seguro que quieres salir del clan?')) return;
+  await _guildRequest('leave', { code: G.guildCode, gameState: G });
   G.guildName = null;
   G.guildCode = null;
   G.guildEmoji = null;
   saveGame();
   renderGuildPanel();
   notify('👋 Saliste del clan');
+  const secEl = document.getElementById('secGuildName');
+  if (secEl) secEl.textContent = 'Sin clan — crea o únete';
 }
 
 function copyGuildCode() {
-  const code = G.guildCode || '';
-  const emoji = G.guildEmoji || '🤝';
-  const name = G.guildName || 'mi clan';
-  const txt = `${emoji} ¡Únete a mi clan "${name}" en Imperio del Barrio! Código: ${code} #ImperioDelBarrio`;
+  const txt = `🤝 ¡Únete a mi clan "${G.guildName}" en Imperio del Barrio! Código: ${G.guildCode} #ImperioDelBarrio`;
   if (navigator.share) {
     navigator.share({ title: 'Imperio del Barrio', text: txt }).catch(() => {});
   } else {
@@ -7106,14 +7183,18 @@ function copyGuildCode() {
   }
 }
 
-// Sync guild data on game saves
+// Sync guild on every game save (non-blocking)
 const _origSaveForGuild = window.saveGame;
-if (_origSaveForGuild) {
+if (_origSaveForGuild && !window._guildHookApplied) {
+  window._guildHookApplied = true;
   window.saveGame = function() {
     _origSaveForGuild();
-    if (G.guildCode) syncGuildData();
+    if (G.guildCode) {
+      _guildRequest('sync', { code: G.guildCode, gameState: G }).catch(() => {});
+    }
   };
 }
+
 
 // ═══════════════════════════════════════════════════════════════════
 // IMPROVED TUTORIAL SYSTEM (replaces old tooltip style)
