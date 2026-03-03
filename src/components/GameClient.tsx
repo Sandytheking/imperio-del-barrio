@@ -13,6 +13,8 @@ interface LeaderboardEntry {
   level: number;
   prestige_stars: number;
   zone: string;
+  social_stage: number;
+  influence: number;
 }
 
 interface User {
