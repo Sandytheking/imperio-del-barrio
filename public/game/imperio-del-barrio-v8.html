@@ -1851,17 +1851,24 @@ body.super-empresa .hdr {
 /* Ascend button */
 .btn-ascend {
   width: 100%;
-  background: linear-gradient(135deg, #FFE135, #FFA500);
-  color: var(--ink);
+  background: linear-gradient(135deg, #FFE135, #FF8C00);
+  color: #1E1B2E;
   font-family: 'Fredoka One', cursive;
-  font-size: 1.2rem;
-  padding: 16px;
-  border: var(--outline);
-  border-radius: 16px;
+  font-size: 1.25rem;
+  padding: 18px 16px;
+  border: 3px solid #1E1B2E;
+  border-radius: 18px;
   cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: transform 0.1s;
+  box-shadow: 0 6px 0 #1E1B2E, 0 0 24px rgba(255,165,0,0.55);
+  transition: transform 0.1s, box-shadow 0.1s;
   letter-spacing: 0.5px;
+  margin-top: 20px;
+  display: block;
+  animation: ascendPulse 2s ease-in-out infinite;
+}
+@keyframes ascendPulse {
+  0%,100% { box-shadow: 0 6px 0 #1E1B2E, 0 0 20px rgba(255,165,0,0.4); }
+  50%      { box-shadow: 0 6px 0 #1E1B2E, 0 0 36px rgba(255,165,0,0.85); }
 }
 .btn-ascend:hover { transform: scale(1.02); }
 .btn-ascend:disabled { opacity: 0.45; cursor: not-allowed; transform: none; background: #ccc; }
@@ -2429,7 +2436,7 @@ body.night-mode .night-stars { opacity: 0.35; }
     <div class="stat-pill"><div class="stat-emo">👥</div><div class="stat-val" id="stClientes">0</div><div class="stat-lbl">Clientes</div></div>
     <div class="stat-pill"><div class="stat-emo">🏆</div><div class="stat-val" id="stNivel">1</div><div class="stat-lbl">Nivel</div></div>
     <div class="stat-pill"><div class="stat-emo">🏪</div><div class="stat-val" id="stNegocios">0</div><div class="stat-lbl">Negocios</div></div>
-    <div class="stat-pill"><div class="stat-emo">💎</div><div class="stat-val" id="stPrestige">0</div><div class="stat-lbl">Influencia</div></div>
+    <div class="stat-pill"><div class="stat-emo">⭐</div><div class="stat-val" id="stPrestige">0</div><div class="stat-lbl">Influencia</div></div>
   </div>
 
   <!-- Level -->
@@ -3021,12 +3028,12 @@ const ACHIEVEMENTS = [
 ];
 
 const LEADERBOARD_STATIC = [
-  { name: 'Juan Marte', avatar: '🤵', money: 12400000, negocios: 8 },
-  { name: 'Carmen Familia', avatar: '👩‍💼', money: 8900000, negocios: 7 },
-  { name: 'Roberto Díaz', avatar: '👨‍💼', money: 6700000, negocios: 6 },
-  { name: 'María Almonte', avatar: '👩', money: 3200000, negocios: 5 },
-  { name: 'Pedro Sánchez', avatar: '👨', money: 2100000, negocios: 4 },
-  { name: 'Ana García', avatar: '👩‍🦱', money: 980000, negocios: 3 },
+  { name: 'Juan Marte', avatar: '🤵', money: 12400000, negocios: 8, influence: 0 },
+  { name: 'Carmen Familia', avatar: '👩‍💼', money: 8900000, negocios: 7, influence: 0 },
+  { name: 'Roberto Díaz', avatar: '👨‍💼', money: 6700000, negocios: 6, influence: 0 },
+  { name: 'María Almonte', avatar: '👩', money: 3200000, negocios: 5, influence: 0 },
+  { name: 'Pedro Sánchez', avatar: '👨', money: 2100000, negocios: 4, influence: 0 },
+  { name: 'Ana García', avatar: '👩‍🦱', money: 980000, negocios: 3, influence: 0 },
 ];
 
 // ═══════════════════════════════════════════════
@@ -3367,10 +3374,10 @@ function showAscendModal() {
     <div style="font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--ink)">${next.name}</div>
     <div class="ascend-modal-sub">${next.label} · ${next.bonus}</div>
     <div class="ascend-keep-lose">
-      <div class="akl-box akl-keep"><div class="akl-title">✅ Conservas</div>💎 Influencia<br>🏆 Logros<br>⚡ Bonos permanentes</div>
+      <div class="akl-box akl-keep"><div class="akl-title">✅ Conservas</div>⭐ Influencia<br>🏆 Logros<br>⚡ Bonos permanentes</div>
       <div class="akl-box akl-lose"><div class="akl-title">❌ Se reinicia</div>💰 Dinero<br>🏪 Negocios<br>📈 Nivel XP</div>
     </div>
-    <div style="font-size:0.75rem;font-weight:700;color:#888;margin-bottom:16px">+${next.influenceReward||1} 💎 Influencia al ascender</div>
+    <div style="font-size:0.75rem;font-weight:700;color:#888;margin-bottom:16px">+${next.influenceReward||1} ⭐ Influencia al ascender</div>
     <div class="ascend-confirm-btns">
       <button class="btn-cancel-ascend" onclick="document.getElementById('ascendModalOverlay').remove()">Cancelar</button>
       <button class="btn-confirm-ascend" onclick="doAscend()">🔥 ¡Ascender!</button>
@@ -3407,7 +3414,7 @@ function doAscend() {
 function buyInfluenceUpgrade(id) {
   const u = INFLUENCE_UPGRADES.find(u => u.id === id);
   if (!u || G.influenceUpgrades?.[id]) return;
-  if ((G.influence||0) < u.cost) { notify(`💎 Necesitas ${u.cost} de Influencia`); return; }
+  if ((G.influence||0) < u.cost) { notify(`⭐ Necesitas ${u.cost} de Influencia`); return; }
   G.influence -= u.cost;
   if (!G.influenceUpgrades) G.influenceUpgrades = {};
   G.influenceUpgrades[id] = true;
@@ -4937,16 +4944,31 @@ function trackW(field, amount) {
 }
 
 function renderLeaderboard() {
-  const rows = [...LEADERBOARD_STATIC, { name: 'TÚ', avatar: '😎', money: G.totalEarned, negocios: Object.values(G.businesses).filter(b=>b.level>0).length, isYou: true }];
-  rows.sort((a,b)=>b.money-a.money);
-  document.getElementById('lbBody').innerHTML = rows.map((r,i)=>{
+  // Score = totalInfluence * 1B + totalEarned  → ascenders rank above fresh starts
+  const myScore = (G.totalInfluence||0) * 1e9 + (G.totalEarned||0);
+  const rows = [
+    ...LEADERBOARD_STATIC.map(r => ({
+      ...r,
+      score: (r.influence||0) * 1e9 + (r.money||0),
+    })),
+    {
+      name: 'TÚ', avatar: G.avatar||'😎',
+      money: G.totalEarned, influence: G.totalInfluence||0,
+      score: myScore,
+      negocios: Object.values(G.businesses).filter(b=>b.level>0).length,
+      isYou: true,
+    }
+  ];
+  rows.sort((a,b) => b.score - a.score);
+  document.getElementById('lbBody').innerHTML = rows.map((r,i) => {
     const rankClass = i===0?'r1':i===1?'r2':i===2?'r3':'rN';
+    const inf = r.influence||0;
     return `<div class="lb-row ${r.isYou?'you':''}">
       <div class="lb-rank ${rankClass}">${i+1}</div>
       <div class="lb-avatar">${r.avatar}</div>
       <div class="lb-info">
         <div class="lb-name">${r.isYou ? '👤 '+r.name : r.name}</div>
-        <div class="lb-detail">${r.negocios} negocios</div>
+        <div class="lb-detail">${r.negocios} negocios${inf>0?' · ⭐'+inf+' inf':''}</div>
       </div>
       <div class="lb-money">${fmt(r.money)}</div>
     </div>`;
@@ -4984,8 +5006,8 @@ function renderAll() {
   renderDailyObjectives();
   // Map
   renderMap();
-  // Leaderboard
-  renderLeaderboard();
+  // Leaderboard — only render when mapa tab is visible (avoid flicker on upgrade)
+  if (document.getElementById('tab-mapa')?.classList.contains('active')) renderLeaderboard();
   // Prestige
   renderPrestige();
   // Theme dots
@@ -6647,6 +6669,7 @@ function showTab(name) {
   const navIdx = navOrder.indexOf(name);
   if (navIdx >= 0) document.querySelectorAll('.nav-btn')[navIdx]?.classList.add('active');
   if (name === 'ascenso') renderAscensoTab();
+  if (name === 'mapa') renderLeaderboard();
 }
 
 // ═══════════════════════════════════════════════
@@ -6728,7 +6751,7 @@ function renderPrestige() {
     return `<div class="inf-upgrade ${bought?'bought':''}" onclick="${bought?'':("buyInfluenceUpgrade('"+u.id+"')")}">
       <div class="inf-upgrade-icon">${u.icon}</div>
       <div class="inf-upgrade-info"><div class="inf-upgrade-name">${u.name}</div><div class="inf-upgrade-desc">${u.desc}</div></div>
-      <div class="inf-upgrade-cost">${bought?'✓':('💎'+u.cost)}</div>
+      <div class="inf-upgrade-cost">${bought?'✓':('⭐'+u.cost)}</div>
     </div>`;
   }).join('');
 
@@ -6752,11 +6775,11 @@ function renderPrestige() {
       <div class="jet-fly">✈️</div>
       <div class="scene-emoji">${stage.icon}</div>
       <div class="scene-label">${stage.name}</div>
-      <div class="scene-influence">💎 ${G.influence||0}</div>
+      <div class="scene-influence">⭐ ${G.influence||0}</div>
     </div>
     <div class="influence-panel">
-      <div class="influence-title">💎 Influencia — Mejoras Permanentes</div>
-      <div style="font-size:0.78rem;opacity:0.8;margin-bottom:10px">Tienes <strong>${G.influence||0}</strong> · Total: ${G.totalInfluence||0}</div>
+      <div class="influence-title">⭐ Influencia — Mejoras Permanentes</div>
+      <div style="font-size:0.78rem;opacity:0.8;margin-bottom:10px">⭐ Tienes <strong>${G.influence||0}</strong> · Total acumulado: ${G.totalInfluence||0}</div>
       <div class="influence-upgrades">${infUpgrades}</div>
     </div>
     <div style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--ink);margin-bottom:10px">🏆 Progresión Social</div>
@@ -7020,7 +7043,7 @@ const STORY_MISSIONS = [
   { id:'s3',  icon:'💪', title:'El Barrio Habla',    desc:'Llega a Nivel 3',                              check: g => g.level >= 2, reward:{ money:5000, gems:5  }, story:'Tu nombre empieza a sonar en el vecindario. La gente confía en ti.' },
   { id:'s4',  icon:'🏪', title:'Cinco Negocios',     desc:'Ten 5 negocios activos',                       check: g => Object.values(g.businesses).filter(b=>b.level>0).length >= 5, reward:{ money:15000, gems:8 }, story:'Con 5 negocios en pie, el barrio entero es tu oficina.' },
   { id:'s5',  icon:'🗺️', title:'Nuevos Horizontes',  desc:'Múdate a la Zona Norte o Sur',                check: g => g.zoneHistory?.some(z => z==='norte'||z==='sur'), reward:{ money:25000, gems:10 }, story:'El barrio ya es pequeño. Es hora de expandir el Imperio.' },
-  { id:'s6',  icon:'💎', title:'Primera Influencia', desc:'Haz tu primer Ascenso Social',                check: g => (g.socialStage||0) >= 1, reward:{ money:50000, gems:15 }, story:'Ascendiste. Ahora tienes Influencia: el poder invisible del barrio.' },
+  { id:'s6',  icon:'⭐', title:'Primera Influencia', desc:'Haz tu primer Ascenso Social',                check: g => (g.socialStage||0) >= 1, reward:{ money:50000, gems:15 }, story:'Ascendiste. Ahora tienes Influencia: el poder invisible del barrio.' },
   { id:'s7',  icon:'🏆', title:'El Millonario',      desc:'Acumula $1,000,000 en total',                 check: g => g.totalEarned >= 1000000, reward:{ money:100000, gems:20 }, story:'Un millón de pesos. La gente ya te llama "Don". Tu legado comienza.' },
   { id:'s8',  icon:'🌟', title:'La Zona Premium',    desc:'Llega a la Zona Premium',                     check: g => g.zoneHistory?.includes('premium'), reward:{ money:250000, gems:25 }, story:'La élite de la ciudad te abre las puertas. Ahora eres de los grandes.' },
   { id:'s9',  icon:'🛩️', title:'El Imperio Total',   desc:'Ten todos los negocios abiertos',             check: g => typeof BUSINESSES!=='undefined' && Object.values(g.businesses).filter(b=>b.level>0).length >= BUSINESSES.length, reward:{ money:500000, gems:35 }, story:'Cada rincón del barrio lleva tu nombre. Eres el dueño del territorio.' },
