@@ -3435,9 +3435,46 @@ function showAscendCelebration(stage) {
   }
   const cel = document.createElement('div');
   cel.className = 'ascend-celebration';
-  cel.innerHTML = `<div class="ascend-cel-text">🚀 ¡ASCENDISTE!</div><div style="font-size:5rem;margin:12px 0">${stage.icon}</div><div class="ascend-cel-sub">${stage.name}</div>`;
+  cel.innerHTML = `
+    <div class="ascend-cel-text">🚀 ¡ASCENDISTE!</div>
+    <div style="font-size:5rem;margin:12px 0">${stage.icon}</div>
+    <div class="ascend-cel-sub">${stage.name}</div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="shareAscend('${stage.icon}','${stage.name}')" style="background:linear-gradient(135deg,#25D366,#128C7E);border:3px solid white;border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+        📲 ¡Compartir en WhatsApp!
+      </button>
+      <button onclick="this.closest('.ascend-celebration').remove()" style="background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.4);border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px 16px;cursor:pointer;">
+        Continuar →
+      </button>
+    </div>`;
   document.body.appendChild(cel);
-  setTimeout(() => cel.remove(), 3200);
+  // Don't auto-remove — user closes it
+}
+
+function shareAscend(icon, stageName) {
+  const money   = typeof fmt === 'function' ? fmt(G.totalEarned||0) : '$?';
+  const inf     = G.totalInfluence || 0;
+  const lvl     = (G.level||0) + 1;
+  const company = G.companyName || 'mi empresa';
+  const text = [
+    `${icon} ¡Ascendí a ${stageName} en Imperio del Barrio! 🏘️`,
+    ``,
+    `📊 Mis estadísticas:`,
+    `💰 Total ganado: ${money}`,
+    `⭐ Influencia: ${inf}`,
+    `📈 Nivel: ${lvl}`,
+    `🏢 Empresa: ${company}`,
+    ``,
+    `¿Puedes superarme? ⚔️`,
+    `👉 https://imperio-del-barrio.vercel.app`,
+  ].join('\n');
+
+  if (navigator.share) {
+    navigator.share({ title: '🏘️ Imperio del Barrio', text }).catch(() => {});
+  } else {
+    const wa = 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.open(wa, '_blank');
+  }
 }
 
 function doPrestige() { showAscendModal(); }
@@ -6639,20 +6676,93 @@ function updateXPCircle() {
 // ═══════════════════════════════════════════════
 // EVENTS (reduce interval to 3min)
 // ═══════════════════════════════════════════════
-setInterval(() => {
-  if (!G.activeEvent && Object.keys(G.businesses).filter(k=>bizLevel(k)>0).length >= 2) {
-    const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
-    G.activeEvent = ev;
-    G.eventEnd = Date.now() + ev.duration * 1000;
-    G.eventsParticipated = (G.eventsParticipated || 0) + 1;
-    const banner = document.getElementById('eventBanner');
-    document.getElementById('evIcon').textContent = ev.icon;
+// ─── Weekend Event System ───────────────────────────────────
+// Sat 00:00 → Mon 00:00 → global x2.5 multiplier + special banner
+const WEEKEND_EVENTS = [
+  { icon:'🎉', title:'¡Fin de Semana del Barrio!',   desc:'TODO el Imperio gana x2.5 este fin de semana',       mult:2.5 },
+  { icon:'🎊', title:'¡Feria del Barrio!',           desc:'Doble producción + clientes extra todo el fin de semana', mult:2.5 },
+  { icon:'🏖️', title:'¡Finde de Vacaciones!',        desc:'El barrio está de fiesta — ganancias x2.5',          mult:2.5 },
+  { icon:'⚡', title:'¡Finde Turbo!',                desc:'Energía máxima: todos los negocios al 250%',         mult:2.5 },
+];
+
+function getWeekendEvent() {
+  const now  = new Date();
+  const dow  = now.getDay(); // 0=Sun, 6=Sat
+  if (dow !== 0 && dow !== 6) return null;
+  // Use ISO week number to pick event
+  const week = Math.floor(now.getTime() / (7 * 24 * 3600 * 1000));
+  return WEEKEND_EVENTS[week % WEEKEND_EVENTS.length];
+}
+
+function getWeekendCountdown() {
+  const now = new Date();
+  const dow = now.getDay();
+  if (dow === 1) return null; // Monday — just ended
+  // Next Monday midnight
+  const daysToMon = dow === 0 ? 1 : (8 - dow) % 7 || 7;
+  const mon = new Date(now);
+  mon.setDate(now.getDate() + daysToMon);
+  mon.setHours(0,0,0,0);
+  const ms = mon - now;
+  const h = Math.floor(ms/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  return `${h}h ${m}m`;
+}
+
+function checkWeekendEvent() {
+  const ev = getWeekendEvent();
+  const banner = document.getElementById('eventBanner');
+  if (!banner) return;
+  if (ev && !G.activeEvent) {
+    G.activeEvent   = { ...ev, target:'all', duration: 99999999, isWeekend: true };
+    G.eventEnd      = new Date(new Date().setHours(23,59,59,999) + (new Date().getDay()===6 ? 86400000 : 0)).getTime();
+    G.eventsParticipated = (G.eventsParticipated||0) + 1;
+    document.getElementById('evIcon').textContent  = ev.icon;
     document.getElementById('evTitle').textContent = ev.title;
-    document.getElementById('evDesc').textContent = ev.desc;
+    document.getElementById('evDesc').textContent  = ev.desc + ' · Termina el lunes';
     banner.classList.remove('hidden');
-    notify(`${ev.icon} ¡Evento especial! ${ev.title}`);
+    banner.style.background = 'linear-gradient(135deg,#FF6B35,#E91E8C)';
+    const timerEl = document.getElementById('evTimer');
+    if (timerEl) { timerEl.textContent = getWeekendCountdown() || ''; timerEl.style.display='inline'; }
+    notify(`${ev.icon} ¡EVENTO DE FIN DE SEMANA! ${ev.title}`);
     checkAchievements();
+  } else if (!ev && G.activeEvent?.isWeekend) {
+    // Weekend ended
+    G.activeEvent = null;
+    G.eventEnd    = 0;
+    banner.classList.add('hidden');
+    banner.style.background = '';
+    notify('👋 El evento de fin de semana terminó. ¡Hasta el próximo!');
   }
+}
+
+// Check weekend on load and every 5 minutes
+checkWeekendEvent();
+setInterval(checkWeekendEvent, 5 * 60 * 1000);
+
+// Countdown ticker
+setInterval(() => {
+  if (!G.activeEvent?.isWeekend) return;
+  const timerEl = document.getElementById('evTimer');
+  if (timerEl) timerEl.textContent = getWeekendCountdown() || '';
+}, 60000);
+
+// Regular random events (only on weekdays when no weekend event active)
+setInterval(() => {
+  if (G.activeEvent) return; // don't stack with weekend
+  if (Object.keys(G.businesses).filter(k=>bizLevel(k)>0).length < 2) return;
+  const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+  G.activeEvent = ev;
+  G.eventEnd = Date.now() + ev.duration * 1000;
+  G.eventsParticipated = (G.eventsParticipated || 0) + 1;
+  const banner = document.getElementById('eventBanner');
+  document.getElementById('evIcon').textContent = ev.icon;
+  document.getElementById('evTitle').textContent = ev.title;
+  document.getElementById('evDesc').textContent = ev.desc;
+  banner.classList.remove('hidden');
+  banner.style.background = '';
+  notify(`${ev.icon} ¡Evento especial! ${ev.title}`);
+  checkAchievements();
 }, 90000);
 
 // ═══════════════════════════════════════════════
@@ -7048,6 +7158,20 @@ const STORY_MISSIONS = [
   { id:'s8',  icon:'🌟', title:'La Zona Premium',    desc:'Llega a la Zona Premium',                     check: g => g.zoneHistory?.includes('premium'), reward:{ money:250000, gems:25 }, story:'La élite de la ciudad te abre las puertas. Ahora eres de los grandes.' },
   { id:'s9',  icon:'🛩️', title:'El Imperio Total',   desc:'Ten todos los negocios abiertos',             check: g => typeof BUSINESSES!=='undefined' && Object.values(g.businesses).filter(b=>b.level>0).length >= BUSINESSES.length, reward:{ money:500000, gems:35 }, story:'Cada rincón del barrio lleva tu nombre. Eres el dueño del territorio.' },
   { id:'s10', icon:'👑', title:'Leyenda del Barrio',  desc:'Llega a Nivel 20 y 2+ Ascensos',              check: g => g.level >= 19 && (g.socialStage||0) >= 2, reward:{ money:1000000, gems:50 }, story:'Tu historia será contada por generaciones. El barrio te pertenece para siempre.' },
+
+  // ── ARC 2: El Magnate ──────────────────────────────────────────
+  { id:'s11', icon:'🏦', title:'El Primer Banco',      desc:'Abre el Banco del Barrio',                    check: g => g.businesses?.banco?.level > 0, reward:{ money:500000, gems:20 }, story:'El barrio ya tiene su propio banco. Tú controlas el flujo del dinero.' },
+  { id:'s12', icon:'🌆', title:'La Plaza',              desc:'Abre la Plaza Comercial',                     check: g => g.businesses?.plaza?.level > 0, reward:{ money:800000, gems:25 }, story:'Una plaza entera con tu nombre. Los turistas vienen a verte.' },
+  { id:'s13', icon:'⭐', title:'Tercer Ascenso',        desc:'Alcanza la Villa (3er ascenso)',               check: g => (g.socialStage||0) >= 3, reward:{ money:2000000, gems:30 }, story:'Villa con piscina. Tu infancia fue humilde — tu presente es extraordinario.' },
+  { id:'s14', icon:'💎', title:'Coleccionista',         desc:'Compra 10 mejoras permanentes de Influencia',  check: g => Object.keys(g.influenceUpgrades||{}).length >= 10, reward:{ money:3000000, gems:35 }, story:'Cada mejora es una pieza del puzzle. El Imperio se fortalece desde adentro.' },
+  { id:'s15', icon:'🏙️', title:'Banco Central',         desc:'Abre el Banco Central',                       check: g => g.businesses?.banco_central?.level > 0, reward:{ money:5000000, gems:40 }, story:'Ya no eres del barrio. El barrio es tuyo. El banco central lo certifica.' },
+
+  // ── ARC 3: La Corporación ─────────────────────────────────────
+  { id:'s16', icon:'✈️', title:'El Jet Privado',        desc:'Alcanza el Penthouse (5to ascenso)',           check: g => (g.socialStage||0) >= 5, reward:{ money:10000000, gems:60 }, story:'Un jet privado. Ya no esperas por nadie. El mundo entero es tu barrio.' },
+  { id:'s17', icon:'🌍', title:'Imperio Global',         desc:'Abre la Corporación Global',                  check: g => g.businesses?.corporacion?.level > 0, reward:{ money:20000000, gems:75 }, story:'Tu corporación opera en tres continentes. Todo empezó con $500.' },
+  { id:'s18', icon:'🎯', title:'El Nivel 25',            desc:'Llega al Nivel 25',                           check: g => g.level >= 24, reward:{ money:30000000, gems:80 }, story:'Nivel 25. Eres uno de los pocos que llegó hasta aquí. El barrio te rinde homenaje.' },
+  { id:'s19', icon:'🔱', title:'Rey Absoluto',           desc:'6 Ascensos + Nivel 25',                       check: g => (g.socialStage||0) >= 6 && g.level >= 24, reward:{ money:50000000, gems:100 }, story:'El máximo ascenso. La Corporación Global. Tu nombre es sinónimo de poder.' },
+  { id:'s20', icon:'🌈', title:'La Historia Completa',   desc:'Completa las 19 misiones anteriores',         check: g => g.storyClaimed && Object.keys(g.storyClaimed).filter(k=>k!=='s20').length >= 19, reward:{ money:100000000, gems:150 }, story:'De $500 a un Imperio. Esta es la historia que le contarás a tus hijos. Eres la Leyenda del Barrio.' },
 ];
 
 function renderStoryMissions() {
@@ -7212,6 +7336,77 @@ window.buyGemItem = function(id) {
 
 // ═══════════════════════════════════════════════════════════════════
 // GUILD / CLAN SYSTEM — respaldado por Supabase
+// ═══════════════════════════════════════════════════════════════════
+// CLAN WEEKLY CHALLENGES
+// ═══════════════════════════════════════════════════════════════════
+
+const CLAN_CHALLENGES = [
+  { id:'cc1', icon:'💰', name:'Ganar $10M en clan',     desc:'Entre todos los miembros acumulen $10M esta semana', target: 10_000_000, stat:'totalEarned',  gemReward: 20 },
+  { id:'cc2', icon:'⬆️', name:'50 mejoras en clan',     desc:'El clan completa 50 mejoras de negocios',            target: 50,         stat:'weeklyLevels', gemReward: 15 },
+  { id:'cc3', icon:'🎮', name:'100 mini-juegos',         desc:'Entre todos jueguen 100 mini-juegos esta semana',    target: 100,        stat:'weeklyNego',   gemReward: 25 },
+  { id:'cc4', icon:'🔓', name:'Abrir 5 negocios nuevos', desc:'El clan abre 5 negocios nuevos esta semana',         target: 5,          stat:'weeklyNewBiz', gemReward: 30 },
+];
+
+function getClanChallengeWeekId() {
+  return Math.floor(Date.now() / (7 * 24 * 3600 * 1000));
+}
+
+function renderClanChallenges(members) {
+  if (!members || members.length === 0) return '';
+  const weekId = getClanChallengeWeekId();
+  if (!G.clanChallenges) G.clanChallenges = {};
+  if (G.clanChallengesWeek !== weekId) {
+    G.clanChallengesWeek = weekId;
+    G.clanChallenges = {};
+  }
+
+  // Pick 2 challenges for this week (deterministic by weekId)
+  const active = [CLAN_CHALLENGES[weekId % 4], CLAN_CHALLENGES[(weekId + 2) % 4]];
+
+  return `<div style="margin-top:14px;">
+    <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">⚔️ Retos del Clan — Esta Semana</div>
+    ${active.map(ch => {
+      // Sum stat across all members
+      const total = members.reduce((s,m) => {
+        const v = (m[ch.stat]||0);
+        return s + v;
+      }, 0);
+      const pct = Math.min(100, Math.floor(total / ch.target * 100));
+      const done = total >= ch.target;
+      const claimed = G.clanChallenges[ch.id];
+      return `<div style="background:rgba(255,255,255,0.05);border:2px solid ${done?'#2DC653':'rgba(255,255,255,0.08)'};border-radius:14px;padding:12px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-family:'Fredoka One',cursive;font-size:0.95rem;color:white;">${ch.icon} ${ch.name}</span>
+          <span style="font-size:0.7rem;color:#FFE135;font-weight:900;">+${ch.gemReward}💎</span>
+        </div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-bottom:8px;">${ch.desc}</div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:8px;overflow:hidden;margin-bottom:8px;">
+          <div style="height:100%;width:${pct}%;background:${done?'#2DC653':'#FFE135'};border-radius:99px;transition:width 0.5s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:0.7rem;color:rgba(255,255,255,0.5);">${fmtRaw(total)} / ${fmtRaw(ch.target)} (${pct}%)</span>
+          ${done && !claimed
+            ? `<button onclick="claimClanChallenge('${ch.id}',${ch.gemReward})" style="background:linear-gradient(135deg,#2DC653,#00a844);border:2px solid #1E1B2E;border-radius:10px;color:white;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:5px 12px;cursor:pointer;">¡Reclamar!</button>`
+            : claimed
+              ? `<span style="font-size:0.75rem;color:#2DC653;font-weight:900;">✅ Reclamado</span>`
+              : `<span style="font-size:0.7rem;color:rgba(255,255,255,0.3);">${pct}% completo</span>`
+          }
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function claimClanChallenge(id, gems) {
+  if (!G.clanChallenges) G.clanChallenges = {};
+  if (G.clanChallenges[id]) return;
+  G.clanChallenges[id] = true;
+  addGems(gems);
+  saveGame();
+  notify(`⚔️ ¡Reto de clan completado! +${gems}💎`);
+  openGuildPanel(); // refresh
+}
+
 // El juego corre en un iframe, así que usamos postMessage para
 // pedirle al parent React que ejecute las llamadas a Supabase.
 // ═══════════════════════════════════════════════════════════════════
@@ -7251,6 +7446,7 @@ async function renderGuildPanel() {
   if (G.guildCode) {
     // Fetch members from Supabase
     const data = await _guildRequest('getMembers', { code: G.guildCode });
+    if (data?.members) window._lastGuildMembers = data.members;
     const members = (data?.members || []);
     const guild   = data?.guild || { name: G.guildName, emoji: G.guildEmoji, total_earned: 0 };
 
@@ -7283,7 +7479,8 @@ async function renderGuildPanel() {
       <div style="display:flex;gap:8px;">
         <button onclick="renderGuildPanel()" style="flex:1;background:rgba(45,198,83,0.15);border:2px solid rgba(45,198,83,0.4);border-radius:12px;color:#2DC653;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px;cursor:pointer;">🔄 Actualizar</button>
         <button onclick="leaveGuildAction()" style="background:rgba(255,71,87,0.1);border:2px solid rgba(255,71,87,0.3);border-radius:12px;color:rgba(255,71,87,0.7);font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px 14px;cursor:pointer;">Salir</button>
-      </div>`;
+      </div>
+      ${renderClanChallenges(members)}`;
     return;
   }
 
