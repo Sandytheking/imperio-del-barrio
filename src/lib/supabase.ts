@@ -22,6 +22,8 @@ export interface GameSave {
   prestige_stars: number;
   prestige_mult: number;
   zone: string;
+  social_stage: number;   // Etapa Ascenso Social (0-6)
+  influence: number;      // Total influencia acumulada
   game_state: Record<string, unknown>;
   updated_at?: string;
 }
@@ -36,6 +38,8 @@ export interface LeaderboardEntry {
   level: number;
   prestige_stars: number;
   zone: string;
+  social_stage: number;
+  influence: number;
   updated_at: string;
 }
 

@@ -168,56 +168,68 @@ export default function GameClient() {
   });
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative', background: '#1E1B2E' }}>
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#1E1B2E' }}>
 
-      {/* ── GAME IFRAME ── */}
-      <iframe
-        ref={iframeRef}
-        src="/game/imperio-del-barrio-v8.html"
-        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-        title="Imperio del Barrio"
-        allow="autoplay"
-      />
-
-      {/* ── FLOATING HUD BAR ── */}
+      {/* ── BARRA SUPERIOR (React HUD) ── */}
       <div style={{
-        position: 'fixed', top: 0, right: 0,
-        display: 'flex', alignItems: 'center', gap: '8px',
-        padding: '6px 10px', zIndex: 100,
-        background: 'rgba(30,27,46,.85)', backdropFilter: 'blur(8px)',
-        borderBottom: '2px solid #FFE135', borderLeft: '2px solid #FFE135',
-        borderBottomLeftRadius: '12px',
+        flexShrink: 0,
+        height: '38px',
+        background: '#16132a',
+        borderBottom: '2px solid rgba(255,225,53,0.25)',
+        display: 'flex', alignItems: 'center',
+        padding: '0 12px', gap: '8px',
+        zIndex: 200,
       }}>
-        {/* Cloud save indicator */}
+        {/* Izquierda: logo + estado nube */}
+        <span style={{ fontFamily: 'Fredoka One, cursive', color: '#FFE135', fontSize: '13px', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+          🏘️ Imperio
+        </span>
+        <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
         {cloudStatus !== 'idle' && (
-          <span style={{ fontSize: '11px', fontWeight: 900, color: cloudStatus === 'saved' ? '#2DC653' : cloudStatus === 'error' ? '#FF4757' : '#FFE135' }}>
+          <span style={{ fontSize: '10px', fontWeight: 900, color: cloudStatus === 'saved' ? '#2DC653' : cloudStatus === 'error' ? '#FF4757' : '#FFE135', whiteSpace: 'nowrap' }}>
             {cloudStatus === 'saving' ? '☁️ Guardando...' : cloudStatus === 'saved' ? '✅ Guardado' : '❌ Error'}
           </span>
         )}
-        {loadSource && <span style={{ fontSize: '10px', color: '#aaa' }}>{loadSource === 'cloud' ? '☁️ Nube' : '💾 Local'}</span>}
+        {loadSource && cloudStatus === 'idle' && (
+          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>
+            {loadSource === 'cloud' ? '☁️ Nube' : '💾 Local'}
+          </span>
+        )}
 
-        {/* Auth button */}
+        {/* Espacio flexible */}
+        <div style={{ flex: 1 }} />
+
+        {/* Derecha: auth */}
         {user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: '#FFE135', fontWeight: 900, fontFamily: 'Nunito' }}>
+            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 900, fontFamily: 'Nunito, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: '120px', textOverflow: 'ellipsis' }}>
               {user.email?.split('@')[0]}
             </span>
             <button
               onClick={handleOpenLeaderboard}
-              style={{ background: '#2DC653', border: 'none', borderRadius: '8px', padding: '4px 10px', cursor: 'pointer', color: 'white', fontFamily: 'Fredoka One', fontSize: '12px' }}
+              style={{ background: 'rgba(45,198,83,0.2)', border: '1px solid #2DC653', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer', color: '#2DC653', fontFamily: 'Fredoka One, cursive', fontSize: '11px', whiteSpace: 'nowrap' }}
             >🏆 Ranking</button>
             <button
               onClick={handleSignOut}
-              style={{ background: 'rgba(255,71,87,.3)', border: '1px solid #FF4757', borderRadius: '8px', padding: '4px 8px', cursor: 'pointer', color: '#FF4757', fontSize: '11px' }}
+              style={{ background: 'transparent', border: '1px solid rgba(255,71,87,0.4)', borderRadius: '6px', padding: '3px 7px', cursor: 'pointer', color: 'rgba(255,71,87,0.8)', fontSize: '10px', whiteSpace: 'nowrap' }}
             >Salir</button>
           </div>
         ) : (
           <button
             onClick={() => { setShowAuth(true); setAuthMode('login'); }}
-            style={{ background: '#FFE135', border: 'none', borderRadius: '8px', padding: '5px 14px', cursor: 'pointer', color: '#1E1B2E', fontFamily: 'Fredoka One', fontSize: '13px' }}
-          >☁️ Iniciar Sesión</button>
+            style={{ background: 'rgba(255,225,53,0.12)', border: '1px solid rgba(255,225,53,0.4)', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', color: '#FFE135', fontFamily: 'Fredoka One, cursive', fontSize: '11px', whiteSpace: 'nowrap' }}
+          >☁️ Guardar en la nube</button>
         )}
       </div>
+
+      {/* ── IFRAME DEL JUEGO (ocupa el resto de la pantalla) ── */}
+      <iframe
+        ref={iframeRef}
+        src="/game/imperio-del-barrio-v8.html"
+        style={{ flex: 1, width: '100%', border: 'none', display: 'block', minHeight: 0 }}
+        title="Imperio del Barrio"
+        allow="autoplay"
+      />
 
       {/* ══ AUTH MODAL ══ */}
       {showAuth && (
@@ -325,8 +337,8 @@ export default function GameClient() {
             )}
 
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '40px 32px 1fr 90px 60px', gap: '8px', padding: '6px 12px', color: '#888', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-              <span>#</span><span></span><span>Jugador</span><span style={{ textAlign: 'right' }}>Ganado</span><span style={{ textAlign: 'right' }}>Nivel</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '40px 32px 1fr 90px 60px 50px', gap: '8px', padding: '6px 12px', color: '#888', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+              <span>#</span><span></span><span>Jugador</span><span style={{ textAlign: 'right' }}>Ganado</span><span style={{ textAlign: 'right' }}>Nivel</span><span style={{ textAlign: 'right' }}>💎</span>
             </div>
 
             {/* Rows */}
@@ -338,11 +350,13 @@ export default function GameClient() {
               ) : leaderboard.map((p, i) => {
                 const isMe = user?.email?.startsWith(p.username);
                 const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+                const STAGE_ICONS = ['🏠','🏡','🏖️','🏙️','🛩️','🌎'];
+                const stageIcon = p.social_stage > 0 ? STAGE_ICONS[Math.min(p.social_stage - 1, 5)] : '';
                 return (
                   <div
                     key={p.username}
                     style={{
-                      display: 'grid', gridTemplateColumns: '40px 32px 1fr 90px 60px', gap: '8px',
+                      display: 'grid', gridTemplateColumns: '40px 32px 1fr 90px 60px 50px', gap: '8px',
                       padding: '8px 12px', borderRadius: '10px', alignItems: 'center',
                       background: isMe ? 'rgba(255,225,53,.12)' : i < 3 ? 'rgba(255,255,255,.04)' : 'transparent',
                       border: isMe ? '1px solid rgba(255,225,53,.3)' : '1px solid transparent',
@@ -355,7 +369,7 @@ export default function GameClient() {
                     <div>
                       <div style={{ color: 'white', fontWeight: 900, fontSize: '13px' }}>{p.username}</div>
                       <div style={{ color: '#888', fontSize: '10px' }}>
-                        {ZONE_NAMES[p.zone] || p.zone} · {'⭐'.repeat(Math.min(p.prestige_stars, 5))}
+                        {ZONE_NAMES[p.zone] || p.zone}{stageIcon ? ` · ${stageIcon}` : ''}
                       </div>
                     </div>
                     <span style={{ textAlign: 'right', fontFamily: 'Fredoka One', color: '#2DC653', fontSize: '13px' }}>
@@ -364,6 +378,9 @@ export default function GameClient() {
                     <span style={{ textAlign: 'right', color: '#aaa', fontSize: '12px', fontWeight: 900 }}>
                       Nv.{p.level + 1}<br />
                       <span style={{ fontSize: '10px', color: '#666' }}>{LEVEL_NAMES[p.level] || ''}</span>
+                    </span>
+                    <span style={{ textAlign: 'right', color: '#D4A8FF', fontSize: '12px', fontWeight: 900 }}>
+                      {(p.influence || 0)}💎
                     </span>
                   </div>
                 );

@@ -74,13 +74,34 @@ export async function saveToCloud(G: Record<string, unknown>): Promise<boolean> 
         prestige_stars:(G.prestigeStars as number) || 0,
         prestige_mult: (G.prestigeMult as number) || 1,
         zone:          (G.zone as string) || 'centro',
+        // Influencia — columnas nuevas (requiere migración 002)
+        social_stage:  (G.socialStage as number) || 0,
+        influence:     Math.floor((G.totalInfluence as number) || 0),
         game_state:    G,
         save_version:  SAVE_VERSION,
       }, { onConflict: 'user_id' });
 
     if (error) {
-      console.warn('[Imperio] Cloud save failed:', error.message);
-      return false;
+      // Si las columnas aún no existen, guardar sin ellas (fallback seguro)
+      if (error.message?.includes('social_stage') || error.message?.includes('influence')) {
+        const { error: error2 } = await sb
+          .from('game_saves')
+          .upsert({
+            user_id:       user.id,
+            money:         Math.floor((G.money as number) || 0),
+            total_earned:  Math.floor((G.totalEarned as number) || 0),
+            level:         (G.level as number) || 0,
+            prestige_stars:(G.prestigeStars as number) || 0,
+            prestige_mult: (G.prestigeMult as number) || 1,
+            zone:          (G.zone as string) || 'centro',
+            game_state:    G,
+            save_version:  SAVE_VERSION,
+          }, { onConflict: 'user_id' });
+        if (error2) { console.warn('[Imperio] Cloud save failed:', error2.message); return false; }
+      } else {
+        console.warn('[Imperio] Cloud save failed:', error.message);
+        return false;
+      }
     }
     return true;
   } catch (e) {
@@ -163,31 +184,62 @@ export async function getMyRank(): Promise<number | null> {
 
 /**
  * Smart load: tries cloud first, merges with localStorage.
- * Picks the save with higher totalEarned (prevents rollbacks).
+ * Elige el save con más progreso (totalEarned).
+ * PROTEGE la Influencia — siempre conserva el valor más alto de cualquier save.
  */
 export async function smartLoad(): Promise<{ state: Record<string, unknown>; source: 'cloud' | 'local' | 'new' }> {
-  // 1. Load from localStorage (always fast)
+  // 1. Cargar localStorage (rápido, sin red)
   let localState: Record<string, unknown> | null = null;
   try {
     const raw = localStorage.getItem('idb2_save');
     if (raw) localState = JSON.parse(raw);
   } catch { /* ignore */ }
 
-  // 2. Try cloud
+  // 2. Intentar nube
   const cloudState = await loadFromCloud();
 
-  // 3. Pick the better save
+  // 3. Elegir el mejor save y proteger influencia
   if (cloudState && localState) {
     const cloudEarned = (cloudState.totalEarned as number) || 0;
     const localEarned = (localState.totalEarned as number) || 0;
+
+    // Base: el que tiene más dinero ganado
+    let base: Record<string, unknown>;
+    let source: 'cloud' | 'local';
     if (cloudEarned >= localEarned) {
-      // Cloud wins — also update localStorage
-      localStorage.setItem('idb2_save', JSON.stringify(cloudState));
-      return { state: cloudState, source: 'cloud' };
+      base = cloudState;
+      source = 'cloud';
     } else {
-      // Local wins — schedule a cloud sync
-      return { state: localState, source: 'local' };
+      base = localState;
+      source = 'local';
     }
+
+    // SIEMPRE preservar el MAYOR valor de influencia entre ambos saves
+    // (el jugador no debe perder influencia al cambiar de dispositivo)
+    const cloudInfluence      = (cloudState.influence as number) || 0;
+    const localInfluence      = (localState.influence as number) || 0;
+    const cloudTotalInfluence = (cloudState.totalInfluence as number) || 0;
+    const localTotalInfluence = (localState.totalInfluence as number) || 0;
+    const cloudStage          = (cloudState.socialStage as number) || 0;
+    const localStage          = (localState.socialStage as number) || 0;
+
+    if (localInfluence > cloudInfluence || localStage > cloudStage) {
+      base = {
+        ...base,
+        influence:         Math.max(cloudInfluence, localInfluence),
+        totalInfluence:    Math.max(cloudTotalInfluence, localTotalInfluence),
+        socialStage:       Math.max(cloudStage, localStage),
+        // Unión de influenceUpgrades — conservar todo lo comprado
+        influenceUpgrades: {
+          ...((cloudState.influenceUpgrades as Record<string, boolean>) || {}),
+          ...((localState.influenceUpgrades as Record<string, boolean>) || {}),
+        },
+      };
+    }
+
+    // Actualizar localStorage con el mejor estado fusionado
+    localStorage.setItem('idb2_save', JSON.stringify(base));
+    return { state: base, source };
   }
 
   if (cloudState) return { state: cloudState, source: 'cloud' };
