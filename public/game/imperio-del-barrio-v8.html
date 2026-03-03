@@ -5593,6 +5593,7 @@ function claimDaily() {
 
 let _mgState = null;          // current game state
 let _mgRaf   = null;          // requestAnimationFrame handle
+let _mgIv    = null;          // setInterval handle (memory/snake/wordfind)
 let _mgBizIncome = 0;
 let _mgBizName   = '';
 let _mgBizId     = '';
@@ -5620,8 +5621,12 @@ function openNegotiate(id, name, income) {
 function launchMiniGame(game) {
   // Clean up any previous game
   cancelAnimationFrame(_mgRaf);
+  clearInterval(_mgIv);
   _mgRaf = null;
+  _mgIv  = null;
   _mgState = null;
+  document.removeEventListener('keydown', _mgKeyHandler);
+  document.removeEventListener('keyup',   _mgKeyHandler);
   document.getElementById('mgResult').style.display = 'none';
   document.getElementById('mgControls').innerHTML = '';
 
@@ -5647,12 +5652,14 @@ function launchMiniGame(game) {
 
 function closeMiniGame() {
   cancelAnimationFrame(_mgRaf);
+  clearInterval(_mgIv);
   _mgRaf = null;
+  _mgIv  = null;
   _mgState = null;
   document.getElementById('miniGameOverlay').style.display = 'none';
   document.getElementById('mgControls').innerHTML = '';
-  // Remove any keyboard listeners
   document.removeEventListener('keydown', _mgKeyHandler);
+  document.removeEventListener('keyup',   _mgKeyHandler);
 }
 
 function playMiniGameAgain() {
@@ -5662,9 +5669,12 @@ function playMiniGameAgain() {
 
 function _mgFinish(won, score) {
   cancelAnimationFrame(_mgRaf);
+  clearInterval(_mgIv);
   _mgRaf = null;
+  _mgIv  = null;
   document.getElementById('mgControls').innerHTML = '';
   document.removeEventListener('keydown', _mgKeyHandler);
+  document.removeEventListener('keyup',   _mgKeyHandler);
 
   const multiplier = won ? Math.max(1, Math.min(score / 10, 10)) : 0.1;
   const bonus = Math.floor(_mgBizIncome * 8 * multiplier);
@@ -5970,16 +5980,16 @@ function startWordFind() {
   };
   _mgState = st;
 
-  let timerIv = setInterval(() => {
+  _mgIv = setInterval(() => {
     if (!st.done) {
       st.timeLeft--;
-      if (st.timeLeft <= 0) { clearInterval(timerIv); endWord(false); }
+      if (st.timeLeft <= 0) { clearInterval(_mgIv); endWord(false); }
       drawWord();
     }
   }, 1000);
 
   function endWord(won) {
-    clearInterval(timerIv);
+    clearInterval(_mgIv);
     if (won) {
       st.score += 3;
       playSound('ching');
@@ -6008,10 +6018,10 @@ function startWordFind() {
       st.formed = '';
       st.timeLeft = 20;
       renderWordButtons();
-      timerIv = setInterval(() => {
+      _mgIv = setInterval(() => {
         if (!st.done) {
           st.timeLeft--;
-          if (st.timeLeft <= 0) { clearInterval(timerIv); endWord(false); }
+          if (st.timeLeft <= 0) { clearInterval(_mgIv); endWord(false); }
           drawWord();
         }
       }, 1000);
@@ -6027,7 +6037,7 @@ function startWordFind() {
       st.selected.push(i);
     }
     st.formed = st.selected.map(x => st.pool[x]).join('');
-    if (st.formed === st.word) { clearInterval(timerIv); endWord(true); }
+    if (st.formed === st.word) { clearInterval(_mgIv); endWord(true); }
     drawWord();
     renderWordButtons();
   }
@@ -6124,12 +6134,12 @@ function startMemory() {
   };
   _mgState = st;
 
-  const timerIv = setInterval(() => {
+  _mgIv = setInterval(() => {
     if (!st.done) {
       st.timeLeft--;
       renderMemory();
       if (st.timeLeft <= 0) {
-        clearInterval(timerIv);
+        clearInterval(_mgIv);
         st.done = true;
         _mgFinish(st.matches >= 4, st.matches);
       }
@@ -6156,7 +6166,7 @@ function startMemory() {
         st.blocked = false;
         playSound('ching');
         if (st.matches === EMOJIS.length) {
-          clearInterval(timerIv);
+          clearInterval(_mgIv);
           st.done = true;
           renderMemory();
           setTimeout(() => _mgFinish(true, 10 + Math.max(0, 45 - st.timeLeft < 20 ? 5 : 0)), 500);
@@ -6516,11 +6526,11 @@ function startSnake() {
   document.getElementById('snkR').onclick = () => { if(st.dir.x!==-1) st.nextDir={x:1,y:0}; };
 
   let timeLeft = 40;
-  const timerIv = setInterval(() => {
+  _mgIv = setInterval(() => {
     if (st.alive) {
       timeLeft--;
       if (timeLeft <= 0) {
-        clearInterval(timerIv);
+        clearInterval(_mgIv);
         st.alive = false;
         _mgFinish(st.score >= 5, st.score);
       }
@@ -6543,7 +6553,7 @@ function startSnake() {
 
       // Self collision
       if (st.snake.slice(2).some(s => s.x === head.x && s.y === head.y)) {
-        clearInterval(timerIv);
+        clearInterval(_mgIv);
         st.alive = false;
         draw();
         _mgFinish(st.score >= 5, st.score);

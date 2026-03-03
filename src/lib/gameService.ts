@@ -303,7 +303,7 @@ export async function findGuildByCode(code: string): Promise<Guild | null> {
     .from('guilds')
     .select('*')
     .eq('code', code.toUpperCase())
-    .single();
+    .maybeSingle();
 
   if (error || !data) return null;
   return data as Guild;
