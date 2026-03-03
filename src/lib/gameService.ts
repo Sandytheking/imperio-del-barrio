@@ -77,6 +77,7 @@ export async function saveToCloud(G: Record<string, unknown>): Promise<boolean> 
         // Influencia — columnas nuevas (requiere migración 002)
         social_stage:  (G.socialStage as number) || 0,
         influence:     Math.floor((G.totalInfluence as number) || 0),
+        guild_code:    (G.guildCode as string) || null,
         game_state:    G,
         save_version:  SAVE_VERSION,
       }, { onConflict: 'user_id' });
@@ -259,4 +260,272 @@ export function smartSave(G: Record<string, unknown>) {
 
   // Cloud save async (don't await — never block the game)
   saveToCloud(G).catch(() => { /* silent fail */ });
+  // Sync guild stats async
+  syncGuildMember(G).catch(() => { /* silent fail */ });
+}
+
+// ══════════════════════════════════════════════
+// GUILD SYSTEM
+// ══════════════════════════════════════════════
+
+import type { Guild, GuildMember, GuildLeaderboardEntry } from './supabase';
+
+/**
+ * Crea un clan nuevo. El código se genera en el cliente y se verifica
+ * que sea único en la DB antes de insertarlo.
+ */
+export async function createGuild(
+  name: string,
+  emoji: string,
+  code: string
+): Promise<Guild> {
+  const user = await getUser();
+  if (!user) throw new Error('Debes iniciar sesión para crear un clan');
+
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('guilds')
+    .insert({ name, emoji, code, owner_id: user.id })
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === '23505') throw new Error('Ese código ya existe, intenta otro nombre');
+    throw error;
+  }
+  return data as Guild;
+}
+
+/**
+ * Busca un clan por código de invitación.
+ */
+export async function findGuildByCode(code: string): Promise<Guild | null> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('guilds')
+    .select('*')
+    .eq('code', code.toUpperCase())
+    .single();
+
+  if (error || !data) return null;
+  return data as Guild;
+}
+
+/**
+ * Une al usuario actual al clan con ese guild_id.
+ * Actualiza game_saves.guild_code también.
+ */
+export async function joinGuild(
+  guildId: string,
+  guildCode: string,
+  G: Record<string, unknown>
+): Promise<void> {
+  const user = await getUser();
+  if (!user) throw new Error('Debes iniciar sesión');
+
+  const sb = getSupabase();
+
+  // Upsert membership
+  const { error: memberError } = await sb
+    .from('guild_members')
+    .upsert({
+      guild_id:     guildId,
+      user_id:      user.id,
+      username:     (G.companyName as string) || 'Jugador',
+      avatar:       (G.avatar as string) || '😎',
+      total_earned: Math.floor((G.totalEarned as number) || 0),
+      level:        (G.level as number) || 0,
+      social_stage: (G.socialStage as number) || 0,
+      influence:    Math.floor((G.totalInfluence as number) || 0),
+      last_seen:    new Date().toISOString(),
+    }, { onConflict: 'guild_id,user_id' });
+
+  if (memberError) throw memberError;
+
+  // Save guild_code to game_saves
+  await sb
+    .from('game_saves')
+    .update({ guild_code: guildCode })
+    .eq('user_id', user.id);
+}
+
+/**
+ * Sincroniza las stats del jugador en su clan.
+ * Llamar junto con saveToCloud().
+ */
+export async function syncGuildMember(G: Record<string, unknown>): Promise<void> {
+  try {
+    const user = await getUser();
+    if (!user) return;
+
+    const guildCode = G.guildCode as string | null;
+    if (!guildCode) return;
+
+    const guild = await findGuildByCode(guildCode);
+    if (!guild) return;
+
+    const sb = getSupabase();
+    await sb
+      .from('guild_members')
+      .upsert({
+        guild_id:     guild.id,
+        user_id:      user.id,
+        username:     (G.companyName as string) || 'Jugador',
+        avatar:       (G.avatar as string) || '😎',
+        total_earned: Math.floor((G.totalEarned as number) || 0),
+        level:        (G.level as number) || 0,
+        social_stage: (G.socialStage as number) || 0,
+        influence:    Math.floor((G.totalInfluence as number) || 0),
+        last_seen:    new Date().toISOString(),
+      }, { onConflict: 'guild_id,user_id' });
+  } catch (e) {
+    console.warn('[Imperio] Guild sync error:', e);
+  }
+}
+
+/**
+ * Obtiene los miembros del clan ordenados por total_earned.
+ */
+export async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('guild_members')
+    .select('*')
+    .eq('guild_id', guildId)
+    .order('total_earned', { ascending: false })
+    .limit(20);
+
+  if (error || !data) return [];
+  return data as GuildMember[];
+}
+
+/**
+ * Leaderboard global de clanes por total_earned.
+ */
+export async function getGuildLeaderboard(): Promise<GuildLeaderboardEntry[]> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('guild_leaderboard')
+    .select('*')
+    .limit(50);
+
+  if (error || !data) return [];
+  return data as GuildLeaderboardEntry[];
+}
+
+/**
+ * Sale del clan actual.
+ */
+export async function leaveGuild(guildId: string): Promise<void> {
+  const user = await getUser();
+  if (!user) return;
+
+  const sb = getSupabase();
+  await sb
+    .from('guild_members')
+    .delete()
+    .eq('guild_id', guildId)
+    .eq('user_id', user.id);
+
+  await sb
+    .from('game_saves')
+    .update({ guild_code: null })
+    .eq('user_id', user.id);
+}
+
+// ══════════════════════════════════════════════
+// PUSH NOTIFICATIONS
+// ══════════════════════════════════════════════
+
+const VAPID_PUBLIC_KEY = 'BKuRMZlUR0zNVo7Fn9AJJzTy-FhUeSuK8ayYBkBXc9zw8wVO49PwLwN1LB_VRA1B5c_j05t9I51Ay4QKjPRg-Us';
+
+function urlBase64ToUint8Array(base64: string): Uint8Array {
+  const pad = '='.repeat((4 - base64.length % 4) % 4);
+  const b64 = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(b64);
+  return Uint8Array.from({ length: raw.length }, (_, i) => raw.charCodeAt(i));
+}
+
+/** Register SW, ask permission, subscribe to push, save to Supabase. */
+export async function subscribePush(): Promise<'granted' | 'denied' | 'unsupported'> {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return 'unsupported';
+
+  // 1. Register SW
+  const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+  await navigator.serviceWorker.ready;
+
+  // 2. Ask permission
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') return 'denied';
+
+  // 3. Subscribe to push
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+  });
+
+  // 4. Save subscription to Supabase
+  const user = await getUser();
+  if (!user) return 'denied';
+
+  const key  = sub.getKey('p256dh');
+  const auth = sub.getKey('auth');
+  if (!key || !auth) return 'unsupported';
+
+  const sb = getSupabase();
+  await sb.from('push_subscriptions').upsert({
+    user_id:    user.id,
+    endpoint:   sub.endpoint,
+    p256dh:     btoa(String.fromCharCode(...new Uint8Array(key)))
+                  .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''),
+    auth_key:   btoa(String.fromCharCode(...new Uint8Array(auth)))
+                  .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''),
+    user_agent: navigator.userAgent.slice(0, 200),
+  }, { onConflict: 'user_id,endpoint' });
+
+  return 'granted';
+}
+
+/** Unsubscribe and remove from Supabase. */
+export async function unsubscribePush(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+  const reg = await navigator.serviceWorker.getRegistration();
+  if (!reg) return;
+  const sub = await reg.pushManager.getSubscription();
+  if (!sub) return;
+
+  const user = await getUser();
+  if (user) {
+    const sb = getSupabase();
+    await sb.from('push_subscriptions').delete()
+      .eq('user_id', user.id).eq('endpoint', sub.endpoint);
+  }
+  await sub.unsubscribe();
+}
+
+/** Check current push permission state. */
+export async function getPushStatus(): Promise<'granted' | 'denied' | 'default' | 'unsupported'> {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return 'unsupported';
+  return Notification.permission as 'granted' | 'denied' | 'default';
+}
+
+/**
+ * Trigger a push to specific users (called server-side or from admin).
+ * In production this would be a server action — here it calls the Edge Function.
+ */
+export async function sendPushToUser(
+  userIds: string[],
+  title: string,
+  body: string,
+  url = '/'
+): Promise<void> {
+  const sb = getSupabase();
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ user_ids: userIds, title, body, url }),
+  });
 }

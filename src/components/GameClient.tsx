@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
-import { smartSave, smartLoad, getLeaderboard, getMyRank, signIn, signUp, signOut } from '@/lib/gameService';
+import { smartSave, smartLoad, getLeaderboard, getMyRank, signIn, signUp, signOut, subscribePush, unsubscribePush, getPushStatus } from '@/lib/gameService';
 
 // ── Types ───────────────────────────────────────────────────
 interface LeaderboardEntry {
@@ -47,6 +47,7 @@ export default function GameClient() {
   const [myRank, setMyRank] = useState<number | null>(null);
   const [cloudStatus, setCloudStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [loadSource, setLoadSource] = useState<string>('');
+  const [pushStatus, setPushStatus] = useState<'granted' | 'denied' | 'default' | 'unsupported' | 'loading'>('default');
   const [form, setForm] = useState({ email: '', password: '', username: '', avatar: '😎' });
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -62,6 +63,33 @@ export default function GameClient() {
     });
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  // ── Push notification setup ────────────────────────────────
+  useEffect(() => {
+    getPushStatus().then(s => setPushStatus(s));
+  }, []);
+
+  // ── Schedule push reminders via SW (fires when user leaves) ─
+  useEffect(() => {
+    if (!user || pushStatus !== 'granted') return;
+
+    // Schedule "come back" messages at 4h, 8h, 24h after last visit
+    const scheduleReminders = async () => {
+      if (!('serviceWorker' in navigator)) return;
+      const reg = await navigator.serviceWorker.ready;
+      // Use SW message channel to schedule
+      reg.active?.postMessage({
+        type: 'SCHEDULE_REMINDERS',
+        userId: user.id,
+        reminders: [
+          { delayMs: 4  * 3600 * 1000, title: '💰 Tu barrio está generando dinero', body: '¡Vuelve a cobrar antes de que se llene el límite!', url: '/' },
+          { delayMs: 8  * 3600 * 1000, title: '🏘️ ¡Tu Imperio te espera!',          body: 'Llevas 8 horas sin jugar. ¡Hay dinero acumulado!',  url: '/' },
+          { delayMs: 24 * 3600 * 1000, title: '👑 Alguien te superó en el ranking',  body: 'Tu clan necesita tu ayuda. ¡Entra ahora!',          url: '/' },
+        ]
+      });
+    };
+    scheduleReminders();
+  }, [user, pushStatus]);
 
   // ── Listen for messages from the game iframe ───────────────
   useEffect(() => {
@@ -211,6 +239,41 @@ export default function GameClient() {
               onClick={handleOpenLeaderboard}
               style={{ background: 'rgba(45,198,83,0.2)', border: '1px solid #2DC653', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer', color: '#2DC653', fontFamily: 'Fredoka One, cursive', fontSize: '11px', whiteSpace: 'nowrap' }}
             >🏆 Ranking</button>
+
+            {/* Push notification bell */}
+            {pushStatus !== 'unsupported' && pushStatus !== 'denied' && (
+              <button
+                onClick={async () => {
+                  if (pushStatus === 'granted') {
+                    await unsubscribePush();
+                    setPushStatus('default');
+                  } else {
+                    setPushStatus('loading');
+                    const result = await subscribePush();
+                    setPushStatus(result);
+                    if (result === 'granted') {
+                      // Show test notification
+                      new Notification('🏘️ Imperio del Barrio', {
+                        body: '¡Notificaciones activadas! Te avisaremos cuando tu barrio necesite atención.',
+                        icon: '/icon-192.png',
+                      });
+                    }
+                  }
+                }}
+                title={pushStatus === 'granted' ? 'Notificaciones activas — click para desactivar' : 'Activar notificaciones'}
+                style={{
+                  background: pushStatus === 'granted' ? 'rgba(255,225,53,0.2)' : 'rgba(255,255,255,0.08)',
+                  border: `1px solid ${pushStatus === 'granted' ? 'rgba(255,225,53,0.6)' : 'rgba(255,255,255,0.2)'}`,
+                  borderRadius: '6px', padding: '3px 7px',
+                  cursor: pushStatus === 'loading' ? 'wait' : 'pointer',
+                  color: pushStatus === 'granted' ? '#FFE135' : 'rgba(255,255,255,0.5)',
+                  fontSize: '13px', lineHeight: 1,
+                }}
+              >
+                {pushStatus === 'loading' ? '⏳' : pushStatus === 'granted' ? '🔔' : '🔕'}
+              </button>
+            )}
+
             <button
               onClick={handleSignOut}
               style={{ background: 'transparent', border: '1px solid rgba(255,71,87,0.4)', borderRadius: '6px', padding: '3px 7px', cursor: 'pointer', color: 'rgba(255,71,87,0.8)', fontSize: '10px', whiteSpace: 'nowrap' }}
