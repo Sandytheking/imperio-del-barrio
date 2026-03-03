@@ -75,64 +75,237 @@ body {
 .cloud:nth-child(3)::after { width: 55px; height: 55px; top: -28px; left: 70px; }
 @keyframes driftCloud { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
 
-/* ═══ HEADER ═══ */
+/* ═══ HEADER — solo información ═══ */
 header {
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--dark);
-  border-bottom: 4px solid var(--sun);
-  padding: 0 16px;
+  border-bottom: 3px solid var(--sun);
+  padding: 0 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+}
+
+/* Fila 1: dinero + chips */
+.hdr-row1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  padding: 6px 0 3px;
+  gap: 8px;
 }
-
-.logo-wrap {
+.hdr-money-block {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
 }
-.logo-icon {
-  width: 42px; height: 42px;
-  background: var(--sun);
-  border-radius: 10px;
-  border: var(--outline);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  box-shadow: var(--shadow-sm);
-}
-.logo-text {
-  font-family: 'Boogaloo', cursive;
+.hm-amount {
+  font-family: 'Fredoka One', cursive;
   font-size: 1.5rem;
   color: var(--sun);
   line-height: 1;
-  text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
-}
-.logo-text span { color: white; }
-
-.header-money {
-  background: var(--sun);
-  border: var(--outline);
-  border-radius: 99px;
-  padding: 6px 16px;
-  box-shadow: var(--shadow-sm);
-  text-align: center;
-}
-.hm-label { font-size: 0.6rem; color: var(--ink); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-.hm-amount {
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.3rem;
-  color: var(--ink);
-  line-height: 1;
   transition: transform 0.15s;
+  white-space: nowrap;
 }
 .hm-amount.bounce { animation: moneyBounce 0.3s ease; }
 @keyframes moneyBounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.25)} }
-.hm-ips { font-size: 0.6rem; color: #3a3a3a; font-weight: 800; }
+.hm-ips {
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: #2DC653;
+  white-space: nowrap;
+}
+.hdr-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.hdr-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 99px;
+  padding: 3px 9px;
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.78rem;
+  color: white;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.hdr-chip:hover { background: rgba(255,255,255,0.14); }
+.hdr-chip.gems { color: #D4A8FF; border-color: rgba(155,93,229,0.4); }
+.hdr-chip.level { color: #FFE135; border-color: rgba(255,225,53,0.4); }
+
+/* ⚙️ settings button */
+.hdr-settings-btn {
+  width: 30px; height: 30px;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.hdr-settings-btn:hover { background: rgba(255,255,255,0.18); color: white; }
+
+/* Fila 2: XP bar delgada */
+.hdr-xp-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+.hdr-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), #e040fb);
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+
+.header-money { display: none; } /* legacy — ocultar */
+.logo-wrap { display: none; }    /* logo movido al panel ⚙️ */
+.xp-circle-wrap { display: none; } /* reemplazado por barra */
+.gem-display { display: none; }
+.hdr-map-btn { display: none; }
+.sound-btn { display: none; }
+.company-name-display { display: none; }
+
+/* ═══ PANEL SECUNDARIO ⚙️ ═══ */
+#secondaryPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: none;
+}
+#secondaryPanel.open { display: block; }
+.sec-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+.sec-drawer {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: min(300px, 85vw);
+  background: var(--dark);
+  border-left: 3px solid var(--sun);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 8px;
+  overflow-y: auto;
+  animation: drawerIn 0.22s cubic-bezier(0.34,1.2,0.64,1);
+}
+@keyframes drawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.sec-title {
+  font-family: 'Boogaloo', cursive;
+  font-size: 1.4rem;
+  color: var(--sun);
+  margin-bottom: 8px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sec-close {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.sec-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 13px 16px;
+  color: white;
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+  width: 100%;
+}
+.sec-btn:hover { background: rgba(255,255,255,0.12); }
+.sec-btn-icon { font-size: 1.4rem; width: 28px; text-align: center; }
+.sec-btn-sub { font-size: 0.6rem; color: rgba(255,255,255,0.5); font-family: 'Nunito', sans-serif; font-weight: 700; margin-top: 1px; }
+.sec-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0; }
+.sec-game-info {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.3);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ═══ BOTTOM NAV — 4 tabs limpios ═══ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--dark);
+  border-top: 3px solid rgba(255,255,255,0.08);
+  display: flex;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.nav-btn {
+  flex: 1;
+  padding: 10px 4px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  position: relative;
+}
+.nav-btn.active {
+  background: rgba(255,225,53,0.1);
+}
+.nav-btn.active::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 15%; right: 15%;
+  height: 3px;
+  background: var(--sun);
+  border-radius: 0 0 4px 4px;
+}
+.nav-btn:hover:not(.active) { background: rgba(255,255,255,0.05); }
+.nav-emoji { font-size: 1.35rem; }
+.nav-label { font-size: 0.52rem; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
+.nav-btn.active .nav-label { color: var(--sun); }
+
+/* Ocultar tabs redundantes del centro — la nav de abajo los reemplaza */
+.tabs { display: none; }
+/* Stats strip — compactar */
+.stats-strip { display: none; }
+/* Level card — compactar, la info está en el header */
+.level-card { display: none; }
+
 
 /* ═══ SCREEN SYSTEM ═══ */
 .screen { display: none; }
@@ -1475,62 +1648,322 @@ body.super-empresa .hdr {
 .map-grid,.zone-cell,.zone-emoji,.zone-name,.zone-mult,.zone-cost,.zone-badge,.zone-locked-badge { display:none; }
 
 
-/* ═══ PRESTIGE ═══ */
-.prestige-card {
-  background: linear-gradient(135deg, #7B2FBE, #B24BF3);
+/* ═══ ASCENSO SOCIAL ═══ */
+.ascenso-wrap { padding: 0 0 24px; }
+
+/* Background scene */
+.ascenso-scene {
+  position: relative;
   border: var(--outline);
   border-radius: 20px;
+  overflow: hidden;
+  height: 180px;
+  margin-bottom: 16px;
   box-shadow: var(--shadow);
-  padding: 24px;
-  text-align: center;
+}
+.scene-bg {
+  position: absolute; inset: 0;
+  transition: background 1s ease;
+}
+/* Stage 1 – Barrio */
+.scene-stage-0 .scene-bg { background: linear-gradient(180deg, #87CEEB 0%, #B0C4DE 60%, #8B7355 100%); }
+/* Stage 2 – Casa */
+.scene-stage-1 .scene-bg { background: linear-gradient(180deg, #98D8C8 0%, #7BC8A4 50%, #5CB85C 100%); }
+/* Stage 3 – Casa Moderna */
+.scene-stage-2 .scene-bg { background: linear-gradient(180deg, #E0F0FF 0%, #B8D8F0 50%, #7CB87C 100%); }
+/* Stage 4 – Villa */
+.scene-stage-3 .scene-bg { background: linear-gradient(180deg, #FFE5A0 0%, #87CEEB 40%, #00B4D8 100%); }
+/* Stage 5 – Penthouse */
+.scene-stage-4 .scene-bg { background: linear-gradient(180deg, #0A0A2E 0%, #1A1A5E 40%, #2D2D8E 100%); }
+/* Stage 6 – Jet */
+.scene-stage-5 .scene-bg { background: linear-gradient(180deg, #E8F4FD 0%, #87CEEB 50%, #C8E6C9 100%); }
+/* Stage 7 – Corporación */
+.scene-stage-6 .scene-bg { background: linear-gradient(180deg, #0D0D0D 0%, #1A1A2E 50%, #16213E 100%); }
+
+.scene-emoji {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 5rem;
+  filter: drop-shadow(3px 4px 0px rgba(0,0,0,0.3));
+  animation: floatScene 3s ease-in-out infinite;
+}
+@keyframes floatScene { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-8px)} }
+
+/* Stage 5 penthouse – city lights blinking */
+.city-lights {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  display: none;
+}
+.scene-stage-4 .city-lights { display: block; }
+.city-light {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: #FFE135;
+  border-radius: 50%;
+  animation: blinkLight 1.5s ease-in-out infinite;
+}
+@keyframes blinkLight { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* Pool waves stage 4 */
+.pool-wave {
+  position: absolute;
+  bottom: 8px; left: 20%; right: 20%;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0,180,216,0.5);
+  display: none;
+  animation: wavePool 2s ease-in-out infinite;
+}
+.scene-stage-3 .pool-wave { display: block; }
+@keyframes wavePool { 0%,100%{transform:scaleX(1)} 50%{transform:scaleX(1.15)} }
+
+/* Jet flying stage 6 */
+.jet-fly {
+  position: absolute;
+  top: 30px;
+  font-size: 2rem;
+  display: none;
+  animation: flyJet 4s linear infinite;
+}
+.scene-stage-5 .jet-fly { display: block; }
+@keyframes flyJet { from{left:-60px;opacity:0} 10%{opacity:1} 90%{opacity:1} to{left:110%;opacity:0} }
+
+/* Stars stage 5 + 7 */
+.scene-stars {
+  position: absolute; top: 0; left: 0; right: 0; height: 80px;
+  display: none;
+  overflow: hidden;
+}
+.scene-stage-4 .scene-stars,
+.scene-stage-6 .scene-stars { display: block; }
+.star-dot {
+  position: absolute;
+  width: 3px; height: 3px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 2s ease-in-out infinite;
+}
+@keyframes twinkle { 0%,100%{opacity:1} 50%{opacity:0.1} }
+
+/* Scene label */
+.scene-label {
+  position: absolute;
+  top: 12px; left: 16px;
+  background: rgba(0,0,0,0.6);
   color: white;
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.9rem;
+  padding: 4px 12px;
+  border-radius: 99px;
+  backdrop-filter: blur(4px);
+}
+.scene-influence {
+  position: absolute;
+  top: 12px; right: 16px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: var(--ink);
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 2px solid var(--ink);
+}
+
+/* Stage cards */
+.stage-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stage-card {
+  background: var(--card);
+  border: var(--outline);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s;
   position: relative;
   overflow: hidden;
 }
-.prestige-card::before {
-  content: '⭐';
-  position: absolute;
-  font-size: 8rem;
-  opacity: 0.08;
-  top: -10px; right: -10px;
+.stage-card.current-stage {
+  background: linear-gradient(135deg, #FFE135, #FFA500);
+  animation: pulseStage 2s ease-in-out infinite;
 }
-.prestige-title { font-family: 'Boogaloo', cursive; font-size: 2rem; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
-.prestige-desc { font-size: 0.8rem; font-weight: 700; opacity: 0.85; margin: 8px 0 16px; }
-.prestige-req { font-size: 0.7rem; font-weight: 900; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 14px; margin-bottom: 16px; }
-.btn-prestige {
-  background: var(--sun);
-  color: var(--ink);
-  font-family: 'Fredoka One', cursive;
-  font-size: 1rem;
-  padding: 12px 28px;
-  border: var(--outline);
+@keyframes pulseStage { 0%,100%{box-shadow: var(--shadow-sm)} 50%{box-shadow: 0 0 20px rgba(255,165,0,0.6), var(--shadow-sm)} }
+.stage-card.completed-stage { background: linear-gradient(135deg, #d4edda, #a8d8a8); opacity: 0.85; }
+.stage-card.locked-stage { opacity: 0.45; }
+.stage-icon { font-size: 2.4rem; flex-shrink: 0; }
+.stage-info { flex: 1; min-width: 0; }
+.stage-name { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--ink); }
+.stage-bonus { font-size: 0.7rem; font-weight: 700; color: #555; margin-top: 2px; }
+.stage-badge {
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 3px 10px;
   border-radius: 99px;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.1s;
-}
-.btn-prestige:hover { transform: scale(1.05); }
-.btn-prestige:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-.prestige-stars {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-.p-star {
-  width: 36px; height: 36px;
-  background: var(--sun);
   border: 2px solid var(--ink);
-  border-radius: 8px;
+  flex-shrink: 0;
+}
+.badge-current { background: var(--ink); color: var(--sun); }
+.badge-done { background: #5CB85C; color: white; }
+.badge-locked { background: #ddd; color: #888; }
+
+/* Influence panel */
+.influence-panel {
+  background: linear-gradient(135deg, #1a1a3e, #2d2d6e);
+  border: var(--outline);
+  border-radius: 18px;
+  padding: 18px;
+  color: white;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.influence-title { font-family: 'Boogaloo', cursive; font-size: 1.5rem; margin-bottom: 12px; }
+.influence-upgrades { display: flex; flex-direction: column; gap: 8px; }
+.inf-upgrade {
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  box-shadow: 2px 2px 0 var(--ink);
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
 }
-.p-star.empty { background: rgba(255,255,255,0.15); }
+.inf-upgrade:hover { background: rgba(255,255,255,0.15); transform: translateX(4px); }
+.inf-upgrade.bought { opacity: 0.5; cursor: default; }
+.inf-upgrade.bought:hover { transform: none; }
+.inf-upgrade-icon { font-size: 1.5rem; }
+.inf-upgrade-info { flex: 1; }
+.inf-upgrade-name { font-family: 'Fredoka One', cursive; font-size: 0.9rem; }
+.inf-upgrade-desc { font-size: 0.7rem; opacity: 0.75; }
+.inf-upgrade-cost { font-size: 0.8rem; font-weight: 900; color: #FFD700; }
+
+/* Ascend button */
+.btn-ascend {
+  width: 100%;
+  background: linear-gradient(135deg, #FFE135, #FFA500);
+  color: var(--ink);
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.2rem;
+  padding: 16px;
+  border: var(--outline);
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.1s;
+  letter-spacing: 0.5px;
+}
+.btn-ascend:hover { transform: scale(1.02); }
+.btn-ascend:disabled { opacity: 0.45; cursor: not-allowed; transform: none; background: #ccc; }
+
+/* Ascend modal */
+.ascend-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s;
+}
+.ascend-modal {
+  background: var(--card);
+  border: var(--outline);
+  border-radius: 24px;
+  padding: 28px 24px;
+  max-width: 340px;
+  width: 92%;
+  text-align: center;
+  box-shadow: 8px 8px 0 var(--ink);
+  animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+  overflow: hidden;
+}
+.ascend-modal::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,225,53,0.08), rgba(255,165,0,0.08));
+  pointer-events: none;
+}
+.ascend-modal-title { font-family: 'Boogaloo', cursive; font-size: 2rem; color: var(--ink); margin-bottom: 8px; }
+.ascend-modal-scene { font-size: 4rem; margin: 12px 0; animation: floatScene 2s ease-in-out infinite; }
+.ascend-modal-sub { font-size: 0.85rem; font-weight: 700; color: #555; margin-bottom: 16px; }
+.ascend-keep-lose {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 20px;
+}
+.akl-box { border-radius: 12px; padding: 10px; font-size: 0.75rem; font-weight: 700; text-align: left; border: 2px solid var(--ink); }
+.akl-keep { background: #d4edda; }
+.akl-lose { background: #f8d7da; }
+.akl-title { font-size: 0.8rem; font-family: 'Fredoka One', cursive; margin-bottom: 6px; }
+.ascend-confirm-btns { display: flex; gap: 10px; }
+.btn-cancel-ascend {
+  flex: 1;
+  background: #ddd; color: var(--ink);
+  border: var(--outline); border-radius: 12px;
+  padding: 12px; font-family: 'Fredoka One', cursive;
+  font-size: 0.95rem; cursor: pointer;
+}
+.btn-confirm-ascend {
+  flex: 2;
+  background: linear-gradient(135deg, #FFE135, #FFA500);
+  color: var(--ink);
+  border: var(--outline); border-radius: 12px;
+  padding: 12px; font-family: 'Fredoka One', cursive;
+  font-size: 1rem; cursor: pointer; box-shadow: var(--shadow-sm);
+  transition: transform 0.1s;
+}
+.btn-confirm-ascend:hover { transform: scale(1.03); }
+
+/* Ascend celebration */
+.ascend-celebration {
+  position: fixed; inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.ascend-cel-text {
+  font-family: 'Boogaloo', cursive;
+  font-size: 3rem;
+  color: white;
+  text-shadow: 3px 3px 0 var(--ink);
+  animation: celBounce 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  opacity: 0;
+}
+.ascend-cel-sub {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.2rem;
+  color: var(--sun);
+  text-shadow: 2px 2px 0 var(--ink);
+  margin-top: 8px;
+  animation: celBounce 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  opacity: 0;
+}
+@keyframes celBounce { from{opacity:0;transform:scale(0.5)} to{opacity:1;transform:scale(1)} }
+
+/* Confetti particle override */
+.confetti-ascend {
+  position: fixed;
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9998;
+  animation: confettiFall 2s ease-in forwards;
+}
+@keyframes confettiFall {
+  from { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
 
 /* ═══ EVENT BANNER ═══ */
 .event-banner {
@@ -1807,33 +2240,6 @@ body.night-mode .night-stars { opacity: 0.35; }
 .levelup-flash.pop { animation: lvlFlash 0.8s ease forwards; }
 @keyframes lvlFlash { 0%{opacity:0.9} 100%{opacity:0} }
 
-/* ═══ BOTTOM NAV ═══ */
-.bottom-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: var(--dark);
-  border-top: 4px solid var(--sun);
-  display: flex;
-  z-index: 100;
-}
-.nav-btn {
-  flex: 1;
-  padding: 10px 4px 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: center;
-  transition: background 0.15s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-.nav-btn.active { background: rgba(255,225,53,0.15); }
-.nav-btn:hover { background: rgba(255,255,255,0.07); }
-.nav-emoji { font-size: 1.3rem; }
-.nav-label { font-size: 0.55rem; font-weight: 900; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-.nav-btn.active .nav-label { color: var(--sun); }
 
 </style>
 </head>
@@ -1847,37 +2253,66 @@ body.night-mode .night-stars { opacity: 0.35; }
 
 <!-- HEADER (hidden on intro) -->
 <header id="mainHeader" style="display:none">
-  <div class="logo-wrap">
-    <div class="logo-icon">🏘️</div>
-    <div class="logo-text">Imperio<br><span>del Barrio</span></div>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px">
-    <div class="xp-circle-wrap" title="XP">
-      <svg width="42" height="42" viewBox="0 0 42 42">
-        <circle class="xp-circle-bg" cx="21" cy="21" r="17"/>
-        <circle class="xp-circle-fill" id="xpCircle" cx="21" cy="21" r="17" stroke-dasharray="106.8" stroke-dashoffset="106.8"/>
-      </svg>
-      <div class="xp-circle-label" id="xpCircleLbl">Nv.1</div>
+  <!-- Fila 1: dinero + chips + ajustes -->
+  <div class="hdr-row1">
+    <div class="hdr-money-block">
+      <div class="hm-amount" id="hdrMoney">$0</div>
+      <div class="hm-ips" id="hdrIPS">+$0/seg</div>
     </div>
-    <button class="btn-share" onclick="shareGame()">📤 Compartir</button>
-    <button class="hdr-map-btn" onclick="openMapOverlay()" id="hdrMapBtn">
-      <span class="zone-dot"></span>
-      <span id="hdrZoneLabel">🏘️ Centro</span>
-    </button>
-    <button class="sound-btn" id="soundBtn" onclick="toggleSound()" title="Sonido">🔊</button>
+    <div class="hdr-chips">
+      <div class="hdr-chip gems" onclick="openGemShop()" title="Gemas">💎 <span id="hdrGems">0</span></div>
+      <div class="hdr-chip level" id="hdrLevelChip">⭐ Nv.1</div>
+      <button class="hdr-settings-btn" onclick="openSecondaryPanel()" title="Más opciones">⚙️</button>
+    </div>
   </div>
-  <div class="gem-display" onclick="openGemShop()" title="Gemas">
-    <div class="gem-label">💎 Gemas</div>
-    <div class="gem-amount" id="hdrGems">0</div>
+  <!-- Fila 2: barra XP delgada -->
+  <div class="hdr-xp-bar">
+    <div class="hdr-xp-fill" id="hdrXpFill" style="width:0%"></div>
   </div>
-  <div class="company-name-display" id="companyNameHdr"></div>
-  <div class="header-money">
-    <div class="hm-label">💰 Caja</div>
-    <div class="hm-amount" id="hdrMoney">$0</div>
-    <div class="hm-ips" id="hdrIPS">+$0/seg</div>
-    <div class="session-timer" id="sessionTimer">⏱ 0:00</div>
-  </div>
+  <!-- IDs legacy ocultos para no romper JS -->
+  <span id="xpCircleLbl" style="display:none"></span>
+  <span id="hdrZoneLabel" style="display:none">🏘️ Centro</span>
+  <span id="companyNameHdr" style="display:none"></span>
+  <span id="sessionTimer" style="display:none"></span>
 </header>
+
+<!-- ══ PANEL SECUNDARIO ⚙️ ══ -->
+<div id="secondaryPanel">
+  <div class="sec-backdrop" onclick="closeSecondaryPanel()"></div>
+  <div class="sec-drawer">
+    <div class="sec-title">
+      🏘️ Imperio del Barrio
+      <button class="sec-close" onclick="closeSecondaryPanel()">✕</button>
+    </div>
+    <button class="sec-btn" onclick="openMapOverlay();closeSecondaryPanel()">
+      <span class="sec-btn-icon">🗺️</span>
+      <div><div>Mapa & Zonas</div><div class="sec-btn-sub">Expande tu territorio</div></div>
+    </button>
+    <button class="sec-btn" onclick="showTab('logros');closeSecondaryPanel()">
+      <span class="sec-btn-icon">🏆</span>
+      <div><div>Logros</div><div class="sec-btn-sub">Tus metas y objetivos</div></div>
+    </button>
+    <button class="sec-btn" onclick="toggleSound();updateSoundBtn()" id="secSoundBtn">
+      <span class="sec-btn-icon">🔊</span>
+      <div><div id="secSoundLabel">Sonido activado</div><div class="sec-btn-sub">Toca para cambiar</div></div>
+    </button>
+    <button class="sec-btn" onclick="shareGame();closeSecondaryPanel()">
+      <span class="sec-btn-icon">📤</span>
+      <div><div>Compartir</div><div class="sec-btn-sub">Muestra tu Imperio</div></div>
+    </button>
+    <div class="sec-divider"></div>
+    <button class="sec-btn" onclick="openGemShop();closeSecondaryPanel()">
+      <span class="sec-btn-icon">💎</span>
+      <div><div>Tienda de Gemas</div><div class="sec-btn-sub" id="secGemsCount">0 gemas disponibles</div></div>
+    </button>
+    <div class="sec-divider"></div>
+    <button class="sec-btn" onclick="resetGame&&resetGame()" style="color:#ff6b6b">
+      <span class="sec-btn-icon">🗑️</span>
+      <div><div>Reiniciar partida</div><div class="sec-btn-sub">Borra todo el progreso</div></div>
+    </button>
+    <div class="sec-game-info" id="secGameInfo">Imperio del Barrio v9 • Santiago, DO</div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════ INTRO ══════════════════════════════ -->
 <div id="introScreen" class="screen active">
@@ -1924,7 +2359,7 @@ body.night-mode .night-stars { opacity: 0.35; }
     <div class="stat-pill"><div class="stat-emo">👥</div><div class="stat-val" id="stClientes">0</div><div class="stat-lbl">Clientes</div></div>
     <div class="stat-pill"><div class="stat-emo">🏆</div><div class="stat-val" id="stNivel">1</div><div class="stat-lbl">Nivel</div></div>
     <div class="stat-pill"><div class="stat-emo">🏪</div><div class="stat-val" id="stNegocios">0</div><div class="stat-lbl">Negocios</div></div>
-    <div class="stat-pill"><div class="stat-emo">⭐</div><div class="stat-val" id="stPrestige">0</div><div class="stat-lbl">Prestigio</div></div>
+    <div class="stat-pill"><div class="stat-emo">💎</div><div class="stat-val" id="stPrestige">0</div><div class="stat-lbl">Influencia</div></div>
   </div>
 
   <!-- Level -->
@@ -1942,6 +2377,7 @@ body.night-mode .night-stars { opacity: 0.35; }
     <button class="tab-btn" onclick="showTab('mejoras')">⚡ Mejoras</button>
     <button class="tab-btn" onclick="showTab('logros')">🏆 Logros</button>
     <button class="tab-btn" onclick="showTab('mapa')">🗺️ Mapa</button>
+    <button class="tab-btn" onclick="showTab('ascenso')">🚀 Ascenso</button>
   </div>
 
   <!-- Negocios tab -->
@@ -2019,6 +2455,10 @@ body.night-mode .night-stars { opacity: 0.35; }
 <div id="prestigeSection" style="display:none; padding: 0 0 20px">
 </div>
 
+<div class="tab-panel" id="tab-ascenso">
+  <div id="ascensoTabContent"></div>
+</div>
+
 <!-- Night stars overlay -->
 <div class="night-stars"></div>
 
@@ -2083,10 +2523,21 @@ body.night-mode .night-stars { opacity: 0.35; }
 
 <!-- Bottom nav -->
 <nav class="bottom-nav" id="bottomNav" style="display:none">
-  <button class="nav-btn active" onclick="showTab('negocios')"><span class="nav-emoji">🏪</span><span class="nav-label">Negocios</span></button>
-  <button class="nav-btn" onclick="showTab('mejoras')"><span class="nav-emoji">⚡</span><span class="nav-label">Mejoras</span></button>
-  <button class="nav-btn" onclick="showTab('logros')"><span class="nav-emoji">🏆</span><span class="nav-label">Logros</span></button>
-  <button class="nav-btn" onclick="showTab('mapa')"><span class="nav-emoji">🗺️</span><span class="nav-label">Mapa</span></button>
+  <button class="nav-btn active" onclick="showTab('negocios')">
+    <span class="nav-emoji">🏪</span><span class="nav-label">Negocios</span>
+  </button>
+  <button class="nav-btn" onclick="showTab('mejoras')">
+    <span class="nav-emoji">⚡</span><span class="nav-label">Mejoras</span>
+  </button>
+  <button class="nav-btn" onclick="showTab('mapa')">
+    <span class="nav-emoji">🗺️</span><span class="nav-label">Ciudad</span>
+  </button>
+  <button class="nav-btn" onclick="showTab('ascenso')">
+    <span class="nav-emoji">🚀</span><span class="nav-label">Ascenso</span>
+  </button>
+  <button class="nav-btn" onclick="openSecondaryPanel()">
+    <span class="nav-emoji">⚙️</span><span class="nav-label">Más</span>
+  </button>
 </nav>
 
 <!-- ══════════════════════════════ MAP OVERLAY ══════════════════════════════ -->
@@ -2229,7 +2680,7 @@ const ZONES = [
   { id: 'norte', name: 'Zona Norte', icon: '🏙️', mult: 1.5, cost: 50000, minLevel: 3 },
   { id: 'sur', name: 'Zona Sur', icon: '🌴', mult: 1.3, cost: 30000, minLevel: 2 },
   { id: 'este', name: 'Zona Este', icon: '🏭', mult: 1.8, cost: 200000, minLevel: 5 },
-  { id: 'premium', name: 'Zona Premium', icon: '💎', mult: 2.5, cost: 1000000, minLevel: 6 },
+  { id: 'premium', name: 'Zona Premium', icon: '💎', mult: 6.5, cost: 10000000, minLevel: 8 },
   { id: 'aeropuerto', name: 'Aeropuerto', icon: '✈️', mult: 3.0, cost: 5000000, minLevel: 7 },
 ];
 
@@ -2329,6 +2780,11 @@ let G = {
   level: 0,
   prestigeStars: 0,
   prestigeMult: 1,
+  // ASCENSO SOCIAL
+  socialStage: 0,           // 0-6 (7 etapas)
+  influence: 0,             // nuevo recurso
+  totalInfluence: 0,        // influencia acumulada total
+  influenceUpgrades: {},    // upgrades comprados con influencia
   businesses: {},
   upgrades: {},
   achievements: {},
@@ -2414,7 +2870,7 @@ function bizIncome(biz) {
   });
   const zone = ZONES.find(z => z.id === G.zone) || ZONES[0];
   inc *= zone.mult;
-  inc *= G.prestigeMult;
+  inc *= getStageMult();
   // Event
   if (G.activeEvent) {
     const ev = G.activeEvent;
@@ -2515,32 +2971,119 @@ function moveZone(id) {
   saveGame();
 }
 
-function doPrestige() {
-  const canPrestige = G.level >= 6 && G.totalEarned >= 500000;
-  if (!canPrestige) { notify('🔒 Necesitas Nivel 6 + $500k ganados'); return; }
-  const isP2 = G.prestigeStars >= 5;
-  const msg = isP2
-    ? '¿Prestige II? Conservas zonas y mejoras clave, pero reseteas negocios y nivel.'
-    : '¿Seguro? Perderás dinero y negocios, pero ganarás ⭐ con +25% permanentes.';
-  if (!confirm(msg)) return;
+// ═══════════════════════════════════════════════
+// ASCENSO SOCIAL — DATOS
+// ═══════════════════════════════════════════════
+const SOCIAL_STAGES = [
+  { id:0, name:'El Comienzo', icon:'🏚️', label:'Viviendo en el barrio', incomeMult:1, speedMult:1, vipMult:1, offlineMult:1, bonus:'Sin bonos extra', req:null },
+  { id:1, name:'Casa Propia', icon:'🏠', label:'Una casa sencilla tuya', incomeMult:1.10, speedMult:1.05, vipMult:1, offlineMult:1, bonus:'+10% ingresos · +5% velocidad', req:{level:6, totalEarned:500000}, influenceReward:1 },
+  { id:2, name:'Casa Moderna', icon:'🏡', label:'Moderna con garaje', incomeMult:1.20, speedMult:1.10, vipMult:1, offlineMult:1, bonus:'+20% ingresos · +10% eficiencia', req:{level:8, totalEarned:2000000}, influenceReward:2 },
+  { id:3, name:'Villa', icon:'🏖️', label:'Villa con piscina', incomeMult:1.35, speedMult:1.15, vipMult:1.15, offlineMult:1, bonus:'+35% ingresos · +15% eventos VIP', req:{level:12, totalEarned:10000000}, influenceReward:3 },
+  { id:4, name:'Penthouse', icon:'🏙️', label:'Vista panorámica a la ciudad', incomeMult:1.50, speedMult:1.20, vipMult:1.20, offlineMult:1.25, bonus:'+50% ingresos · +25% offline', req:{level:16, totalEarned:50000000}, influenceReward:5 },
+  { id:5, name:'Jet Privado', icon:'🛩️', label:'Acceso global', incomeMult:1.75, speedMult:1.30, vipMult:1.30, offlineMult:1.35, bonus:'+75% ingresos · +30% premium', req:{level:20, totalEarned:200000000}, influenceReward:8 },
+  { id:6, name:'Corporación', icon:'🌎', label:'Imperio global', incomeMult:2.0, speedMult:1.50, vipMult:1.50, offlineMult:1.50, bonus:'+100% ingresos · Bonus total', req:{level:25, totalEarned:1000000000}, influenceReward:15 },
+];
+
+const INFLUENCE_UPGRADES = [
+  { id:'inf_mindset', icon:'🧠', name:'Mentalidad Ganadora', desc:'+5% ingresos globales', cost:1, incomeMult:1.05 },
+  { id:'inf_network', icon:'🤝', name:'Red de Contactos', desc:'+8% velocidad negocios', cost:2, speedMult:1.08 },
+  { id:'inf_brand', icon:'🎨', name:'Marca Personal', desc:'+10% precio premium', cost:3, incomeMult:1.10 },
+  { id:'inf_media', icon:'📱', name:'Presencia en Redes', desc:'+15% ingresos totales', cost:5, incomeMult:1.15 },
+  { id:'inf_empire', icon:'👑', name:'Visión de Imperio', desc:'+25% todos los ingresos', cost:10, incomeMult:1.25 },
+];
+
+function getStageMult() {
+  const s = SOCIAL_STAGES[G.socialStage] || SOCIAL_STAGES[0];
+  let mult = s.incomeMult;
+  if (!G.influenceUpgrades) G.influenceUpgrades = {};
+  INFLUENCE_UPGRADES.forEach(u => { if (G.influenceUpgrades[u.id] && u.incomeMult) mult *= u.incomeMult; });
+  return mult;
+}
+
+function canAscend() {
+  const nextStage = SOCIAL_STAGES[(G.socialStage||0) + 1];
+  if (!nextStage || !nextStage.req) return false;
+  return G.level >= nextStage.req.level && G.totalEarned >= nextStage.req.totalEarned;
+}
+
+function showAscendModal() {
+  if (!canAscend()) { notify('🔒 No cumples los requisitos aún'); return; }
+  const next = SOCIAL_STAGES[(G.socialStage||0) + 1];
+  const overlay = document.createElement('div');
+  overlay.className = 'ascend-modal-overlay';
+  overlay.id = 'ascendModalOverlay';
+  overlay.innerHTML = `<div class="ascend-modal">
+    <div class="ascend-modal-title">🚀 ¡Ascender!</div>
+    <div class="ascend-modal-scene">${next.icon}</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--ink)">${next.name}</div>
+    <div class="ascend-modal-sub">${next.label} · ${next.bonus}</div>
+    <div class="ascend-keep-lose">
+      <div class="akl-box akl-keep"><div class="akl-title">✅ Conservas</div>💎 Influencia<br>🏆 Logros<br>⚡ Bonos permanentes</div>
+      <div class="akl-box akl-lose"><div class="akl-title">❌ Se reinicia</div>💰 Dinero<br>🏪 Negocios<br>📈 Nivel XP</div>
+    </div>
+    <div style="font-size:0.75rem;font-weight:700;color:#888;margin-bottom:16px">+${next.influenceReward||1} 💎 Influencia al ascender</div>
+    <div class="ascend-confirm-btns">
+      <button class="btn-cancel-ascend" onclick="document.getElementById('ascendModalOverlay').remove()">Cancelar</button>
+      <button class="btn-confirm-ascend" onclick="doAscend()">🔥 ¡Ascender!</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function doAscend() {
+  document.getElementById('ascendModalOverlay')?.remove();
+  if (!canAscend()) return;
+  const next = SOCIAL_STAGES[(G.socialStage||0) + 1];
+  const influenceReward = next.influenceReward || 1;
+  G.socialStage = (G.socialStage||0) + 1;
+  G.influence = (G.influence||0) + influenceReward;
+  G.totalInfluence = (G.totalInfluence||0) + influenceReward;
   G.prestigeStars++;
-  G.prestigeMult = 1 + G.prestigeStars * 0.25;
   G.money = 500;
   G.totalEarned = 0;
   G.xp = 0;
   G.level = 0;
   G.businesses = {};
-  if (!isP2) {
-    G.upgrades = {};
-    G.zone = 'centro';
-    G.zoneHistory = ['centro'];
-  }
-  notify(`⭐ ¡Prestigio ${G.prestigeStars}! Multiplicador: x${G.prestigeMult.toFixed(2)}`);
+  G.upgrades = {};
+  G.zone = 'centro';
+  G.zoneHistory = ['centro'];
+  showAscendCelebration(next);
   playSound('levelup');
   checkAchievements();
   renderAll();
   saveGame();
 }
+
+function buyInfluenceUpgrade(id) {
+  const u = INFLUENCE_UPGRADES.find(u => u.id === id);
+  if (!u || G.influenceUpgrades?.[id]) return;
+  if ((G.influence||0) < u.cost) { notify(`💎 Necesitas ${u.cost} de Influencia`); return; }
+  G.influence -= u.cost;
+  if (!G.influenceUpgrades) G.influenceUpgrades = {};
+  G.influenceUpgrades[id] = true;
+  notify(`${u.icon} ¡${u.name} activado!`);
+  playSound('buy');
+  renderPrestige();
+  saveGame();
+}
+
+function showAscendCelebration(stage) {
+  const colors = ['#FFE135','#FF4757','#00C9A7','#7B2FBE','#FF6348'];
+  for (let i = 0; i < 60; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-ascend';
+    c.style.cssText = `left:${Math.random()*100}vw;top:-20px;background:${colors[i%colors.length]};animation-duration:${1.5+Math.random()*1.5}s;animation-delay:${Math.random()*0.5}s;transform:rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+  }
+  const cel = document.createElement('div');
+  cel.className = 'ascend-celebration';
+  cel.innerHTML = `<div class="ascend-cel-text">🚀 ¡ASCENDISTE!</div><div style="font-size:5rem;margin:12px 0">${stage.icon}</div><div class="ascend-cel-sub">${stage.name}</div>`;
+  document.body.appendChild(cel);
+  setTimeout(() => cel.remove(), 3200);
+}
+
+function doPrestige() { showAscendModal(); }
 
 // ═══════════════════════════════════════════════
 // RENDER
@@ -3645,7 +4188,7 @@ function renderAll() {
   document.getElementById('stClientes').textContent = fmtRaw(totalClientes());
   document.getElementById('stNivel').textContent = G.level + 1;
   document.getElementById('stNegocios').textContent = BUSINESSES.filter(b=>bizLevel(b.id)>0).length;
-  document.getElementById('stPrestige').textContent = G.prestigeStars;
+  document.getElementById('stPrestige').textContent = G.influence||0;
   // Level
   const req = xpRequired(G.level);
   document.getElementById('lcBadge').textContent = `Nivel ${G.level+1} – ${LEVELS[G.level].name}`;
@@ -4282,12 +4825,19 @@ updateDayNight();
 function updateXPCircle() {
   const req = xpRequired(G.level);
   const pct = Math.min(G.xp / req, 1);
-  const circumference = 2 * Math.PI * 17; // r=17
+  // Legacy circle (hidden)
+  const circumference = 2 * Math.PI * 17;
   const offset = circumference * (1 - pct);
   const circle = document.getElementById('xpCircle');
   const lbl = document.getElementById('xpCircleLbl');
   if (circle) circle.style.strokeDashoffset = offset;
   if (lbl) lbl.textContent = `${G.level + 1}`;
+  // New slim bar
+  const fill = document.getElementById('hdrXpFill');
+  if (fill) fill.style.width = (pct * 100) + '%';
+  // Level chip
+  const chip = document.getElementById('hdrLevelChip');
+  if (chip) chip.textContent = `⭐ Nv.${G.level + 1}`;
 }
 
 // ═══════════════════════════════════════════════
@@ -4316,12 +4866,13 @@ function showTab(name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const tabs = ['negocios','mejoras','logros','mapa'];
-  const idx = tabs.indexOf(name);
   const el = document.getElementById(`tab-${name}`);
   if (el) el.classList.add('active');
-  document.querySelectorAll('.tab-btn')[idx]?.classList.add('active');
-  document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+  // Map new nav order: negocios=0, mejoras=1, mapa=2, ⚙️=3
+  const navOrder = ['negocios','mejoras','mapa'];
+  const navIdx = navOrder.indexOf(name);
+  if (navIdx >= 0) document.querySelectorAll('.nav-btn')[navIdx]?.classList.add('active');
+  if (name === 'ascenso') renderAscensoTab();
 }
 
 // ═══════════════════════════════════════════════
@@ -4374,20 +4925,69 @@ function nextTutorial() {
 // ═══════════════════════════════════════════════
 // PRESTIGE IMPROVED
 // ═══════════════════════════════════════════════
+function renderAscensoTab() {
+  renderPrestige();
+}
+
 function renderPrestige() {
-  const sec = document.getElementById('prestigeSection');
-  sec.style.display = 'block';
-  const canPrestige = G.level >= 6 && G.totalEarned >= 500000;
-  const isP2 = G.prestigeStars >= 5;
-  const stars = Array.from({length: 5}, (_,i) => `<div class="p-star ${i < G.prestigeStars ? '' : 'empty'}">${i < G.prestigeStars ? '⭐' : ''}</div>`).join('');
-  sec.innerHTML = `<div class="prestige-card">
-    <div class="prestige-title">⭐ Sistema de Prestigio${isP2 ? ' II' : ''}</div>
-    <div class="prestige-stars">${stars}</div>
-    <div class="prestige-desc">${isP2 ? '🔥 Prestige II: conservas zonas y mejoras clave.' : 'Reinicia tu imperio para ganar poder permanente.'} Cada ⭐ = +25% ganancias para siempre.</div>
-    <div class="prestige-req">Multiplicador: x${G.prestigeMult.toFixed(2)} · Req: Nivel 6 + $500k ganados · Total ganado: ${fmt(G.totalEarned)}</div>
-    <button class="btn-prestige" onclick="doPrestige()" ${!canPrestige ? 'disabled' : ''}>
-      ${canPrestige ? (isP2 ? '🔥 Prestige II!' : '🔁 ¡Hacer Prestigio!') : '🔒 Nivel 6 + $500k ganados'}
-    </button>
+  const sec = document.getElementById('ascensoTabContent') || document.getElementById('prestigeSection');
+  if (!sec) return;
+  const stageIdx = G.socialStage || 0;
+  const stage = SOCIAL_STAGES[stageIdx];
+  const nextStage = SOCIAL_STAGES[stageIdx + 1];
+  const can = canAscend();
+  if (!G.influenceUpgrades) G.influenceUpgrades = {};
+
+  const starDots = (stageIdx===4||stageIdx===6) ? Array.from({length:15},()=>`<div class="star-dot" style="left:${Math.random()*95}%;top:${Math.random()*75}%;animation-delay:${(Math.random()*2).toFixed(1)}s"></div>`).join('') : '';
+  const cityLights = stageIdx===4 ? Array.from({length:20},(_,i)=>`<div class="city-light" style="left:${i*5}%;bottom:${(5+Math.random()*55).toFixed(0)}%;animation-delay:${(Math.random()*2).toFixed(1)}s"></div>`).join('') : '';
+
+  const stageCards = SOCIAL_STAGES.map((s,i) => {
+    let cls='', badge='';
+    if(i===stageIdx){cls='current-stage';badge='<span class="stage-badge badge-current">ACTUAL</span>';}
+    else if(i<stageIdx){cls='completed-stage';badge='<span class="stage-badge badge-done">✓</span>';}
+    else{cls='locked-stage';badge='<span class="stage-badge badge-locked">🔒</span>';}
+    return `<div class="stage-card ${cls}"><div class="stage-icon">${s.icon}</div><div class="stage-info"><div class="stage-name">${s.name}</div><div class="stage-bonus">${s.bonus}</div></div>${badge}</div>`;
+  }).join('');
+
+  const infUpgrades = INFLUENCE_UPGRADES.map(u => {
+    const bought = G.influenceUpgrades[u.id];
+    return `<div class="inf-upgrade ${bought?'bought':''}" onclick="${bought?'':("buyInfluenceUpgrade('"+u.id+"')")}">
+      <div class="inf-upgrade-icon">${u.icon}</div>
+      <div class="inf-upgrade-info"><div class="inf-upgrade-name">${u.name}</div><div class="inf-upgrade-desc">${u.desc}</div></div>
+      <div class="inf-upgrade-cost">${bought?'✓':('💎'+u.cost)}</div>
+    </div>`;
+  }).join('');
+
+  let ascendBtn = '';
+  if (nextStage) {
+    const r = nextStage.req;
+    const reqTxt = can ? `✅ Listo para ascender` : `Req: Nv.${r.level} + ${fmt(r.totalEarned)} · Ganado: ${fmt(G.totalEarned)}`;
+    const btnTxt = can ? `🚀 ¡Ascender a ${nextStage.name}!` : `🔒 Nv.${r.level} + ${fmt(r.totalEarned)}`;
+    ascendBtn = `<div style="font-size:0.75rem;font-weight:700;color:#888;margin-bottom:10px;text-align:center">${reqTxt}</div>
+    <button class="btn-ascend" onclick="showAscendModal()" ${!can?'disabled':''}>${btnTxt}</button>`;
+  } else {
+    ascendBtn = `<div style="text-align:center;font-family:'Boogaloo',cursive;font-size:1.5rem;color:var(--ink)">🌎 ¡Eres el jefe máximo!</div>`;
+  }
+
+  sec.innerHTML = `<div class="ascenso-wrap">
+    <div class="ascenso-scene scene-stage-${stageIdx}">
+      <div class="scene-bg"></div>
+      <div class="scene-stars">${starDots}</div>
+      <div class="city-lights">${cityLights}</div>
+      <div class="pool-wave"></div>
+      <div class="jet-fly">✈️</div>
+      <div class="scene-emoji">${stage.icon}</div>
+      <div class="scene-label">${stage.name}</div>
+      <div class="scene-influence">💎 ${G.influence||0}</div>
+    </div>
+    <div class="influence-panel">
+      <div class="influence-title">💎 Influencia — Mejoras Permanentes</div>
+      <div style="font-size:0.78rem;opacity:0.8;margin-bottom:10px">Tienes <strong>${G.influence||0}</strong> · Total: ${G.totalInfluence||0}</div>
+      <div class="influence-upgrades">${infUpgrades}</div>
+    </div>
+    <div style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--ink);margin-bottom:10px">🏆 Progresión Social</div>
+    <div class="stage-grid">${stageCards}</div>
+    ${ascendBtn}
   </div>`;
 }
 
@@ -4429,6 +5029,14 @@ if (!G.bizUpgrades) G.bizUpgrades = {};
 if (!G.dailyObjClaimed) G.dailyObjClaimed = {};
 if (!G.dailyObjSeed) G.dailyObjSeed = Date.now();
 if (!G.theme) G.theme = 'gold';
+// v10: Ascenso Social migration
+if (G.socialStage === undefined) {
+  // Migrate old prestige stars to socialStage
+  G.socialStage = Math.min(G.prestigeStars || 0, 6);
+  G.influence = G.prestigeStars || 0;
+  G.totalInfluence = G.prestigeStars || 0;
+  G.influenceUpgrades = {};
+}
 applyTheme(G.theme);
 
 if (hadSave) {
@@ -4464,6 +5072,28 @@ if (hadSave) {
   G.money = 500;
   G.soundOn = true;
 }
+
+// ═══════════════════════════════════════════════
+// PANEL SECUNDARIO ⚙️
+// ═══════════════════════════════════════════════
+function openSecondaryPanel() {
+  document.getElementById('secondaryPanel').classList.add('open');
+  // Update dynamic content
+  const gemsEl = document.getElementById('secGemsCount');
+  if (gemsEl) gemsEl.textContent = `${G.gems || 0} gemas disponibles`;
+  updateSoundBtn();
+}
+function closeSecondaryPanel() {
+  document.getElementById('secondaryPanel').classList.remove('open');
+}
+function updateSoundBtn() {
+  const lbl = document.getElementById('secSoundLabel');
+  if (lbl) lbl.textContent = G.soundOn ? 'Sonido activado' : 'Sonido desactivado';
+  const btn = document.getElementById('secSoundBtn');
+  if (btn) btn.querySelector('.sec-btn-icon').textContent = G.soundOn ? '🔊' : '🔇';
+}
+// Close panel on Escape key
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSecondaryPanel(); });
 </script>
 <script src="/game/game-bridge.js"></script>
 

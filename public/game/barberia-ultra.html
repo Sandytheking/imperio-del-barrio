@@ -1150,13 +1150,12 @@ function updateHUD(){
     const cost=upgCost(k);
     const atMax = k==='sillas' && nChairs()>=MAX_CHAIRS;
     const can = !atMax && G.money>=cost;
-    document.getElementById(`lv-${k}`).textContent=`Nv.${G.upg[k].lv}`;
-    document.getElementById(`st-${k}`).innerHTML=`<b>${defs[k].st}</b>`;
-    document.getElementById(`nx-${k}`).innerHTML=`<b>${atMax && k==='sillas' ? '¡Máximo!' : defs[k].nx}</b>`;
-    document.getElementById(`cs-${k}`).textContent=atMax && k==='sillas' ? 'MAX' : cost.toLocaleString();
+    const lv=document.getElementById(`lv-${k}`); if(lv) lv.textContent=`Nv.${G.upg[k].lv}`;
+    const st=document.getElementById(`st-${k}`); if(st) st.innerHTML=`<b>${defs[k]?.st||''}</b>`;
+    const nx=document.getElementById(`nx-${k}`); if(nx) nx.innerHTML=`<b>${atMax && k==='sillas' ? '¡Máximo!' : defs[k]?.nx||''}</b>`;
+    const cs=document.getElementById(`cs-${k}`); if(cs) cs.textContent=atMax && k==='sillas' ? 'MAX' : cost.toLocaleString();
     const btn=document.getElementById(`bn-${k}`);
-    btn.disabled = !can || atMax;
-    if(atMax && k==='sillas') btn.textContent='🪑 ¡Barbería Completa!';
+    if(btn){ btn.disabled = !can || atMax; if(atMax && k==='sillas') btn.textContent='🪑 ¡Completa!'; }
   });
 
   // Combo badge
