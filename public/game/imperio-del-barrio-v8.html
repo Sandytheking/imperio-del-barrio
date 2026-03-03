@@ -3156,6 +3156,13 @@ function totalClientes() {
   return BUSINESSES.reduce((s, b) => s + bizLevel(b.id) * 12, 0);
 }
 
+// Stub — overwritten by the season system in the second script block.
+// Defined here early so addXP (called from tick) never throws ReferenceError.
+function addSeasonXP(amount) {
+  if (!G) return;
+  G.seasonXP = (G.seasonXP || 0) + amount;
+}
+
 function xpRequired(lvl) {
   const entry = LEVELS[Math.min(lvl, LEVELS.length - 1)];
   return entry ? entry.xp : Infinity;
@@ -3178,7 +3185,7 @@ function addXP(amount) {
                    : G.level >= 10 ? 3
                    : G.level >= 5  ? 2 : 1;
     addGems(gemBonus);
-    addSeasonXP?.(20);
+    if (typeof addSeasonXP === 'function') addSeasonXP(20);
     notify(`🎉 ¡Nivel ${G.level + 1} — ${LEVELS[G.level]?.name || ''}! +${gemBonus} 💎`);
     navigator.vibrate?.([100, 50, 100]);
     checkStoryBanner();
