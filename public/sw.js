@@ -1,108 +1,86 @@
-// ═══════════════════════════════════════════════════════════
-// Imperio del Barrio — Service Worker
-// Handles: push notifications + offline cache
-// ═══════════════════════════════════════════════════════════
+// Imperio del Barrio — Service Worker (plain JS)
 
-const CACHE   = 'imperio-v1';
-const OFFLINE = ['/game/', '/game/imperio-del-barrio-v8.html'];
+var CACHE   = 'imperio-v1';
+var OFFLINE = ['/'];
 
-// ── Install: cache the game shell ──────────────────────────
-self.addEventListener('install', e => {
+self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(OFFLINE).catch(() => {}))
-      .then(() => self.skipWaiting())
+      .then(function(c) { return c.addAll(OFFLINE).catch(function(){}); })
+      .then(function() { return self.skipWaiting(); })
   );
 });
 
-self.addEventListener('activate', e => {
+self.addEventListener('activate', function(e) {
   e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
+    caches.keys().then(function(keys) {
+      return Promise.all(
+        keys.filter(function(k){ return k !== CACHE; }).map(function(k){ return caches.delete(k); })
+      );
+    }).then(function(){ return self.clients.claim(); })
   );
 });
 
-// ── Fetch: network-first, fallback to cache ────────────────
-self.addEventListener('fetch', e => {
+self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return res;
-      })
-      .catch(() => caches.match(e.request))
+    fetch(e.request).then(function(res) {
+      var clone = res.clone();
+      caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
+      return res;
+    }).catch(function(){ return caches.match(e.request); })
   );
 });
 
-// ── Push: show notification ────────────────────────────────
-self.addEventListener('push', e => {
-  let data = { title: '🏘️ Imperio del Barrio', body: '¡Tu barrio te necesita!', icon: '/icon-192.png', url: '/' };
-  try { data = { ...data, ...e.data.json() }; } catch (_) {}
-
+// Push — show notification
+self.addEventListener('push', function(e) {
+  var data = { title: '🏘️ Imperio del Barrio', body: '¡Tu barrio te necesita!', icon: '/icon-192.png', url: '/' };
+  try { data = Object.assign({}, data, e.data.json()); } catch(_) {}
   e.waitUntil(
     self.registration.showNotification(data.title, {
-      body:    data.body,
-      icon:    data.icon,
-      badge:   '/icon-96.png',
-      tag:     'imperio-push',          // replaces previous if still visible
-      renotify: true,
-      vibrate: [200, 100, 200],
-      data:    { url: data.url },
+      body: data.body, icon: data.icon, badge: '/icon-192.png',
+      tag: 'imperio-push', renotify: true, vibrate: [200,100,200],
+      data: { url: data.url },
       actions: [
         { action: 'open',    title: '🎮 Jugar ahora' },
-        { action: 'dismiss', title: 'Después'        },
-      ],
+        { action: 'dismiss', title: 'Después' }
+      ]
     })
   );
 });
 
-// ── Scheduled reminders (sent via message from GameClient) ────
-const _timers: ReturnType<typeof setTimeout>[] = [];
-
-self.addEventListener('message', (e: MessageEvent) => {
-  if (e.data?.type !== 'SCHEDULE_REMINDERS') return;
-
-  // Clear any previous timers
-  _timers.forEach(t => clearTimeout(t));
-  _timers.length = 0;
-
-  const reminders: Array<{ delayMs: number; title: string; body: string; url: string }> = e.data.reminders ?? [];
-
-  reminders.forEach(r => {
-    const t = setTimeout(() => {
-      self.registration.showNotification(r.title, {
-        body:    r.body,
-        icon:    '/icon-192.png',
-        badge:   '/icon-96.png',
-        tag:     'imperio-reminder',
-        renotify: true,
-        vibrate: [200, 100, 200],
-        data:    { url: r.url },
-        actions: [
-          { action: 'open',    title: '🎮 Jugar ahora' },
-          { action: 'dismiss', title: 'Después'        },
-        ],
-      });
-    }, r.delayMs);
-    _timers.push(t);
-  });
-});
-self.addEventListener('notificationclick', e => {
+// Notification click — focus or open tab
+self.addEventListener('notificationclick', function(e) {
   e.notification.close();
   if (e.action === 'dismiss') return;
-
-  const target = e.notification.data?.url ?? '/';
+  var target = (e.notification.data && e.notification.data.url) || '/';
   e.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(clients => {
-        // Focus existing tab if open
-        const match = clients.find(c => c.url.includes('imperio') || c.url.includes('/game'));
-        if (match) { match.focus(); return; }
-        // Otherwise open new tab
-        return self.clients.openWindow(target);
-      })
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {
+      var match = clients.find(function(c){ return c.url.indexOf('imperio') !== -1; });
+      if (match) return match.focus();
+      return self.clients.openWindow(target);
+    })
   );
+});
+
+// Scheduled reminders — set via postMessage from the app
+var _timers = [];
+self.addEventListener('message', function(e) {
+  if (!e.data || e.data.type !== 'SCHEDULE_REMINDERS') return;
+  _timers.forEach(function(t){ clearTimeout(t); });
+  _timers = [];
+  var reminders = e.data.reminders || [];
+  reminders.forEach(function(r) {
+    _timers.push(setTimeout(function() {
+      self.registration.showNotification(r.title, {
+        body: r.body, icon: '/icon-192.png', badge: '/icon-192.png',
+        tag: 'imperio-reminder', renotify: true, vibrate: [200,100,200],
+        data: { url: r.url || '/' },
+        actions: [
+          { action: 'open',    title: '🎮 Jugar ahora' },
+          { action: 'dismiss', title: 'Después' }
+        ]
+      });
+    }, r.delayMs));
+  });
 });
