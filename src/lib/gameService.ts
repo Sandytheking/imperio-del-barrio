@@ -474,9 +474,9 @@ export async function subscribePush(): Promise<'granted' | 'denied' | 'unsupport
   await sb.from('push_subscriptions').upsert({
     user_id:    user.id,
     endpoint:   sub.endpoint,
-    p256dh:     btoa(String.fromCharCode(...new Uint8Array(key)))
+    p256dh:     btoa(Array.from(new Uint8Array(key)).map(b => String.fromCharCode(b)).join(''))
                   .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''),
-    auth_key:   btoa(String.fromCharCode(...new Uint8Array(auth)))
+    auth_key:   btoa(Array.from(new Uint8Array(auth)).map(b => String.fromCharCode(b)).join(''))
                   .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''),
     user_agent: navigator.userAgent.slice(0, 200),
   }, { onConflict: 'user_id,endpoint' });
