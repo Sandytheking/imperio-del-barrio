@@ -2227,7 +2227,71 @@ body.night-mode .night-stars { opacity: 0.35; }
 .tab-panel { opacity: 0; transform: translateY(8px); transition: opacity 0.22s ease, transform 0.22s ease; pointer-events: none; }
 .tab-panel.active { opacity: 1; transform: translateY(0); pointer-events: all; }
 
-/* ═══ SOUND BTN ═══ */
+/* ═══ GEM SOURCES PANEL ═══ */
+#gemSourcesOverlay { display:none; position:fixed; inset:0; z-index:650; background:rgba(0,0,0,0.88); backdrop-filter:blur(8px); align-items:flex-end; justify-content:center; }
+#gemSourcesOverlay.open { display:flex; }
+.gem-sources-sheet {
+  background: linear-gradient(180deg,#1a1035,#0d0820);
+  border: 3px solid #9B5DE5;
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px 32px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+.gs-title { font-family:'Boogaloo',cursive; font-size:1.5rem; color:#D4A8FF; text-align:center; margin-bottom:4px; }
+.gs-sub { font-size:0.7rem; color:rgba(255,255,255,0.4); text-align:center; font-weight:900; margin-bottom:18px; }
+.gs-section-label { font-size:0.6rem; font-weight:900; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:1.5px; margin:14px 0 6px; }
+.gs-row {
+  display:flex; align-items:center; gap:12px;
+  background:rgba(255,255,255,0.05);
+  border:2px solid rgba(155,93,229,0.2);
+  border-radius:14px; padding:12px 14px;
+  margin-bottom:8px; cursor:pointer;
+  transition:border-color 0.15s, background 0.15s;
+}
+.gs-row:hover { border-color:rgba(155,93,229,0.5); background:rgba(155,93,229,0.1); }
+.gs-row.claimed { opacity:0.45; cursor:not-allowed; }
+.gs-row.claimed:hover { border-color:rgba(155,93,229,0.2); background:rgba(255,255,255,0.05); }
+.gs-icon { font-size:2rem; flex-shrink:0; width:40px; text-align:center; }
+.gs-info { flex:1; }
+.gs-name { font-family:'Fredoka One',cursive; font-size:0.9rem; color:white; }
+.gs-desc { font-size:0.62rem; color:rgba(255,255,255,0.5); font-weight:900; margin-top:2px; }
+.gs-reward { display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; }
+.gs-gems { font-family:'Fredoka One',cursive; font-size:1rem; color:#D4A8FF; white-space:nowrap; }
+.gs-badge { font-size:0.58rem; font-weight:900; padding:2px 7px; border-radius:99px; white-space:nowrap; }
+.gs-badge.available { background:rgba(45,198,83,0.2); color:#2DC653; border:1px solid #2DC653; }
+.gs-badge.claimed   { background:rgba(255,255,255,0.08); color:#666; border:1px solid #444; }
+.gs-badge.cooldown  { background:rgba(255,165,0,0.15); color:#FFA500; border:1px solid #FFA500; }
+.gs-badge.locked    { background:rgba(255,71,87,0.1); color:#FF4757; border:1px solid rgba(255,71,87,0.4); }
+.gs-close-btn { width:100%; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:2px solid rgba(255,255,255,0.1); border-radius:12px; font-family:'Fredoka One',cursive; font-size:0.9rem; padding:10px; cursor:pointer; margin-top:10px; }
+
+/* ═══ TRIVIA MODAL ═══ */
+#triviaOverlay { display:none; position:fixed; inset:0; z-index:800; background:rgba(0,0,0,0.9); backdrop-filter:blur(8px); align-items:center; justify-content:center; }
+#triviaOverlay.open { display:flex; }
+.trivia-card { background:linear-gradient(135deg,#0d1f3a,#1a0d3a); border:4px solid #00C9A7; border-radius:24px; padding:28px 22px; max-width:350px; width:92%; text-align:center; animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+.trivia-title { font-family:'Boogaloo',cursive; font-size:1.5rem; color:#00C9A7; margin-bottom:4px; }
+.trivia-q { font-family:'Fredoka One',cursive; font-size:1rem; color:white; margin:16px 0; line-height:1.4; }
+.trivia-opts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+.trivia-opt { background:rgba(255,255,255,0.07); border:2px solid rgba(0,201,167,0.3); border-radius:12px; padding:10px 8px; font-family:'Fredoka One',cursive; font-size:0.82rem; color:white; cursor:pointer; transition:all 0.15s; }
+.trivia-opt:hover { background:rgba(0,201,167,0.15); border-color:#00C9A7; }
+.trivia-opt.correct { background:rgba(45,198,83,0.25); border-color:#2DC653; color:#2DC653; }
+.trivia-opt.wrong { background:rgba(255,71,87,0.15); border-color:#FF4757; color:#FF4757; }
+.trivia-timer-bar { height:5px; background:rgba(255,255,255,0.1); border-radius:99px; overflow:hidden; margin-bottom:14px; }
+.trivia-timer-fill { height:100%; background:linear-gradient(90deg,#00C9A7,#FFE135); border-radius:99px; transition:width 0.1s linear; }
+
+/* ═══ REFERRAL PANEL ═══ */
+.ref-code-box { background:rgba(155,93,229,0.12); border:2px dashed rgba(155,93,229,0.5); border-radius:14px; padding:14px; text-align:center; margin:10px 0; }
+.ref-code { font-family:'Fredoka One',cursive; font-size:1.6rem; color:#D4A8FF; letter-spacing:4px; }
+.ref-copy-btn { background:rgba(155,93,229,0.3); border:2px solid #9B5DE5; border-radius:99px; color:#D4A8FF; font-family:'Fredoka One',cursive; font-size:0.8rem; padding:5px 14px; cursor:pointer; margin-top:8px; }
+
+/* ═══ GEM EARN BUTTON in header ═══ */
+.hdr-earn-btn { background:linear-gradient(135deg,rgba(155,93,229,0.3),rgba(100,50,200,0.2)); border:1.5px solid rgba(155,93,229,0.6); border-radius:99px; color:#D4A8FF; font-family:'Fredoka One',cursive; font-size:0.7rem; padding:3px 9px; cursor:pointer; white-space:nowrap; transition:all 0.15s; }
+.hdr-earn-btn:hover { background:rgba(155,93,229,0.4); }
+
+
 .sound-btn { background: transparent; border: 2px solid rgba(255,255,255,0.3); border-radius: 99px; color: rgba(255,255,255,0.7); font-size: 1rem; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
 .sound-btn:hover { background: rgba(255,255,255,0.1); color: white; }
 
@@ -2261,6 +2325,7 @@ body.night-mode .night-stars { opacity: 0.35; }
     </div>
     <div class="hdr-chips">
       <div class="hdr-chip gems" onclick="openGemShop()" title="Gemas">💎 <span id="hdrGems">0</span></div>
+      <button class="hdr-earn-btn" onclick="openGemSources()">✨ Ganar</button>
       <div class="hdr-chip level" id="hdrLevelChip">⭐ Nv.1</div>
       <button class="hdr-settings-btn" onclick="openSecondaryPanel()" title="Más opciones">⚙️</button>
     </div>
@@ -2483,17 +2548,31 @@ body.night-mode .night-stars { opacity: 0.35; }
   </div>
 </div>
 
-<!-- Negotiate Overlay -->
-<div id="negotiateOverlay">
-  <div class="neg-card">
-    <div class="neg-title">💬 Negociación</div>
-    <div class="neg-sub" id="negSubtitle">¡Click rápido para bonus!</div>
-    <div class="neg-timer" id="negTimer">5</div>
-    <div class="neg-clicks" id="negClicks">0 clicks</div>
-    <button class="neg-btn" id="negBtn" onclick="negClick()">💰</button>
-    <div class="neg-prog-wrap"><div class="neg-prog-fill" id="negProg" style="width:100%"></div></div>
+<!-- ══════════════════════════════════════════════
+     MINI-GAME HUB OVERLAY
+══════════════════════════════════════════════ -->
+<div id="miniGameOverlay" style="display:none;position:fixed;inset:0;z-index:750;background:rgba(0,0,0,0.95);backdrop-filter:blur(10px);align-items:center;justify-content:center;">
+  <div id="miniGameContainer" style="width:100%;max-width:400px;max-height:96vh;display:flex;flex-direction:column;align-items:center;padding:16px;gap:0;overflow:hidden;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:10px;">
+      <div>
+        <div id="mgTitle" style="font-family:'Boogaloo',cursive;font-size:1.4rem;color:#FFE135;">Mini-juego</div>
+        <div id="mgSubtitle" style="font-size:0.65rem;color:rgba(255,255,255,0.5);font-weight:900;">Gana para obtener dinero bonus</div>
+      </div>
+      <button onclick="closeMiniGame()" style="background:rgba(255,71,87,0.2);border:2px solid #FF4757;border-radius:99px;color:#FF4757;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:5px 12px;cursor:pointer;">✕ Salir</button>
+    </div>
+    <!-- Canvas / Game Area -->
+    <canvas id="mgCanvas" width="360" height="320" style="border-radius:16px;border:3px solid rgba(255,255,255,0.1);touch-action:none;display:block;"></canvas>
+    <!-- Controls -->
+    <div id="mgControls" style="width:100%;margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;"></div>
+    <!-- Result -->
+    <div id="mgResult" style="display:none;text-align:center;margin-top:8px;padding:12px 20px;background:rgba(255,255,255,0.06);border-radius:14px;width:100%;">
+      <div id="mgResultText" style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#FFE135;"></div>
+      <button id="mgPlayAgain" onclick="playMiniGameAgain()" style="margin-top:8px;background:#2DC653;border:2px solid #1E1B2E;border-radius:99px;color:white;font-family:'Fredoka One',cursive;font-size:0.85rem;padding:7px 20px;cursor:pointer;">🔄 Otro juego</button>
+    </div>
   </div>
 </div>
+
 
 <!-- Level Up Flash -->
 <div class="levelup-flash" id="lvlFlash"></div>
@@ -2515,7 +2594,46 @@ body.night-mode .night-stars { opacity: 0.35; }
   </div>
 </div>
 
-<!-- Story Banner -->
+<!-- ══════════════════════════════════════════════
+     GEM SOURCES BOTTOM SHEET
+══════════════════════════════════════════════ -->
+<div id="gemSourcesOverlay" onclick="e => e.target===this&&closeGemSources()">
+  <div class="gem-sources-sheet" onclick="event.stopPropagation()">
+    <div class="gs-title">✨ Ganar Gemas</div>
+    <div class="gs-sub">Completa acciones para conseguir 💎 gratis</div>
+
+    <div class="gs-section-label">⚡ Disponibles ahora</div>
+    <div id="gsListInstant"></div>
+
+    <div class="gs-section-label">📅 Diario / Semanal</div>
+    <div id="gsListRecurring"></div>
+
+    <div class="gs-section-label">🌐 Redes Sociales</div>
+    <div id="gsListSocial"></div>
+
+    <div class="gs-section-label">👥 Referidos</div>
+    <div id="gsListReferral"></div>
+
+    <button class="gs-close-btn" onclick="closeGemSources()">Cerrar</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TRIVIA OVERLAY
+══════════════════════════════════════════════ -->
+<div id="triviaOverlay">
+  <div class="trivia-card">
+    <div class="trivia-title">🧠 Trivia del Barrio</div>
+    <div style="font-size:0.65rem;color:rgba(255,255,255,0.5);font-weight:900;margin-bottom:10px">Responde bien → <span style="color:#D4A8FF">+3 💎</span></div>
+    <div class="trivia-timer-bar"><div class="trivia-timer-fill" id="triviaTimerFill" style="width:100%"></div></div>
+    <div class="trivia-q" id="triviaQuestion">¿Cuántos negocios tiene el barrio?</div>
+    <div class="trivia-opts" id="triviaOpts"></div>
+    <div id="triviaResult" style="display:none;margin-top:14px;font-family:'Fredoka One',cursive;font-size:1rem"></div>
+    <button id="triviaDoneBtn" style="display:none;margin-top:14px;width:100%;background:#00C9A7;color:#1E1B2E;border:2px solid #1E1B2E;border-radius:99px;font-family:'Fredoka One',cursive;font-size:0.95rem;padding:10px;cursor:pointer" onclick="closeTriviaOverlay()">Continuar</button>
+  </div>
+</div>
+
+
 <div id="storyBanner"><span id="storyText"></span><span class="story-close" onclick="document.getElementById('storyBanner').classList.remove('show')">✕ cerrar</span></div>
 
 <!-- Notifications -->
@@ -2904,7 +3022,10 @@ function addXP(amount) {
   while (G.level < LEVELS.length - 1 && G.xp >= xpRequired(G.level)) {
     G.xp -= xpRequired(G.level);
     G.level++;
-    notify(`🎉 ¡Subiste a Nivel ${G.level+1} – ${LEVELS[G.level].name}!`);
+    // 💎 Gemas por subir de nivel
+    const gemBonus = G.level >= 20 ? 5 : G.level >= 10 ? 3 : G.level >= 5 ? 2 : 1;
+    addGems(gemBonus);
+    notify(`🎉 ¡Nivel ${G.level+1}! +${gemBonus} 💎`);
     navigator.vibrate?.([100, 50, 100]);
     checkStoryBanner();
     playSound('levelup');
@@ -3191,7 +3312,7 @@ function renderBusiness(biz) {
         ${!isOpen ? '🔓 Abrir' : '⬆️ Mejorar'}
       </button>
       <div class="biz-cost-tag">${fmt(cost)}</div>
-      ${isOpen ? `<button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">💬 Negociar</button>` : ''}
+      ${isOpen ? `<button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">🎮 Jugar</button>` : ''}
       ${isOpen && BIZ_ANIMATIONS[biz.id] ? `<button class="btn-live" onclick="openBizAnim('${biz.id}')">🎬 En vivo</button>` : ''}
     </div>
   </div>`;
@@ -4091,43 +4212,460 @@ function checkSuperEmpresa() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// v9: SHARE WITH GEMS
+// ═══════════════════════════════════════════════════════════════════
+// GEM SOURCES SYSTEM — múltiples formas de ganar gemas
 // ═══════════════════════════════════════════════════════════════════
 
-function shareGame() {
+// ── Trivia database ─────────────────────────────────────────────────
+const TRIVIA_QUESTIONS = [
+  { q:'¿Cuántas zonas tiene el mapa de Ciudad Imperio?', opts:['4','5','6','8'], a:2 },
+  { q:'¿Qué moneda especial ganas al Ascender Socialmente?', opts:['Pesos','Gemas','Influencia','XP'], a:2 },
+  { q:'¿Cuál es el negocio más básico para empezar?', opts:['Colmado','Barbería','Salón','Cafetín'], a:1 },
+  { q:'¿Qué upgrade activa las ganancias offline al 100%?', opts:['Modo 24/7 🌙','Auto-Click','Turbo','Flash Sale'], a:0 },
+  { q:'¿Qué zona tiene el mayor multiplicador de ingresos?', opts:['Centro','Norte','Sur','Premium'], a:3 },
+  { q:'¿Qué recurso necesitas para comprar mejoras permanentes?', opts:['Dinero','Gemas','Influencia','XP'], a:2 },
+  { q:'¿Cada cuánto se reinician los Objetivos Diarios?', opts:['1 hora','6 horas','24 horas','7 días'], a:2 },
+  { q:'¿Qué hace el Auto-Clicker Temporal de la tienda?', opts:['Sube nivel solo','Clicks automáticos 5min','Dobla gemas','Skip de cooldown'], a:1 },
+  { q:'¿Cuántos días de racha necesitas para logro "Semana Completa"?', opts:['3','5','7','10'], a:2 },
+  { q:'¿Qué pasa al "Ascender" en el Ascenso Social?', opts:['Pierdes todo','Conservas influencia y logros','Solo pierdes dinero','Nada'], a:1 },
+  { q:'¿Cómo se llama la app donde jugamos?', opts:['Barrio Boss','Imperio del Barrio','Tycoon RD','El Colmado'], a:1 },
+  { q:'¿De qué ciudad dominicana está inspirado el juego?', opts:['Santo Domingo','La Romana','Santiago','Higüey'], a:2 },
+];
+
+let _triviaActive = false;
+let _triviaTimer = null;
+let _triviaTimeout = null;
+let _triviaCallbackOnDone = null;
+
+function startTrivia(onDone) {
+  if (_triviaActive) return;
+  _triviaActive = true;
+  _triviaCallbackOnDone = onDone || null;
+
+  const q = TRIVIA_QUESTIONS[Math.floor(Math.random() * TRIVIA_QUESTIONS.length)];
+  document.getElementById('triviaQuestion').textContent = q.q;
+  const fill = document.getElementById('triviaTimerFill');
+  const result = document.getElementById('triviaResult');
+  const doneBtn = document.getElementById('triviaDoneBtn');
+  result.style.display = 'none';
+  doneBtn.style.display = 'none';
+  fill.style.width = '100%';
+  fill.style.transition = 'none';
+
+  let answered = false;
+  const opts = document.getElementById('triviaOpts');
+  opts.innerHTML = q.opts.map((o, i) =>
+    `<button class="trivia-opt" onclick="answerTrivia(${i},${q.a})">${o}</button>`
+  ).join('');
+
+  // Countdown 15s
+  let timeLeft = 15;
+  fill.style.transition = 'width 15s linear';
+  requestAnimationFrame(() => { fill.style.width = '0%'; });
+
+  _triviaTimeout = setTimeout(() => {
+    if (!answered) {
+      answered = true;
+      Array.from(opts.children).forEach((b, i) => {
+        b.disabled = true;
+        if (i === q.a) b.classList.add('correct');
+      });
+      result.style.display = 'block';
+      result.innerHTML = `<span style="color:#FF4757">⏰ ¡Tiempo agotado! La respuesta era: <b>${q.opts[q.a]}</b></span>`;
+      doneBtn.style.display = 'block';
+    }
+  }, 15000);
+
+  document.getElementById('triviaOverlay').classList.add('open');
+}
+
+function answerTrivia(chosen, correct) {
+  if (document.querySelector('.trivia-opt.correct, .trivia-opt.wrong')) return;
+  clearTimeout(_triviaTimeout);
+
+  const opts = document.getElementById('triviaOpts');
+  Array.from(opts.children).forEach((b, i) => {
+    b.disabled = true;
+    if (i === correct) b.classList.add('correct');
+    else if (i === chosen) b.classList.add('wrong');
+  });
+
+  const result = document.getElementById('triviaResult');
+  const doneBtn = document.getElementById('triviaDoneBtn');
+  result.style.display = 'block';
+  doneBtn.style.display = 'block';
+
+  if (chosen === correct) {
+    result.innerHTML = `<span style="color:#2DC653">✅ ¡Correcto! <b>+3 💎</b></span>`;
+    addGems(3);
+    G.lastTriviaTs = Date.now();
+    G.triviaCorrect = (G.triviaCorrect || 0) + 1;
+    saveGame();
+    if (_triviaCallbackOnDone) _triviaCallbackOnDone(true);
+  } else {
+    result.innerHTML = `<span style="color:#FF4757">❌ Incorrecto. Era: <b>${document.querySelectorAll('.trivia-opt')[correct].textContent}</b></span>`;
+    G.lastTriviaTs = Date.now();
+    saveGame();
+    if (_triviaCallbackOnDone) _triviaCallbackOnDone(false);
+  }
+}
+
+function closeTriviaOverlay() {
+  _triviaActive = false;
+  clearTimeout(_triviaTimeout);
+  document.getElementById('triviaOverlay').classList.remove('open');
+}
+
+// ── Referral code system ─────────────────────────────────────────────
+function getMyReferralCode() {
+  if (G.referralCode) return G.referralCode;
+  const base = (G.companyName || 'BARRIO').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5);
+  const suffix = Math.floor(Math.random() * 900 + 100);
+  G.referralCode = base + suffix;
+  saveGame();
+  return G.referralCode;
+}
+
+function copyReferralCode() {
+  const code = getMyReferralCode();
+  const txt = `🏘️ ¡Juega Imperio del Barrio conmigo! Usa mi código ${code} al registrarte y ambos ganamos 💎 gemas. #ImperioDelBarrio`;
+  if (navigator.share) {
+    navigator.share({ title: 'Imperio del Barrio', text: txt }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(txt).catch(() => {});
+  }
+  notify('📋 ¡Código copiado! Comparte con amigos 💜');
+}
+
+// ── Platform share helpers ────────────────────────────────────────────
+function shareToNetwork(platform) {
   const openBiz = BUSINESSES.filter(b => bizLevel(b.id) > 0).length;
   const zone = ZONES.find(z => z.id === G.zone)?.name || 'el barrio';
   const company = G.companyName || 'Mi Imperio';
-  const txt = `🏘️ "${company}" tiene ${openBiz} negocios y está dominando ${zone} en Imperio del Barrio 😎💰 #ImperioDelBarrio`;
+  const txt = encodeURIComponent(`🏘️ "${company}" tiene ${openBiz} negocios y domina ${zone} en Imperio del Barrio 😎💰 #ImperioDelBarrio`);
+  const url = encodeURIComponent('https://imperiodelbarrio.com');
+
+  const links = {
+    twitter:   `https://twitter.com/intent/tweet?text=${txt}`,
+    facebook:  `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${txt}`,
+    whatsapp:  `https://wa.me/?text=${txt}`,
+    instagram: null, // Instagram no permite deep link de share, abrimos native share
+    tiktok:    null,
+  };
 
   const now = Date.now();
-  const weekMs = 7 * 24 * 3600 * 1000;
-  const isFirst = (G.shareCount || 0) === 0;
-  const weekPassed = (now - (G.lastShareTs || 0)) > weekMs;
-  const gemReward = isFirst ? 25 : weekPassed ? 10 : 0;
+  const dayMs = 24 * 3600 * 1000;
+  if (!G.socialShares) G.socialShares = {};
+  const lastShare = G.socialShares[platform] || 0;
+  const alreadyToday = (now - lastShare) < dayMs;
 
-  const doReward = () => {
-    if (gemReward > 0) {
-      G.gems = (G.gems || 0) + gemReward;
-      G.shareCount = (G.shareCount || 0) + 1;
-      G.lastShareTs = now;
-      saveGame();
-      document.getElementById('hdrGems').textContent = G.gems;
-      notify(`💎 +${gemReward} gemas por compartir! ¡Gracias!`);
+  const openLink = () => {
+    if (links[platform]) {
+      window.open(links[platform], '_blank');
     } else {
-      notify('📤 ¡Compartido! (Próxima recompensa la semana que viene)');
+      // native share para Instagram/TikTok
+      const raw = decodeURIComponent(txt);
+      if (navigator.share) {
+        navigator.share({ title: 'Imperio del Barrio', text: raw }).catch(() => {});
+      } else {
+        navigator.clipboard?.writeText(raw).catch(() => {});
+        notify('📋 Texto copiado — pégalo en ' + platform);
+      }
     }
   };
 
-  if (navigator.share) {
-    navigator.share({ title: 'Imperio del Barrio', text: txt }).then(doReward).catch(() => {});
-  } else {
-    navigator.clipboard?.writeText(txt).then(() => {
-      doReward();
-      if (gemReward === 0) notify('📋 ¡Copiado al portapapeles!');
-    }).catch(() => notify('📤 ' + txt));
+  if (alreadyToday) {
+    openLink();
+    notify(`📤 Ya compartiste en ${platform} hoy. Vuelve mañana para más 💎`);
+    return;
+  }
+
+  openLink();
+  // Wait 2s then reward (user had to at least trigger the share)
+  setTimeout(() => {
+    G.socialShares[platform] = now;
+    const reward = platform === 'whatsapp' ? 5 : 3;
+    addGems(reward);
+    saveGame();
+    notify(`💎 +${reward} gemas por compartir en ${platform}! 🎉`);
+    renderGemSources(); // refresh the panel
+  }, 2000);
+}
+
+// ── Watch a "video ad" (simulated with a timer) ───────────────────────
+let _watchAdActive = false;
+function watchAd() {
+  if (_watchAdActive) return;
+  const now = Date.now();
+  const cooldown = 30 * 60 * 1000; // 30 min
+  if ((now - (G.lastAdTs || 0)) < cooldown) {
+    const remaining = Math.ceil((cooldown - (now - G.lastAdTs)) / 60000);
+    notify(`⏳ Próximo video disponible en ${remaining} min`);
+    return;
+  }
+  _watchAdActive = true;
+  let secs = 5;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;';
+  overlay.innerHTML = `
+    <div style="font-size:0.7rem;color:#aaa;font-weight:900;text-transform:uppercase;letter-spacing:2px">Anuncio del barrio</div>
+    <div style="font-size:5rem" id="adEmoji">📺</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:1.3rem;color:white">¡Apoya al Imperio!</div>
+    <div style="font-size:0.8rem;color:#aaa;font-weight:700">Completando en <span id="adCount">${secs}</span>s...</div>
+    <div style="width:200px;height:6px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden">
+      <div id="adBar" style="height:100%;width:0%;background:linear-gradient(90deg,#9B5DE5,#D4A8FF);border-radius:99px;transition:width 1s linear"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const adEmojis = ['📺','🎬','🎭','🎪','🎨'];
+  let t = 0;
+  requestAnimationFrame(() => { document.getElementById('adBar').style.width = '100%'; });
+  const iv = setInterval(() => {
+    t++;
+    secs--;
+    document.getElementById('adCount').textContent = secs;
+    document.getElementById('adEmoji').textContent = adEmojis[t % adEmojis.length];
+    if (secs <= 0) {
+      clearInterval(iv);
+      overlay.remove();
+      _watchAdActive = false;
+      G.lastAdTs = Date.now();
+      addGems(5);
+      saveGame();
+      notify('🎬 ¡Gracias por ver! +5 💎');
+      renderGemSources();
+    }
+  }, 1000);
+}
+
+// ── Gem Sources Panel ─────────────────────────────────────────────────
+function openGemSources() {
+  renderGemSources();
+  document.getElementById('gemSourcesOverlay').classList.add('open');
+}
+function closeGemSources() {
+  document.getElementById('gemSourcesOverlay').classList.remove('open');
+}
+
+function renderGemSources() {
+  const now = Date.now();
+  const dayMs = 24 * 3600 * 1000;
+  const weekMs = 7 * dayMs;
+  if (!G.socialShares) G.socialShares = {};
+
+  // ── INSTANT / ONE-TIME ───────────────────────────────────────────
+  const instant = [
+    {
+      icon: '🧠', name: 'Trivia del Barrio', desc: 'Responde una pregunta correctamente',
+      gems: '+3 💎', id: 'trivia',
+      cooldown: dayMs,
+      last: G.lastTriviaTs || 0,
+      action: () => { closeGemSources(); startTrivia(); },
+    },
+    {
+      icon: '🎬', name: 'Ver un Video', desc: 'Mira 5 segundos y gana gemas',
+      gems: '+5 💎', id: 'ad',
+      cooldown: 30 * 60 * 1000,
+      last: G.lastAdTs || 0,
+      action: () => { closeGemSources(); watchAd(); },
+    },
+    {
+      icon: '🏆', name: 'Completar un Logro', desc: 'Ve a Logros y reclama los disponibles',
+      gems: '+1~3 💎', id: 'achievement',
+      cooldown: 0,
+      last: 0,
+      action: () => { closeGemSources(); showTab('logros'); },
+    },
+    {
+      icon: '🎯', name: 'Objetivos Diarios', desc: 'Completa los 3 objetivos del día',
+      gems: '+2~8 💎', id: 'objectives',
+      cooldown: 0,
+      last: 0,
+      action: () => { closeGemSources(); showTab('logros'); },
+    },
+  ];
+
+  // ── RECURRING ────────────────────────────────────────────────────
+  const recurring = [
+    {
+      icon: '🎁', name: 'Recompensa Diaria', desc: 'Login cada día para acumular racha',
+      gems: '+1 💎 / día', id: 'daily_gem',
+      cooldown: dayMs,
+      last: G.lastGemDailyTs || 0,
+      action: () => {
+        const cd = dayMs - (now - (G.lastGemDailyTs || 0));
+        if (cd > 0) { notify(`⏳ Vuelve en ${Math.ceil(cd/3600000)}h`); return; }
+        G.lastGemDailyTs = now;
+        addGems(1);
+        saveGame();
+        notify('🎁 +1 💎 por entrar hoy!');
+        renderGemSources();
+      },
+    },
+    {
+      icon: '📅', name: 'Racha Semanal', desc: '7 días seguidos = +10 💎 bonus',
+      gems: '+10 💎', id: 'weekly_streak',
+      cooldown: weekMs,
+      last: G.lastWeeklyGemTs || 0,
+      action: () => {
+        if ((G.loginStreak || 0) < 7) { notify(`🔥 Racha actual: ${G.loginStreak || 0}/7 días`); return; }
+        const cd = weekMs - (now - (G.lastWeeklyGemTs || 0));
+        if (cd > 0) { notify(`⏳ Próximo en ${Math.ceil(cd/86400000)}d`); return; }
+        G.lastWeeklyGemTs = now;
+        addGems(10);
+        saveGame();
+        notify('🔥 +10 💎 por racha de 7 días!');
+        renderGemSources();
+      },
+    },
+    {
+      icon: '🚀', name: 'Subir de Nivel', desc: 'Cada nivel nuevo regala gemas',
+      gems: '+1~5 💎', id: 'level_up',
+      cooldown: 0, last: 0,
+      action: () => { closeGemSources(); notify('¡Sube de nivel para ganar 💎!'); },
+    },
+    {
+      icon: '🏠', name: 'Ascenso Social', desc: 'Al ascender recibes influencia Y gemas',
+      gems: '+5 💎', id: 'ascend',
+      cooldown: 0, last: 0,
+      action: () => { closeGemSources(); showTab('ascenso'); },
+    },
+  ];
+
+  // ── SOCIAL ───────────────────────────────────────────────────────
+  const NETWORKS = [
+    { id:'whatsapp', icon:'💬', name:'WhatsApp', desc:'Comparte con tus contactos', gems:'+5 💎', reward:5 },
+    { id:'twitter',  icon:'🐦', name:'X / Twitter', desc:'Tuitea tu Imperio', gems:'+3 💎', reward:3 },
+    { id:'facebook', icon:'📘', name:'Facebook', desc:'Publica en tu muro', gems:'+3 💎', reward:3 },
+    { id:'instagram',icon:'📷', name:'Instagram', desc:'Copia texto para stories/bio', gems:'+3 💎', reward:3 },
+    { id:'tiktok',   icon:'🎵', name:'TikTok', desc:'Comparte tu progreso', gems:'+3 💎', reward:3 },
+  ];
+
+  // ── RENDER ────────────────────────────────────────────────────────
+  const makeRow = (item, badgeText, badgeCls, disabled) => `
+    <div class="gs-row${disabled ? ' claimed' : ''}" onclick="${disabled ? '' : `gsAction('${item.id}')`}">
+      <div class="gs-icon">${item.icon}</div>
+      <div class="gs-info">
+        <div class="gs-name">${item.name}</div>
+        <div class="gs-desc">${item.desc}</div>
+      </div>
+      <div class="gs-reward">
+        <div class="gs-gems">${item.gems}</div>
+        <div class="gs-badge ${badgeCls}">${badgeText}</div>
+      </div>
+    </div>`;
+
+  const fmtCooldown = (ms) => {
+    const h = Math.floor(ms / 3600000);
+    const m = Math.ceil((ms % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  };
+
+  document.getElementById('gsListInstant').innerHTML = instant.map(item => {
+    const cd = item.cooldown > 0 ? item.cooldown - (now - item.last) : -1;
+    const onCooldown = cd > 0;
+    return makeRow(item, onCooldown ? fmtCooldown(cd) : 'Disponible', onCooldown ? 'cooldown' : 'available', onCooldown);
+  }).join('');
+
+  document.getElementById('gsListRecurring').innerHTML = recurring.map(item => {
+    const cd = item.cooldown > 0 ? item.cooldown - (now - item.last) : -1;
+    const onCooldown = cd > 0;
+    return makeRow(item, onCooldown ? fmtCooldown(cd) : 'Disponible', onCooldown ? 'cooldown' : 'available', onCooldown && item.cooldown > 0);
+  }).join('');
+
+  document.getElementById('gsListSocial').innerHTML = NETWORKS.map(net => {
+    const lastShare = G.socialShares[net.id] || 0;
+    const cd = dayMs - (now - lastShare);
+    const onCooldown = cd > 0;
+    return makeRow(
+      { icon: net.icon, name: net.name, desc: net.desc, gems: net.gems, id: 'social_' + net.id },
+      onCooldown ? 'Mañana' : 'Disponible',
+      onCooldown ? 'cooldown' : 'available',
+      onCooldown
+    );
+  }).join('');
+
+  const code = getMyReferralCode();
+  document.getElementById('gsListReferral').innerHTML = `
+    <div class="gs-row" onclick="copyReferralCode()">
+      <div class="gs-icon">🔗</div>
+      <div class="gs-info">
+        <div class="gs-name">Invita a un amigo</div>
+        <div class="gs-desc">Tu amigo entra con tu código → ambos ganan +10 💎</div>
+      </div>
+      <div class="gs-reward">
+        <div class="gs-gems">+10 💎</div>
+        <div class="gs-badge available">Compartir</div>
+      </div>
+    </div>
+    <div class="ref-code-box">
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Tu código</div>
+      <div class="ref-code">${code}</div>
+      <button class="ref-copy-btn" onclick="copyReferralCode()">📋 Copiar y compartir</button>
+    </div>`;
+}
+
+// ── Dispatch action from rendered rows ───────────────────────────────
+function gsAction(id) {
+  const now = Date.now();
+  const dayMs = 24 * 3600 * 1000;
+  if (!G.socialShares) G.socialShares = {};
+
+  if (id === 'trivia')      { closeGemSources(); startTrivia(); return; }
+  if (id === 'ad')          { closeGemSources(); watchAd(); return; }
+  if (id === 'achievement') { closeGemSources(); showTab('logros'); return; }
+  if (id === 'objectives')  { closeGemSources(); showTab('logros'); return; }
+  if (id === 'ascend')      { closeGemSources(); showTab('ascenso'); return; }
+  if (id === 'level_up')    { closeGemSources(); return; }
+
+  if (id === 'daily_gem') {
+    const cd = dayMs - (now - (G.lastGemDailyTs || 0));
+    if (cd > 0) { notify(`⏳ Vuelve en ${Math.ceil(cd/3600000)}h`); return; }
+    G.lastGemDailyTs = now;
+    addGems(1);
+    saveGame();
+    notify('🎁 +1 💎 por entrar hoy!');
+    renderGemSources();
+    return;
+  }
+
+  if (id === 'weekly_streak') {
+    const weekMs = 7 * dayMs;
+    if ((G.loginStreak || 0) < 7) { notify(`🔥 Racha actual: ${G.loginStreak || 0}/7 días`); return; }
+    const cd = weekMs - (now - (G.lastWeeklyGemTs || 0));
+    if (cd > 0) { notify(`⏳ Próximo en ${Math.ceil(cd/86400000)}d`); return; }
+    G.lastWeeklyGemTs = now;
+    addGems(10);
+    saveGame();
+    notify('🔥 +10 💎 por racha de 7 días!');
+    renderGemSources();
+    return;
+  }
+
+  if (id.startsWith('social_')) {
+    const platform = id.replace('social_', '');
+    closeGemSources();
+    shareToNetwork(platform);
+    return;
   }
 }
+
+// ── Hook: reward gems on level up ────────────────────────────────────
+const _origLevelUp = window.onLevelUp;
+function onGemLevelUpHook(newLevel) {
+  const gemBonus = newLevel >= 20 ? 5 : newLevel >= 10 ? 3 : newLevel >= 5 ? 2 : 1;
+  addGems(gemBonus);
+  if (_origLevelUp) _origLevelUp(newLevel);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// v9: SHARE WITH GEMS (updated)
+// ═══════════════════════════════════════════════════════════════════
+function shareGame() {
+  shareToNetwork('whatsapp');
+}
+
+
 
 // ═══════════════════════════════════════════════════════════════════
 // v9: MICRO STORY REFRESH (called from game tick)
@@ -4753,60 +5291,951 @@ function claimDaily() {
 }
 
 // ═══════════════════════════════════════════════
-// NEGOTIATE MINI-GAME
-// ═══════════════════════════════════════════════
-let negState = { active: false, clicks: 0, timer: 0, baseIncome: 0, bizName: '' };
-let negInterval = null;
+// ═══════════════════════════════════════════════════════════════════
+// MINI-GAME ENGINE — 5 juegos de negociación
+// ═══════════════════════════════════════════════════════════════════
 
+let _mgState = null;          // current game state
+let _mgRaf   = null;          // requestAnimationFrame handle
+let _mgBizIncome = 0;
+let _mgBizName   = '';
+let _mgBizId     = '';
+
+const MINI_GAMES = ['runner', 'wordfind', 'memory', 'catcher', 'snake'];
+
+// Pick a game — avoid repeating the last one
+let _lastMiniGame = '';
+function pickMiniGame() {
+  const pool = MINI_GAMES.filter(g => g !== _lastMiniGame);
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  _lastMiniGame = pick;
+  return pick;
+}
+
+// ── Public entry: called from "🎮 Jugar" button ───────────────────
 function openNegotiate(id, name, income) {
-  if (negState.active) return;
-  negState = { active: true, clicks: 0, timer: 6, baseIncome: income, bizName: name };
-  document.getElementById('negotiateOverlay').classList.add('open');
-  document.getElementById('negSubtitle').textContent = `¡Negocia con ${name}!`;
-  document.getElementById('negTimer').textContent = '6';
-  document.getElementById('negClicks').textContent = '0 clicks';
-  document.getElementById('negProg').style.width = '100%';
-
-  negInterval = setInterval(() => {
-    negState.timer -= 0.1;
-    const pct = Math.max(0, negState.timer / 6);
-    document.getElementById('negTimer').textContent = Math.ceil(negState.timer);
-    document.getElementById('negProg').style.width = (pct * 100) + '%';
-    if (negState.timer <= 0) finishNegotiate();
-  }, 100);
+  _mgBizId     = id;
+  _mgBizName   = name;
+  _mgBizIncome = income;
+  const game   = pickMiniGame();
+  launchMiniGame(game);
 }
 
-function negClick() {
-  if (!negState.active) return;
-  negState.clicks++;
-  document.getElementById('negClicks').textContent = `${negState.clicks} clicks 💥`;
-  playSound('negotiate');
-  const btn = document.getElementById('negBtn');
-  btn.style.transform = 'scale(0.9)';
-  setTimeout(() => btn.style.transform = '', 80);
+function launchMiniGame(game) {
+  // Clean up any previous game
+  cancelAnimationFrame(_mgRaf);
+  _mgRaf = null;
+  _mgState = null;
+  document.getElementById('mgResult').style.display = 'none';
+  document.getElementById('mgControls').innerHTML = '';
+
+  const overlay = document.getElementById('miniGameOverlay');
+  overlay.style.display = 'flex';
+
+  const subtitles = {
+    runner:   '🏃 Salta los obstáculos para ganar',
+    wordfind: '🔤 Forma palabras antes de que acabe el tiempo',
+    memory:   '🃏 Encuentra los pares de tarjetas',
+    catcher:  '🪣 Atrapa los billetes que caen',
+    snake:    '🐍 Come los billetes sin chocarte',
+  };
+  document.getElementById('mgSubtitle').textContent = subtitles[game] || 'Completa el reto para ganar bonus';
+
+  // Launch
+  if (game === 'runner')   startRunner();
+  if (game === 'wordfind') startWordFind();
+  if (game === 'memory')   startMemory();
+  if (game === 'catcher')  startCatcher();
+  if (game === 'snake')    startSnake();
 }
 
-function finishNegotiate() {
-  clearInterval(negInterval);
-  negState.active = false;
-  document.getElementById('negotiateOverlay').classList.remove('open');
-  const bonus = Math.min(negState.clicks * negState.baseIncome * 0.3, negState.baseIncome * 15);
-  G.money += bonus;
-  G.totalEarned += bonus;
-  G.negotiateCount = (G.negotiateCount || 0) + 1;
-  trackW('weeklyNego');
-  G.dailyNegotiations = (G.dailyNegotiations || 0) + 1;
-  navigator.vibrate?.([20, 30, 20]);
+function closeMiniGame() {
+  cancelAnimationFrame(_mgRaf);
+  _mgRaf = null;
+  _mgState = null;
+  document.getElementById('miniGameOverlay').style.display = 'none';
+  document.getElementById('mgControls').innerHTML = '';
+  // Remove any keyboard listeners
+  document.removeEventListener('keydown', _mgKeyHandler);
+}
+
+function playMiniGameAgain() {
+  const game = pickMiniGame();
+  launchMiniGame(game);
+}
+
+function _mgFinish(won, score) {
+  cancelAnimationFrame(_mgRaf);
+  _mgRaf = null;
+  document.getElementById('mgControls').innerHTML = '';
+  document.removeEventListener('keydown', _mgKeyHandler);
+
+  const multiplier = won ? Math.max(1, Math.min(score / 10, 10)) : 0.1;
+  const bonus = Math.floor(_mgBizIncome * 8 * multiplier);
+
   if (bonus > 0) {
-    notify(`💬 ¡Negociación! +${fmt(bonus)} (${negState.clicks} clicks)`);
+    G.money += bonus;
+    G.totalEarned += bonus;
+    G.dailyEarned = (G.dailyEarned || 0) + bonus;
+    G.negotiateCount = (G.negotiateCount || 0) + 1;
+    G.dailyNegotiations = (G.dailyNegotiations || 0) + 1;
+    trackW?.('weeklyNego');
     spawnParticles(bonus);
     playSound('ching');
-  } else {
-    notify('💬 Negociación fallida — ¡intenta más rápido!');
+    checkAchievements();
+    saveGame();
   }
-  checkAchievements();
-  saveGame();
+
+  const result = document.getElementById('mgResult');
+  const text   = document.getElementById('mgResultText');
+  result.style.display = 'block';
+  text.innerHTML = won
+    ? `🎉 ¡Ganaste! <span style="color:#2DC653">+${fmt(bonus)}</span> para ${_mgBizName}`
+    : `💸 Casi... +${fmt(bonus)} de consolación`;
+  notify(won ? `🎮 +${fmt(bonus)} ganado en mini-juego!` : `🎮 Mejor suerte la próxima. +${fmt(bonus)}`);
 }
+
+// ── Canvas helpers ────────────────────────────────────────────────
+function _mgCtx() {
+  const c = document.getElementById('mgCanvas');
+  return { ctx: c.getContext('2d'), W: c.width, H: c.height, canvas: c };
+}
+
+// ── Keyboard handler ref (removable) ─────────────────────────────
+let _mgKeyHandler = () => {};
+
+// ══════════════════════════════════════════════════════════════════
+// GAME 1: RUNNER — salta obstáculos 🏃
+// ══════════════════════════════════════════════════════════════════
+function startRunner() {
+  document.getElementById('mgTitle').textContent = '🏃 Corre por el Barrio';
+  const { ctx, W, H } = _mgCtx();
+
+  const GROUND = H - 50;
+  const st = {
+    player: { x: 60, y: GROUND, vy: 0, onGround: true, w: 32, h: 40 },
+    obstacles: [],
+    coins: [],
+    speed: 4,
+    score: 0,
+    frame: 0,
+    alive: true,
+    distance: 0,
+    bgOffset: 0,
+  };
+  _mgState = st;
+
+  const jump = () => {
+    if (st.player.onGround && st.alive) {
+      st.player.vy = -14;
+      st.player.onGround = false;
+      playSound('negotiate');
+    }
+  };
+
+  // Touch / click
+  const canvas = document.getElementById('mgCanvas');
+  canvas.onclick = jump;
+  canvas.ontouchstart = (e) => { e.preventDefault(); jump(); };
+
+  // Keyboard
+  _mgKeyHandler = (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') jump(); };
+  document.addEventListener('keydown', _mgKeyHandler);
+
+  // Mobile button
+  document.getElementById('mgControls').innerHTML =
+    `<button onclick="" id="runnerJumpBtn" style="background:linear-gradient(135deg,#FFE135,#FF9800);border:3px solid #1E1B2E;border-radius:99px;font-family:'Fredoka One',cursive;font-size:1.1rem;padding:12px 32px;cursor:pointer;box-shadow:0 4px 0 #1E1B2E;color:#1E1B2E;">⬆️ SALTAR</button>`;
+  document.getElementById('runnerJumpBtn').addEventListener('click', jump);
+  document.getElementById('runnerJumpBtn').addEventListener('touchstart', (e)=>{ e.preventDefault(); jump(); });
+
+  // Characters / obstacles pool
+  const OBSTACLES = ['🚧','🛑','🏗️','📦','🚌'];
+  const COINS_SET = ['💰','💵','💴'];
+
+  function spawnObstacle() {
+    st.obstacles.push({ x: W + 20, y: GROUND - 10, type: OBSTACLES[Math.floor(Math.random()*OBSTACLES.length)] });
+  }
+  function spawnCoin() {
+    const yPos = GROUND - 20 - Math.random() * 60;
+    st.coins.push({ x: W + 20, y: yPos, type: COINS_SET[Math.floor(Math.random()*COINS_SET.length)], collected: false });
+  }
+
+  let nextObs = 80, nextCoin = 40;
+
+  function loop() {
+    if (!st.alive || document.getElementById('miniGameOverlay').style.display === 'none') return;
+    _mgRaf = requestAnimationFrame(loop);
+    st.frame++;
+    st.distance++;
+    st.bgOffset = (st.bgOffset + st.speed * 0.5) % W;
+    st.speed = 4 + st.distance / 400;
+
+    // Physics
+    st.player.vy += 0.7;
+    st.player.y += st.player.vy;
+    if (st.player.y >= GROUND) {
+      st.player.y = GROUND;
+      st.player.vy = 0;
+      st.player.onGround = true;
+    }
+
+    // Spawn
+    nextObs--;
+    if (nextObs <= 0) { spawnObstacle(); nextObs = 60 + Math.random() * 60; }
+    nextCoin--;
+    if (nextCoin <= 0) { spawnCoin(); nextCoin = 40 + Math.random() * 40; }
+
+    // Move obstacles
+    st.obstacles.forEach(o => { o.x -= st.speed; });
+    st.obstacles = st.obstacles.filter(o => o.x > -40);
+    st.coins.forEach(c => { c.x -= st.speed; });
+    st.coins = st.coins.filter(c => c.x > -40);
+
+    // Collision: obstacles
+    const px = st.player.x, py = st.player.y - st.player.h;
+    for (const o of st.obstacles) {
+      if (Math.abs(o.x - px - 10) < 22 && Math.abs(o.y - py - 20) < 28) {
+        st.alive = false;
+        _mgFinish(st.score >= 8, st.score);
+        draw();
+        return;
+      }
+    }
+
+    // Collect coins
+    st.coins.forEach(c => {
+      if (!c.collected && Math.abs(c.x - px - 10) < 24 && Math.abs(c.y - (py + 20)) < 24) {
+        c.collected = true;
+        st.score++;
+      }
+    });
+
+    draw();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Sky gradient
+    const sky = ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0, '#0d0d2b');
+    sky.addColorStop(1, '#1a1a4e');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+
+    // Stars
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    for (let i = 0; i < 20; i++) {
+      const sx = (i * 73 + st.bgOffset * 0.3) % W;
+      const sy = (i * 47) % (H * 0.5);
+      ctx.fillRect(sx, sy, 1.5, 1.5);
+    }
+
+    // Ground
+    ctx.fillStyle = '#2DC653';
+    ctx.fillRect(0, GROUND + st.player.h, W, H - GROUND - st.player.h);
+    ctx.fillStyle = '#1a8a3a';
+    ctx.fillRect(0, GROUND + st.player.h, W, 4);
+
+    // Sidewalk pattern
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    for (let i = 0; i < W; i += 40) {
+      ctx.fillRect((i - st.bgOffset * 0.8) % W, GROUND + st.player.h + 4, 30, 4);
+    }
+
+    // Player
+    ctx.font = '32px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('🏃', st.player.x + 16, st.player.y + st.player.h * 0.2);
+
+    // Obstacles
+    ctx.font = '28px serif';
+    st.obstacles.forEach(o => ctx.fillText(o.type, o.x, o.y + 32));
+
+    // Coins
+    ctx.font = '22px serif';
+    st.coins.forEach(c => { if (!c.collected) ctx.fillText(c.type, c.x, c.y + 22); });
+
+    // HUD
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.roundRect?.(8, 8, 120, 36, 8); ctx.fill?.();
+    ctx.fillStyle = '#FFE135';
+    ctx.font = 'bold 14px Fredoka One, cursive';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`💰 ${st.score}  |  📏 ${Math.floor(st.distance/10)}m`, 14, 26);
+
+    // Game over flash
+    if (!st.alive) {
+      ctx.fillStyle = 'rgba(255,50,50,0.5)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 28px Fredoka One, cursive';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('¡CRASH! 💥', W/2, H/2);
+    }
+  }
+
+  loop();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GAME 2: WORD FIND — completa palabras 🔤
+// ══════════════════════════════════════════════════════════════════
+function startWordFind() {
+  document.getElementById('mgTitle').textContent = '🔤 Palabras del Barrio';
+  const { ctx, W, H } = _mgCtx();
+
+  const WORDS = [
+    { word: 'BARRIO', hint: '🏘️ Donde vivimos' },
+    { word: 'NEGOCIO', hint: '🏪 Lo que manejamos' },
+    { word: 'DINERO', hint: '💵 Lo que ganamos' },
+    { word: 'COLMADO', hint: '🛒 La tiendita' },
+    { word: 'CLIENTE', hint: '👤 El que paga' },
+    { word: 'GANANCIAS', hint: '📈 El resultado' },
+    { word: 'EMPRESA', hint: '🏢 Organización' },
+    { word: 'MERCADO', hint: '🛍️ Donde vendemos' },
+    { word: 'SOCIO', hint: '🤝 Compañero' },
+    { word: 'PRECIO', hint: '🏷️ Cuánto cuesta' },
+    { word: 'BILLETE', hint: '💴 Papel de dinero' },
+    { word: 'CAPITAL', hint: '💰 Dinero inicial' },
+  ];
+
+  const chosen = WORDS[Math.floor(Math.random() * WORDS.length)];
+  const word = chosen.word;
+
+  // Build scramble — shuffle letters + add 3 random extras
+  const extra = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let pool = word.split('');
+  for (let i = 0; i < 3; i++) pool.push(extra[Math.floor(Math.random()*extra.length)]);
+  // Shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  const st = {
+    word, hint: chosen.hint, pool,
+    selected: [],    // indices into pool
+    formed: '',
+    timeLeft: 20,
+    done: false,
+    score: 0,
+    rounds: 0,
+    maxRounds: 3,
+  };
+  _mgState = st;
+
+  let timerIv = setInterval(() => {
+    if (!st.done) {
+      st.timeLeft--;
+      if (st.timeLeft <= 0) { clearInterval(timerIv); endWord(false); }
+      drawWord();
+    }
+  }, 1000);
+
+  function endWord(won) {
+    clearInterval(timerIv);
+    if (won) {
+      st.score += 3;
+      playSound('ching');
+    }
+    st.rounds++;
+    if (st.rounds >= st.maxRounds || !won && st.rounds >= 2) {
+      st.done = true;
+      _mgFinish(st.score >= 3, st.score);
+      drawWord();
+      document.getElementById('mgControls').innerHTML = '';
+      return;
+    }
+    // Next word
+    setTimeout(() => {
+      const next = WORDS[Math.floor(Math.random() * WORDS.length)];
+      st.word = next.word;
+      st.hint = next.hint;
+      let p2 = next.word.split('');
+      for (let i = 0; i < 3; i++) p2.push(extra[Math.floor(Math.random()*extra.length)]);
+      for (let i = p2.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i+1));
+        [p2[i], p2[j]] = [p2[j], p2[i]];
+      }
+      st.pool = p2;
+      st.selected = [];
+      st.formed = '';
+      st.timeLeft = 20;
+      renderWordButtons();
+      timerIv = setInterval(() => {
+        if (!st.done) {
+          st.timeLeft--;
+          if (st.timeLeft <= 0) { clearInterval(timerIv); endWord(false); }
+          drawWord();
+        }
+      }, 1000);
+      drawWord();
+    }, 800);
+  }
+
+  function selectLetter(i) {
+    if (st.done) return;
+    if (st.selected.includes(i)) {
+      st.selected = st.selected.filter(x => x !== i);
+    } else {
+      st.selected.push(i);
+    }
+    st.formed = st.selected.map(x => st.pool[x]).join('');
+    if (st.formed === st.word) { clearInterval(timerIv); endWord(true); }
+    drawWord();
+    renderWordButtons();
+  }
+
+  function renderWordButtons() {
+    const ctrl = document.getElementById('mgControls');
+    ctrl.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">${
+      st.pool.map((l, i) => {
+        const sel = st.selected.includes(i);
+        return `<button onclick="window._wfSelect(${i})" style="width:40px;height:40px;border-radius:10px;border:2px solid ${sel?'#FFE135':'rgba(255,255,255,0.2)'};background:${sel?'rgba(255,225,53,0.25)':'rgba(255,255,255,0.07)'};color:${sel?'#FFE135':'white'};font-family:'Fredoka One',cursive;font-size:1.1rem;cursor:pointer;">${l}</button>`;
+      }).join('')
+    }</div>`;
+  }
+  window._wfSelect = selectLetter;
+
+  function drawWord() {
+    ctx.clearRect(0, 0, W, H);
+
+    // BG
+    const bg = ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0, '#0d1f3a');
+    bg.addColorStop(1, '#1a0d3a');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    // Hint
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '18px serif';
+    ctx.fillText(st.hint, W/2, 40);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = '700 13px Nunito, sans-serif';
+    ctx.fillText(`Pista: ${st.hint}`, W/2, 40);
+
+    // Timer bar
+    const barW = (W - 40) * (st.timeLeft / 20);
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.roundRect?.(20, 60, W-40, 10, 5); ctx.fill?.();
+    const barColor = st.timeLeft > 10 ? '#2DC653' : st.timeLeft > 5 ? '#FFE135' : '#FF4757';
+    ctx.fillStyle = barColor;
+    ctx.roundRect?.(20, 60, Math.max(0, barW), 10, 5); ctx.fill?.();
+
+    // Word blanks
+    const cellW = Math.min(36, (W - 40) / st.word.length);
+    const startX = W/2 - (st.word.length * cellW)/2;
+    for (let i = 0; i < st.word.length; i++) {
+      const x = startX + i * cellW;
+      const letter = st.formed[i] || '';
+      ctx.strokeStyle = letter ? '#FFE135' : 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 2, 85, cellW - 6, cellW - 4);
+      if (letter) {
+        ctx.fillStyle = '#FFE135';
+        ctx.font = `bold ${Math.min(22, cellW-6)}px Fredoka One, cursive`;
+        ctx.fillText(letter, x + cellW/2, 85 + (cellW-4)/2);
+      }
+    }
+
+    // Status
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '700 12px Nunito, sans-serif';
+    ctx.fillText(`Ronda ${st.rounds+1}/${st.maxRounds} · Puntos: ${st.score} · ⏱ ${st.timeLeft}s`, W/2, 148);
+
+    if (st.formed === st.word) {
+      ctx.fillStyle = 'rgba(45,198,83,0.3)';
+      ctx.fillRect(0,0,W,H);
+      ctx.fillStyle = '#2DC653';
+      ctx.font = 'bold 22px Fredoka One, cursive';
+      ctx.fillText('¡CORRECTO! 🎉', W/2, H/2);
+    }
+  }
+
+  drawWord();
+  renderWordButtons();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GAME 3: MEMORY — encuentra los pares 🃏
+// ══════════════════════════════════════════════════════════════════
+function startMemory() {
+  document.getElementById('mgTitle').textContent = '🃏 Memoria del Barrio';
+
+  const EMOJIS = ['💰','🏪','🛒','🚀','💎','🏆','🤝','🎯'];
+  const pairs = [...EMOJIS, ...EMOJIS].sort(() => Math.random() - 0.5);
+
+  const st = {
+    cards: pairs.map((e, i) => ({ emoji: e, id: i, flipped: false, matched: false })),
+    flipped: [],
+    moves: 0,
+    matches: 0,
+    timeLeft: 45,
+    done: false,
+    blocked: false,
+  };
+  _mgState = st;
+
+  const timerIv = setInterval(() => {
+    if (!st.done) {
+      st.timeLeft--;
+      renderMemory();
+      if (st.timeLeft <= 0) {
+        clearInterval(timerIv);
+        st.done = true;
+        _mgFinish(st.matches >= 4, st.matches);
+      }
+    }
+  }, 1000);
+
+  function flip(i) {
+    if (st.done || st.blocked) return;
+    const card = st.cards[i];
+    if (card.flipped || card.matched) return;
+    card.flipped = true;
+    st.flipped.push(i);
+    playSound('negotiate');
+
+    if (st.flipped.length === 2) {
+      st.blocked = true;
+      st.moves++;
+      const [a, b] = st.flipped;
+      if (st.cards[a].emoji === st.cards[b].emoji) {
+        st.cards[a].matched = true;
+        st.cards[b].matched = true;
+        st.matches++;
+        st.flipped = [];
+        st.blocked = false;
+        playSound('ching');
+        if (st.matches === EMOJIS.length) {
+          clearInterval(timerIv);
+          st.done = true;
+          renderMemory();
+          setTimeout(() => _mgFinish(true, 10 + Math.max(0, 45 - st.timeLeft < 20 ? 5 : 0)), 500);
+        }
+      } else {
+        setTimeout(() => {
+          st.cards[a].flipped = false;
+          st.cards[b].flipped = false;
+          st.flipped = [];
+          st.blocked = false;
+          renderMemory();
+        }, 900);
+      }
+    }
+    renderMemory();
+  }
+
+  window._memFlip = flip;
+
+  function renderMemory() {
+    const ctrl = document.getElementById('mgControls');
+    // Timer bar at top via canvas
+    const { ctx, W, H } = _mgCtx();
+    ctx.clearRect(0,0,W,H);
+    const bg = ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#0d1f1d');
+    bg.addColorStop(1,'#1a2d1a');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    // Timer
+    const barW = (W-32) * (st.timeLeft/45);
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.fillRect(16,8,W-32,8);
+    ctx.fillStyle = st.timeLeft > 20 ? '#2DC653' : st.timeLeft > 10 ? '#FFE135' : '#FF4757';
+    ctx.fillRect(16,8,Math.max(0,barW),8);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '700 12px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Pares: ${st.matches}/${EMOJIS.length} · Movimientos: ${st.moves} · ⏱ ${st.timeLeft}s`, W/2, 30);
+
+    ctrl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;max-width:280px;">${
+      st.cards.map((c, i) => {
+        const show = c.flipped || c.matched;
+        const bg = c.matched ? 'rgba(45,198,83,0.25)' : show ? 'rgba(255,225,53,0.2)' : 'rgba(255,255,255,0.07)';
+        const border = c.matched ? '#2DC653' : show ? '#FFE135' : 'rgba(255,255,255,0.15)';
+        return `<button onclick="window._memFlip(${i})" style="aspect-ratio:1;border-radius:10px;border:2px solid ${border};background:${bg};font-size:1.4rem;cursor:pointer;transition:all 0.2s;">${show ? c.emoji : '❓'}</button>`;
+      }).join('')
+    }</div>`;
+  }
+
+  renderMemory();
+  document.getElementById('mgControls').style.justifyContent = 'center';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GAME 4: CATCHER — atrapa los billetes 🪣
+// ══════════════════════════════════════════════════════════════════
+function startCatcher() {
+  document.getElementById('mgTitle').textContent = '🪣 Atrapa los Billetes';
+  const { ctx, W, H } = _mgCtx();
+
+  const BUCKET_W = 64, BUCKET_H = 40;
+  const st = {
+    bucket: { x: W/2 - BUCKET_W/2, speed: 0 },
+    items: [],
+    score: 0,
+    misses: 0,
+    maxMisses: 5,
+    timeLeft: 25,
+    alive: true,
+    frame: 0,
+  };
+  _mgState = st;
+
+  const timerIv = setInterval(() => {
+    if (st.alive) {
+      st.timeLeft--;
+      if (st.timeLeft <= 0) {
+        clearInterval(timerIv);
+        st.alive = false;
+        _mgFinish(st.score >= 8, st.score);
+      }
+    }
+  }, 1000);
+
+  // Touch drag
+  const canvas = document.getElementById('mgCanvas');
+  let touching = false;
+  canvas.ontouchmove = (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const tx = (e.touches[0].clientX - rect.left) * (W / rect.width);
+    st.bucket.x = Math.max(0, Math.min(W - BUCKET_W, tx - BUCKET_W/2));
+  };
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    st.bucket.x = Math.max(0, Math.min(W - BUCKET_W, mx - BUCKET_W/2));
+  };
+
+  // Keyboard
+  _mgKeyHandler = (e) => {
+    if (e.code === 'ArrowLeft')  st.bucket.speed = -8;
+    if (e.code === 'ArrowRight') st.bucket.speed = 8;
+  };
+  document.addEventListener('keydown', _mgKeyHandler);
+
+  // Controls
+  document.getElementById('mgControls').innerHTML = `
+    <button id="mcLeft" style="background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:14px;color:white;font-size:1.4rem;padding:10px 24px;cursor:pointer;">◀</button>
+    <button id="mcRight" style="background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:14px;color:white;font-size:1.4rem;padding:10px 24px;cursor:pointer;">▶</button>`;
+  const addHold = (id, dir) => {
+    const btn = document.getElementById(id);
+    let iv;
+    const start = () => { iv = setInterval(() => { st.bucket.x = Math.max(0, Math.min(W-BUCKET_W, st.bucket.x + dir * 10)); }, 30); };
+    const stop  = () => clearInterval(iv);
+    btn.addEventListener('mousedown', start); btn.addEventListener('mouseup', stop); btn.addEventListener('mouseleave', stop);
+    btn.addEventListener('touchstart', (e)=>{ e.preventDefault(); start(); }); btn.addEventListener('touchend', stop);
+  };
+  addHold('mcLeft', -1); addHold('mcRight', 1);
+
+  const FALL_ITEMS = [
+    { emoji:'💵', value:1, speed:3 },
+    { emoji:'💴', value:2, speed:4 },
+    { emoji:'💰', value:3, speed:3.5 },
+    { emoji:'💎', value:5, speed:2.5 },
+    { emoji:'💣', value:-3, speed:5 },  // bomb — avoid!
+  ];
+  let nextSpawn = 30;
+
+  function loop() {
+    if (!st.alive) return;
+    _mgRaf = requestAnimationFrame(loop);
+    st.frame++;
+
+    // Keyboard move
+    if (st.bucket.speed !== 0) {
+      st.bucket.x = Math.max(0, Math.min(W-BUCKET_W, st.bucket.x + st.bucket.speed));
+      st.bucket.speed *= 0.85;
+      if (Math.abs(st.bucket.speed) < 0.5) st.bucket.speed = 0;
+    }
+
+    // Spawn
+    nextSpawn--;
+    if (nextSpawn <= 0) {
+      const template = FALL_ITEMS[Math.floor(Math.random() * FALL_ITEMS.length)];
+      st.items.push({ x: Math.random() * (W - 30), y: -20, ...template });
+      nextSpawn = 20 + Math.random() * 20;
+    }
+
+    // Move items
+    st.items.forEach(it => { it.y += it.speed * (1 + st.frame/500); });
+
+    // Catch check
+    const bucketTop = H - BUCKET_H - 20;
+    const bucketRight = st.bucket.x + BUCKET_W;
+    st.items = st.items.filter(it => {
+      if (it.y > bucketTop && it.y < H - 10 && it.x > st.bucket.x - 10 && it.x < bucketRight) {
+        if (it.value > 0) {
+          st.score += it.value;
+          playSound('ching');
+        } else {
+          st.misses++;
+          playSound('negotiate');
+          if (st.misses >= st.maxMisses) {
+            clearInterval(timerIv);
+            st.alive = false;
+            _mgFinish(st.score >= 8, st.score);
+          }
+        }
+        return false;
+      }
+      // Fell off screen
+      if (it.y > H + 10) {
+        if (it.value > 0) {
+          st.misses++;
+          if (st.misses >= st.maxMisses) {
+            clearInterval(timerIv);
+            st.alive = false;
+            _mgFinish(st.score >= 8, st.score);
+          }
+        }
+        return false;
+      }
+      return true;
+    });
+
+    draw();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // BG
+    const bg = ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#1a0d2e');
+    bg.addColorStop(1,'#0d1a2e');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    // Falling items
+    ctx.font = '26px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    st.items.forEach(it => ctx.fillText(it.emoji, it.x + 13, it.y));
+
+    // Bucket
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(st.bucket.x, H - BUCKET_H - 20, BUCKET_W, BUCKET_H);
+    ctx.fillStyle = '#A0522D';
+    ctx.fillRect(st.bucket.x + 4, H - BUCKET_H - 20, BUCKET_W - 8, 8);
+    ctx.font = '22px serif';
+    ctx.fillText('🪣', st.bucket.x + BUCKET_W/2, H - BUCKET_H/2 - 14);
+
+    // Miss hearts
+    const hearts = Array(st.maxMisses).fill('').map((_,i) => i < st.maxMisses - st.misses ? '❤️' : '🖤').join('');
+    ctx.font = '14px serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(hearts, 8, 22);
+
+    // Score
+    ctx.fillStyle = '#FFE135';
+    ctx.font = 'bold 14px Fredoka One, cursive';
+    ctx.textAlign = 'right';
+    ctx.fillText(`💰 ${st.score}  ⏱ ${st.timeLeft}s`, W - 8, 22);
+  }
+
+  loop();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GAME 5: SNAKE — come los billetes 🐍
+// ══════════════════════════════════════════════════════════════════
+function startSnake() {
+  document.getElementById('mgTitle').textContent = '🐍 La Culebra del Barrio';
+  const { ctx, W, H } = _mgCtx();
+
+  const CELL = 24;
+  const COLS = Math.floor(W / CELL);
+  const ROWS = Math.floor((H - 40) / CELL);
+  const OFFSET_Y = 40;
+
+  const st = {
+    snake: [{ x: Math.floor(COLS/2), y: Math.floor(ROWS/2) }],
+    dir: { x: 1, y: 0 },
+    nextDir: { x: 1, y: 0 },
+    food: [],
+    score: 0,
+    alive: true,
+    frame: 0,
+    speed: 8, // frames per move
+  };
+  _mgState = st;
+
+  function spawnFood() {
+    const FOOD_TYPES = [
+      { emoji:'💵', value:1 },
+      { emoji:'💴', value:2 },
+      { emoji:'💰', value:3 },
+    ];
+    let pos;
+    do { pos = { x: Math.floor(Math.random()*COLS), y: Math.floor(Math.random()*ROWS) }; }
+    while (st.snake.some(s => s.x === pos.x && s.y === pos.y));
+    const t = FOOD_TYPES[Math.floor(Math.random()*FOOD_TYPES.length)];
+    st.food.push({ ...pos, ...t });
+  }
+  spawnFood(); spawnFood();
+
+  // Keyboard
+  _mgKeyHandler = (e) => {
+    const map = { ArrowUp:{x:0,y:-1}, ArrowDown:{x:0,y:1}, ArrowLeft:{x:-1,y:0}, ArrowRight:{x:1,y:0} };
+    const d = map[e.code];
+    if (d && !(d.x === -st.dir.x && d.y === -st.dir.y)) st.nextDir = d;
+  };
+  document.addEventListener('keydown', _mgKeyHandler);
+
+  // Touch swipe
+  let touchStart = null;
+  const canvas = document.getElementById('mgCanvas');
+  canvas.ontouchstart = (e) => { e.preventDefault(); touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+  canvas.ontouchend   = (e) => {
+    if (!touchStart) return;
+    const dx = e.changedTouches[0].clientX - touchStart.x;
+    const dy = e.changedTouches[0].clientY - touchStart.y;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      st.nextDir = dx > 0 ? {x:1,y:0} : {x:-1,y:0};
+    } else {
+      st.nextDir = dy > 0 ? {x:0,y:1} : {x:0,y:-1};
+    }
+    touchStart = null;
+  };
+
+  // Controls
+  document.getElementById('mgControls').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);gap:4px;">
+      <div></div>
+      <button id="snkU" style="border-radius:10px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:white;font-size:1.3rem;cursor:pointer;">⬆️</button>
+      <div></div>
+      <button id="snkL" style="border-radius:10px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:white;font-size:1.3rem;cursor:pointer;">⬅️</button>
+      <button id="snkD" style="border-radius:10px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:white;font-size:1.3rem;cursor:pointer;">⬇️</button>
+      <button id="snkR" style="border-radius:10px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:white;font-size:1.3rem;cursor:pointer;">➡️</button>
+    </div>`;
+  document.getElementById('snkU').onclick = () => { if(st.dir.y!==1)  st.nextDir={x:0,y:-1}; };
+  document.getElementById('snkD').onclick = () => { if(st.dir.y!==-1) st.nextDir={x:0,y:1}; };
+  document.getElementById('snkL').onclick = () => { if(st.dir.x!==1)  st.nextDir={x:-1,y:0}; };
+  document.getElementById('snkR').onclick = () => { if(st.dir.x!==-1) st.nextDir={x:1,y:0}; };
+
+  let timeLeft = 40;
+  const timerIv = setInterval(() => {
+    if (st.alive) {
+      timeLeft--;
+      if (timeLeft <= 0) {
+        clearInterval(timerIv);
+        st.alive = false;
+        _mgFinish(st.score >= 5, st.score);
+      }
+    }
+  }, 1000);
+
+  function loop() {
+    if (!st.alive) return;
+    _mgRaf = requestAnimationFrame(loop);
+    st.frame++;
+
+    if (st.frame % st.speed === 0) {
+      // Move
+      st.dir = { ...st.nextDir };
+      const head = { x: st.snake[0].x + st.dir.x, y: st.snake[0].y + st.dir.y };
+
+      // Wall wrap
+      head.x = (head.x + COLS) % COLS;
+      head.y = (head.y + ROWS) % ROWS;
+
+      // Self collision
+      if (st.snake.slice(2).some(s => s.x === head.x && s.y === head.y)) {
+        clearInterval(timerIv);
+        st.alive = false;
+        draw();
+        _mgFinish(st.score >= 5, st.score);
+        return;
+      }
+
+      // Eat food
+      let ate = false;
+      st.food = st.food.filter(f => {
+        if (f.x === head.x && f.y === head.y) {
+          st.score += f.value;
+          ate = true;
+          playSound('ching');
+          return false;
+        }
+        return true;
+      });
+
+      st.snake.unshift(head);
+      if (!ate) st.snake.pop();
+      else { spawnFood(); if (st.speed > 4) st.speed--; }
+    }
+
+    draw();
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      const bg = ctx.createLinearGradient(0,0,0,H);
+      bg.addColorStop(0,'#0d1f0d');
+      bg.addColorStop(1,'#1a3a1a');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0,0,W,H);
+
+      // Grid dots
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      for (let col = 0; col < COLS; col++)
+        for (let row = 0; row < ROWS; row++)
+          ctx.fillRect(col*CELL + CELL/2 - 1, OFFSET_Y + row*CELL + CELL/2 - 1, 2, 2);
+
+      // Snake
+      st.snake.forEach((s, i) => {
+        const x = s.x * CELL, y = OFFSET_Y + s.y * CELL;
+        ctx.fillStyle = i === 0 ? '#2DC653' : `rgba(45,${198 - i*4},83,${1 - i/st.snake.length * 0.5})`;
+        ctx.beginPath();
+        ctx.roundRect?.(x+2, y+2, CELL-4, CELL-4, 4) ?? ctx.rect(x+2, y+2, CELL-4, CELL-4);
+        ctx.fill();
+        if (i === 0) {
+          ctx.font = '16px serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('🐍', x + CELL/2, y + CELL/2);
+        }
+      });
+
+      // Food
+      ctx.font = '18px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      st.food.forEach(f => ctx.fillText(f.emoji, f.x*CELL + CELL/2, OFFSET_Y + f.y*CELL + CELL/2));
+
+      // HUD
+      ctx.fillStyle = '#FFE135';
+      ctx.font = 'bold 13px Fredoka One, cursive';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`💰 ${st.score}  🐍 ${st.snake.length}  ⏱ ${timeLeft}s`, 10, 20);
+
+      if (!st.alive) {
+        ctx.fillStyle = 'rgba(255,50,50,0.4)';
+        ctx.fillRect(0,0,W,H);
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 26px Fredoka One, cursive';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('💥 ¡Chocaste!', W/2, H/2);
+      }
+    }
+  }
+
+  loop();
+}
+
+
 
 // ═══════════════════════════════════════════════
 // NIGHT/DAY MODE
@@ -5029,6 +6458,14 @@ if (!G.bizUpgrades) G.bizUpgrades = {};
 if (!G.dailyObjClaimed) G.dailyObjClaimed = {};
 if (!G.dailyObjSeed) G.dailyObjSeed = Date.now();
 if (!G.theme) G.theme = 'gold';
+// v10: Gem sources migration
+if (!G.socialShares) G.socialShares = {};
+if (!G.referralCode) {} // will be lazy-created
+if (!G.lastTriviaTs) G.lastTriviaTs = 0;
+if (!G.lastAdTs) G.lastAdTs = 0;
+if (!G.lastGemDailyTs) G.lastGemDailyTs = 0;
+if (!G.lastWeeklyGemTs) G.lastWeeklyGemTs = 0;
+if (!G.triviaCorrect) G.triviaCorrect = 0;
 // v10: Ascenso Social migration
 if (G.socialStage === undefined) {
   // Migrate old prestige stars to socialStage
@@ -5124,5 +6561,294 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSeconda
     <div style="font-size:0.65rem;color:#ccc;margin-top:12px;font-weight:700">Puedes cambiarlo después desde configuración</div>
   </div>
 </div>
-</body>
-</html>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// PWA INSTALL PROMPT
+// ═══════════════════════════════════════════════════════════════════
+let _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  // Show install banner after 30s or first level up
+  setTimeout(showInstallBanner, 30000);
+});
+
+function showInstallBanner() {
+  if (!_pwaPrompt || G.pwaInstalled || document.getElementById('pwaBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pwaBanner';
+  banner.style.cssText = `position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:995;background:linear-gradient(135deg,#1E1B2E,#2d1a4a);border:3px solid #9B5DE5;border-radius:16px;padding:12px 16px;max-width:320px;width:92%;display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,0.5);animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)`;
+  banner.innerHTML = `
+    <div style="font-size:2.2rem">📲</div>
+    <div style="flex:1">
+      <div style="font-family:'Fredoka One',cursive;color:#D4A8FF;font-size:0.9rem">¡Instala el Imperio!</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.5);font-weight:900">Juega sin internet · Icono en pantalla</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <button onclick="installPWA()" style="background:#9B5DE5;border:none;border-radius:8px;color:white;font-family:'Fredoka One',cursive;font-size:0.75rem;padding:5px 10px;cursor:pointer;">Instalar</button>
+      <button onclick="this.closest('#pwaBanner').remove()" style="background:transparent;border:none;color:rgba(255,255,255,0.3);font-size:0.65rem;cursor:pointer;">Ahora no</button>
+    </div>`;
+  document.body.appendChild(banner);
+  setTimeout(() => banner?.remove(), 12000);
+}
+
+async function installPWA() {
+  if (!_pwaPrompt) return;
+  const result = await _pwaPrompt.prompt();
+  if (result?.outcome === 'accepted') {
+    G.pwaInstalled = true;
+    addGems(10);
+    saveGame();
+    notify('📲 ¡Imperio instalado! +10 💎 de regalo');
+  }
+  document.getElementById('pwaBanner')?.remove();
+  _pwaPrompt = null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SEASONS SYSTEM — temporadas de 30 días con cosmetics
+// ═══════════════════════════════════════════════════════════════════
+const CURRENT_SEASON = {
+  id: 1,
+  name: 'Temporada del Barrio',
+  theme: '🌆',
+  endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).getTime(),
+  tiers: [
+    { level: 1,  xp: 100,   reward: { type:'gems', amount:5 },    label:'💎 5 Gemas' },
+    { level: 2,  xp: 300,   reward: { type:'gems', amount:10 },   label:'💎 10 Gemas' },
+    { level: 3,  xp: 600,   reward: { type:'title', val:'🌟 Emprendedor de Temporada' }, label:'🌟 Título' },
+    { level: 4,  xp: 1000,  reward: { type:'gems', amount:20 },   label:'💎 20 Gemas' },
+    { level: 5,  xp: 1500,  reward: { type:'boost', val:'x1.5 ingresos 2h' }, label:'⚡ Boost x1.5' },
+    { level: 6,  xp: 2200,  reward: { type:'gems', amount:30 },   label:'💎 30 Gemas' },
+    { level: 7,  xp: 3000,  reward: { type:'title', val:'🔥 Magnate de Temporada' }, label:'🔥 Título Elite' },
+    { level: 8,  xp: 4000,  reward: { type:'gems', amount:50 },   label:'💎 50 Gemas' },
+    { level: 9,  xp: 5500,  reward: { type:'boost', val:'Offline 24h gratis' }, label:'🌙 Boost Offline' },
+    { level: 10, xp: 7500,  reward: { type:'title', val:'👑 Leyenda del Barrio' }, label:'👑 Leyenda' },
+  ]
+};
+
+function getSeasonXP() { return G.seasonXP || 0; }
+function getSeasonLevel() {
+  const xp = getSeasonXP();
+  let lv = 0;
+  for (const t of CURRENT_SEASON.tiers) { if (xp >= t.xp) lv = t.level; }
+  return lv;
+}
+function addSeasonXP(amount) {
+  if (!G.seasonXP) G.seasonXP = 0;
+  if (!G.seasonClaimed) G.seasonClaimed = {};
+  const prevLv = getSeasonLevel();
+  G.seasonXP += amount;
+  const newLv = getSeasonLevel();
+  if (newLv > prevLv) {
+    for (let l = prevLv + 1; l <= newLv; l++) {
+      const tier = CURRENT_SEASON.tiers.find(t => t.level === l);
+      if (tier && !G.seasonClaimed[l]) {
+        claimSeasonTier(l, tier);
+      }
+    }
+  }
+}
+function claimSeasonTier(level, tier) {
+  if (!G.seasonClaimed) G.seasonClaimed = {};
+  if (G.seasonClaimed[level]) return;
+  G.seasonClaimed[level] = true;
+  const r = tier.reward;
+  if (r.type === 'gems')  { addGems(r.amount); notify(`🏆 Temporada Nv.${level}: +${r.amount} 💎`); }
+  if (r.type === 'title') { G.seasonTitle = r.val; notify(`🏆 Temporada Nv.${level}: ${r.val}`); }
+  if (r.type === 'boost') { G.seasonBoostEnd = Date.now() + 2 * 3600000; notify(`🏆 Temporada Nv.${level}: ${r.val}`); }
+}
+
+// Give season XP on actions
+const _origAddXP = window.addXP;
+// Patch will be applied below after addXP is defined
+
+// ═══════════════════════════════════════════════════════════════════
+// STORY MISSIONS — arco narrativo de 10 misiones
+// ═══════════════════════════════════════════════════════════════════
+const STORY_MISSIONS = [
+  { id:'s1',  icon:'🪒', title:'El Comienzo',        desc:'Abre la Barbería Los Manos',                   check: g => Object.values(g.businesses).filter(b=>b.level>0).length >= 1, reward:{ money:500,  gems:2  }, story:'Heredaste la barbería de tu abuelo con $500 y muchos sueños.' },
+  { id:'s2',  icon:'🛒', title:'El Primer Socio',    desc:'Abre el Colmado Don Beto',                    check: g => g.businesses?.colmado?.level > 0, reward:{ money:2000, gems:3  }, story:'Don Beto te ofrece el colmado de su jubilación. ¡Es tu momento!' },
+  { id:'s3',  icon:'💪', title:'El Barrio Habla',    desc:'Llega a Nivel 3',                              check: g => g.level >= 2, reward:{ money:5000, gems:5  }, story:'Tu nombre empieza a sonar en el vecindario. La gente confía en ti.' },
+  { id:'s4',  icon:'🏪', title:'Cinco Negocios',     desc:'Ten 5 negocios activos',                       check: g => Object.values(g.businesses).filter(b=>b.level>0).length >= 5, reward:{ money:15000, gems:8 }, story:'Con 5 negocios en pie, el barrio entero es tu oficina.' },
+  { id:'s5',  icon:'🗺️', title:'Nuevos Horizontes',  desc:'Múdate a la Zona Norte o Sur',                check: g => g.zoneHistory?.some(z => z==='norte'||z==='sur'), reward:{ money:25000, gems:10 }, story:'El barrio ya es pequeño. Es hora de expandir el Imperio.' },
+  { id:'s6',  icon:'💎', title:'Primera Influencia', desc:'Haz tu primer Ascenso Social',                check: g => (g.socialStage||0) >= 1, reward:{ money:50000, gems:15 }, story:'Ascendiste. Ahora tienes Influencia: el poder invisible del barrio.' },
+  { id:'s7',  icon:'🏆', title:'El Millonario',      desc:'Acumula $1,000,000 en total',                 check: g => g.totalEarned >= 1000000, reward:{ money:100000, gems:20 }, story:'Un millón de pesos. La gente ya te llama "Don". Tu legado comienza.' },
+  { id:'s8',  icon:'🌟', title:'La Zona Premium',    desc:'Llega a la Zona Premium',                     check: g => g.zoneHistory?.includes('premium'), reward:{ money:250000, gems:25 }, story:'La élite de la ciudad te abre las puertas. Ahora eres de los grandes.' },
+  { id:'s9',  icon:'🛩️', title:'El Imperio Total',   desc:'Ten todos los negocios abiertos',             check: g => typeof BUSINESSES!=='undefined' && Object.values(g.businesses).filter(b=>b.level>0).length >= BUSINESSES.length, reward:{ money:500000, gems:35 }, story:'Cada rincón del barrio lleva tu nombre. Eres el dueño del territorio.' },
+  { id:'s10', icon:'👑', title:'Leyenda del Barrio',  desc:'Llega a Nivel 20 y 2+ Ascensos',              check: g => g.level >= 19 && (g.socialStage||0) >= 2, reward:{ money:1000000, gems:50 }, story:'Tu historia será contada por generaciones. El barrio te pertenece para siempre.' },
+];
+
+function renderStoryMissions() {
+  if (!G.storyClaimed) G.storyClaimed = {};
+  const container = document.getElementById('storyMissionsContainer');
+  if (!container) return;
+
+  const activeMissions = STORY_MISSIONS.filter(m => !G.storyClaimed[m.id]);
+  const nextMission = activeMissions[0];
+  const completedCount = STORY_MISSIONS.length - activeMissions.length;
+
+  container.innerHTML = `
+    <div style="background:linear-gradient(135deg,#1a0d3a,#2d1a4a);border:3px solid #9B5DE5;border-radius:18px;padding:16px;margin-bottom:12px;">
+      <div style="font-family:'Boogaloo',cursive;font-size:1.2rem;color:#D4A8FF;margin-bottom:4px;">📖 Historia del Imperio <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);font-family:'Nunito',sans-serif;">${completedCount}/${STORY_MISSIONS.length}</span></div>
+      <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:99px;margin-bottom:12px;overflow:hidden;">
+        <div style="height:100%;width:${completedCount/STORY_MISSIONS.length*100}%;background:linear-gradient(90deg,#9B5DE5,#D4A8FF);border-radius:99px;"></div>
+      </div>
+      ${STORY_MISSIONS.slice(0, completedCount + 2).map(m => {
+        const done = !!G.storyClaimed[m.id];
+        const ready = !done && m.check(G);
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:${done?'rgba(45,198,83,0.1)':ready?'rgba(255,225,53,0.08)':'rgba(255,255,255,0.04)'};border:2px solid ${done?'rgba(45,198,83,0.3)':ready?'rgba(255,225,53,0.3)':'rgba(255,255,255,0.08)'};margin-bottom:6px;">
+          <div style="font-size:1.6rem;">${done?'✅':m.icon}</div>
+          <div style="flex:1;">
+            <div style="font-family:'Fredoka One',cursive;font-size:0.85rem;color:${done?'#2DC653':ready?'#FFE135':'rgba(255,255,255,0.6)'};">${m.title}</div>
+            <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);font-weight:900;">${done?m.story:m.desc}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            ${done ? '<div style="font-size:0.65rem;color:#2DC653;font-weight:900;">Completado</div>' :
+              ready ? `<button onclick="claimStoryMission('${m.id}')" style="background:#FFE135;border:2px solid #1E1B2E;border-radius:99px;color:#1E1B2E;font-family:'Fredoka One',cursive;font-size:0.7rem;padding:5px 10px;cursor:pointer;">+${m.reward.gems}💎</button>` :
+              `<div style="font-size:0.7rem;color:rgba(255,255,255,0.25);font-weight:900;">🔒</div>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function claimStoryMission(id) {
+  const m = STORY_MISSIONS.find(x => x.id === id);
+  if (!m || G.storyClaimed?.[id]) return;
+  if (!m.check(G)) return;
+  if (!G.storyClaimed) G.storyClaimed = {};
+  G.storyClaimed[id] = true;
+  G.money += m.reward.money;
+  G.totalEarned += m.reward.money;
+  addGems(m.reward.gems);
+  addSeasonXP(50);
+  notify(`📖 Misión: ${m.title} — +${fmt(m.reward.money)} y +${m.reward.gems}💎`);
+  spawnParticles(m.reward.money);
+  renderStoryMissions();
+  saveGame();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EXPANDED GEM SHOP ITEMS
+// ═══════════════════════════════════════════════════════════════════
+// Patch GEM_ITEMS after definition
+if (typeof GEM_ITEMS !== 'undefined') {
+  GEM_ITEMS.push(
+    { id:'xpboost', icon:'📈', name:'Boost de XP x2 (30min)', desc:'Doble XP en todos los negocios', cost:8, action:'xpboost' },
+    { id:'megabiz', icon:'🏢', name:'Súper Negocio (1h)', desc:'Un negocio al azar x5 ingresos por 1 hora', cost:15, action:'megabiz' },
+    { id:'shield', icon:'🛡️', name:'Escudo Anti-Reset', desc:'Protege tu progreso de un evento negativo', cost:6, action:'shield' },
+    { id:'seasonxp', icon:'🏆', name:'+200 XP de Temporada', desc:'Avanza rápido en la Temporada', cost:10, action:'seasonxp' }
+  );
+}
+
+// Patch buyGemItem for new items
+const _origBuyGemItem = window.buyGemItem;
+window.buyGemItem = function(id) {
+  const item = typeof GEM_ITEMS !== 'undefined' ? GEM_ITEMS.find(i => i.id === id) : null;
+  if (!item) return;
+  if (item.action === 'xpboost') {
+    G.xpBoostEnd = Date.now() + 30 * 60000;
+    document.getElementById('gemShopOverlay').classList.remove('open');
+    G.gems -= item.cost;
+    document.getElementById('hdrGems').textContent = G.gems;
+    notify('📈 XP x2 activo por 30 minutos!');
+    saveGame();
+    return;
+  }
+  if (item.action === 'megabiz') {
+    const openBiz = typeof BUSINESSES !== 'undefined' ? BUSINESSES.filter(b => (G.businesses[b.id]?.level||0) > 0) : [];
+    if (openBiz.length > 0) {
+      const target = openBiz[Math.floor(Math.random() * openBiz.length)];
+      G.megaBizId = target.id;
+      G.megaBizEnd = Date.now() + 3600000;
+      document.getElementById('gemShopOverlay').classList.remove('open');
+      G.gems -= item.cost;
+      document.getElementById('hdrGems').textContent = G.gems;
+      notify(`🏢 ${target.name} ahora produce x5 por 1 hora!`);
+      saveGame();
+    }
+    return;
+  }
+  if (item.action === 'shield') {
+    G.shieldActive = true;
+    document.getElementById('gemShopOverlay').classList.remove('open');
+    G.gems -= item.cost;
+    document.getElementById('hdrGems').textContent = G.gems;
+    notify('🛡️ Escudo activo — próximo evento negativo bloqueado');
+    saveGame();
+    return;
+  }
+  if (item.action === 'seasonxp') {
+    document.getElementById('gemShopOverlay').classList.remove('open');
+    G.gems -= item.cost;
+    document.getElementById('hdrGems').textContent = G.gems;
+    addSeasonXP(200);
+    notify('🏆 +200 XP de Temporada!');
+    saveGame();
+    return;
+  }
+  // Fall back to original handler
+  if (_origBuyGemItem) _origBuyGemItem(id);
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// INJECT STORY MISSIONS INTO LOGROS TAB
+// ═══════════════════════════════════════════════════════════════════
+(function injectStoryMissionsTab() {
+  const target = document.getElementById('tab-logros');
+  if (!target) return;
+  const wrapper = document.createElement('div');
+  wrapper.id = 'storyMissionsContainer';
+  target.insertBefore(wrapper, target.firstChild);
+})();
+
+// ═══════════════════════════════════════════════════════════════════
+// SEASON XP HOOK — give XP on key actions
+// ═══════════════════════════════════════════════════════════════════
+(function hookSeasonXP() {
+  const origSave = window.saveGame;
+  window.saveGame = function() {
+    if (origSave) origSave();
+  };
+
+  // Hook into biz income tick to give season XP periodically
+  let _seasonXPTick = 0;
+  const origTick = window.tick;
+  if (origTick) {
+    window.tick = function() {
+      _seasonXPTick++;
+      if (_seasonXPTick % 600 === 0) {  // every ~10s of game time
+        const ips = typeof totalIPS === 'function' ? totalIPS() : 0;
+        if (ips > 0) addSeasonXP(1);
+      }
+      origTick();
+    };
+  }
+})();
+
+// Render story missions when logros tab opens
+(function hookTabChange() {
+  const origShow = window.showTab;
+  window.showTab = function(name) {
+    if (origShow) origShow(name);
+    if (name === 'logros') {
+      setTimeout(renderStoryMissions, 50);
+    }
+  };
+})();
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE MIGRATION for new fields
+// ═══════════════════════════════════════════════════════════════════
+if (!G.seasonXP)      G.seasonXP = 0;
+if (!G.seasonClaimed) G.seasonClaimed = {};
+if (!G.storyClaimed)  G.storyClaimed = {};
+if (!G.pwaInstalled)  G.pwaInstalled = false;
+if (!G.shieldActive)  G.shieldActive = false;
+
+// Render missions on first load
+setTimeout(renderStoryMissions, 200);
+
+</script>
