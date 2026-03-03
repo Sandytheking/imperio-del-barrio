@@ -3,7 +3,7 @@
  * All Supabase interactions for Imperio del Barrio
  */
 
-import { getSupabase, GameSave, LeaderboardEntry } from './supabase';
+import { getSupabase, GameSave, LeaderboardEntry, Guild, GuildMember, GuildLeaderboardEntry } from './supabase';
 
 const SAVE_VERSION = 1;
 
@@ -267,8 +267,6 @@ export function smartSave(G: Record<string, unknown>) {
 // ══════════════════════════════════════════════
 // GUILD SYSTEM
 // ══════════════════════════════════════════════
-
-import type { Guild, GuildMember, GuildLeaderboardEntry } from './supabase';
 
 /**
  * Crea un clan nuevo. El código se genera en el cliente y se verifica
