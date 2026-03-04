@@ -2124,9 +2124,21 @@ body.night-mode .night-stars { opacity: 0.35; }
 .biz-anim-close { position: absolute; top: 16px; right: 16px; background: #FF4757; color: white; border: 3px solid white; border-radius: 99px; font-family: 'Fredoka One',cursive; font-size: 1rem; padding: 8px 20px; cursor: pointer; z-index: 10; box-shadow: 3px 3px 0 rgba(0,0,0,0.5); }
 .biz-anim-close:hover { transform: scale(1.05); }
 .biz-anim-info { color: white; font-family: 'Fredoka One',cursive; font-size: 0.85rem; margin-top: 10px; opacity: 0.7; }
-.btn-live { background: linear-gradient(135deg,#FF6348,#FF4757); color: white; border: 2px solid #1E1B2E; border-radius: 99px; font-family: 'Fredoka One',cursive; font-size: 0.75rem; padding: 5px 12px; cursor: pointer; box-shadow: 2px 2px 0 #1E1B2E; animation: pulse-live 2s ease-in-out infinite; }
-@keyframes pulse-live { 0%,100%{box-shadow:2px 2px 0 #1E1B2E, 0 0 0 0 rgba(255,71,87,0.4)} 50%{box-shadow:2px 2px 0 #1E1B2E, 0 0 0 6px rgba(255,71,87,0)} }
-.btn-live:hover { transform: scale(1.05); }
+
+/* Rotate prompt — shown on portrait mobile */
+#rotatePrompt {
+  display: none;
+  position: fixed; inset: 0; z-index: 710;
+  background: #0d1b36;
+  flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+}
+#rotatePrompt .rot-icon { font-size: 4rem; animation: rotSpin 1.5s ease-in-out infinite; }
+@keyframes rotSpin { 0%{transform:rotate(0deg)} 40%{transform:rotate(90deg)} 60%{transform:rotate(90deg)} 100%{transform:rotate(0deg)} }
+#rotatePrompt p { font-family: 'Fredoka One',cursive; color: white; font-size: 1.2rem; text-align: center; }
+
+@media (orientation: portrait) and (max-width: 768px) {
+  #bizAnimOverlay.open #bizAnimFrame { display: none; }
+}
 
 /* ═══ FLOATING INCOME COUNTER ═══ */
 .biz-earned-float { font-family: 'Fredoka One',cursive; font-size: 0.75rem; color: #2DC653; font-weight: 900; text-align: right; min-width: 80px; }
@@ -2596,6 +2608,12 @@ body.night-mode .night-stars { opacity: 0.35; }
   <div class="biz-anim-info" id="bizAnimInfo">Los ingresos se sincronizarán al cerrar</div>
 </div>
 
+<!-- Rotate prompt for portrait mobile -->
+<div id="rotatePrompt">
+  <div class="rot-icon">📱</div>
+  <p>Gira tu teléfono<br>para ver la animación</p>
+</div>
+
 <!-- Gem Shop Overlay -->
 <div id="gemShopOverlay" onclick="if(event.target===this)document.getElementById('gemShopOverlay').classList.remove('open')">
   <div class="gem-shop-card">
@@ -2771,7 +2789,7 @@ body.night-mode .night-stars { opacity: 0.35; }
       <div style="display:flex;align-items:center;align-self:center;flex:0 0 10px"><div class="road-h" style="height:10px;width:10px"></div></div>
       <div class="zc zc-md" id="zc-premium" onclick="selectZone('premium')">
         <div class="zc-scene-wrap" id="zc-mini-premium"></div>
-        <div class="zc-foot"><div class="zc-fname">💎 Premium</div><div class="zc-fmult">x2.5</div></div>
+        <div class="zc-foot"><div class="zc-fname">💎 Premium</div><div class="zc-fmult">x6.5</div></div>
       </div>
     </div>
   </div>
@@ -2924,7 +2942,7 @@ const ZONES = [
   { id: 'norte', name: 'Zona Norte', icon: '🏙️', mult: 1.5, cost: 50000, minLevel: 3 },
   { id: 'sur', name: 'Zona Sur', icon: '🌴', mult: 1.3, cost: 30000, minLevel: 2 },
   { id: 'este', name: 'Zona Este', icon: '🏭', mult: 1.8, cost: 200000, minLevel: 5 },
-  { id: 'premium', name: 'Zona Premium', icon: '💎', mult: 6.5, cost: 10000000, minLevel: 8 },
+  { id: 'premium', name: 'Zona Premium', icon: '💎', mult: 6.5, cost: 10000000, minLevel: 15 },
   { id: 'aeropuerto', name: 'Aeropuerto', icon: '✈️', mult: 3.0, cost: 5000000, minLevel: 7 },
 ];
 
@@ -2945,8 +2963,24 @@ const EVENTS = [
 // BIZ ANIMATIONS MAP
 // ═══════════════════════════════════════════════
 const BIZ_ANIMATIONS = {
-  barberia: 'barberia-ultra.html',
-  salon: 'salon-bella-imagen.html',
+  barberia:     'barberia-ultra.html',
+  salon:        'salon-bella-imagen.html',
+  colmado:      'colmado.html',
+  motoconcho:   'motoconcho.html',
+  cafeteria:    'cafeteria.html',
+  taller:       'taller.html',
+  farmacia:     'farmacia.html',
+  gym:          'gym.html',
+  restaurante:  'restaurante.html',
+  lavado:       'lavado.html',
+  ferreteria:   'ferreteria.html',
+  discoteca:    'discoteca.html',
+  bambu:        'bambu.html',
+  supermercado: 'supermercado.html',
+  hotelito:     'hotelito.html',
+  plaza:        'plaza.html',
+  banco:        'banco.html',
+  banco_central:'banco_central.html',
 };
 
 // ═══════════════════════════════════════════════
@@ -3434,20 +3468,20 @@ function showAscendCelebration(stage) {
   }
   const cel = document.createElement('div');
   cel.className = 'ascend-celebration';
+  cel.id = 'ascendCelPanel';
   cel.innerHTML = `
     <div class="ascend-cel-text">🚀 ¡ASCENDISTE!</div>
     <div style="font-size:5rem;margin:12px 0">${stage.icon}</div>
     <div class="ascend-cel-sub">${stage.name}</div>
     <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button onclick="shareAscend('${stage.icon}','${stage.name}')" style="background:linear-gradient(135deg,#1877F2,#0a5dc9);border:3px solid white;border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+      <button onclick="shareAscend('${stage.icon}','${stage.name}');document.getElementById('ascendCelPanel')?.remove();" style="background:linear-gradient(135deg,#1877F2,#0a5dc9);border:3px solid white;border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
         📘 ¡Compartir en Facebook!
       </button>
-      <button onclick="this.closest('.ascend-celebration').remove()" style="background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.4);border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px 16px;cursor:pointer;">
+      <button onclick="document.getElementById('ascendCelPanel')?.remove()" style="background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.4);border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px 16px;cursor:pointer;">
         Continuar →
       </button>
     </div>`;
   document.body.appendChild(cel);
-  // Don't auto-remove — user closes it
 }
 
 function shareAscend(icon, stageName) {
@@ -3572,12 +3606,11 @@ function renderBusiness(biz) {
 
     <!-- FOOTER ACTIONS -->
     <div class="biz-footer-row">
-      <button class="btn-buy${!isOpen?' open-btn':''}" onclick="buyBiz('${biz.id}')" ${!canAfford?'disabled':''} style="${!isOpen?'background:'+accentColor:''}">
-        ${!isOpen ? '🔓 Abrir' : '⬆️ Mejorar'}
+      <button class="btn-buy${!isOpen?' open-btn':''}" onclick="${isOpen && BIZ_ANIMATIONS[biz.id] ? `openBizAnim('${biz.id}')` : `buyBiz('${biz.id}')`}" ${!isOpen && !canAfford?'disabled':''} style="${!isOpen?'background:'+accentColor:''}">
+        ${!isOpen ? '🔓 Abrir' : '🎬 Mejorar'}
       </button>
-      <div class="biz-cost-tag">${fmt(cost)}</div>
+      <div class="biz-cost-tag">${isOpen ? '▶ Ver animación' : fmt(cost)}</div>
       ${isOpen ? `<button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">🎮 Jugar</button>` : ''}
-      ${isOpen && BIZ_ANIMATIONS[biz.id] ? `<button class="btn-live" onclick="openBizAnim('${biz.id}')">🎬 En vivo</button>` : ''}
     </div>
   </div>`;
 }
@@ -3624,7 +3657,7 @@ const ZONE_DEFS = {
   sur:        { name:'Zona Sur',        icon:'🌴', mult:1.3, cost:30000,   minLevel:2, desc:'Zona turística. Más poder adquisitivo, cafeterías y palmeras por doquier.', vibe:'Ambiente relajado' },
   norte:      { name:'Zona Norte',      icon:'🏙️', mult:1.5, cost:50000,   minLevel:3, desc:'Zona empresarial. Clientes ejecutivos, calles anchas y autos elegantes.', vibe:'Dinero serio' },
   este:       { name:'Zona Este',       icon:'🏭', mult:1.8, cost:200000,  minLevel:5, desc:'Zona industrial. Mucho volumen, camiones y producción intensa.', vibe:'Producción máxima' },
-  premium:    { name:'Zona Premium',    icon:'💎', mult:2.5, cost:1000000, minLevel:6, desc:'Zona de lujo. Torres doradas, autos deportivos y clientes VIP.', vibe:'Exclusividad total' },
+  premium:    { name:'Zona Premium',    icon:'💎', mult:6.5, cost:80000000, minLevel:15, desc:'Zona de lujo. Torres doradas, autos deportivos y clientes VIP.', vibe:'Exclusividad total' },
   aeropuerto: { name:'Aeropuerto',      icon:'✈️', mult:3.0, cost:5000000, minLevel:7, desc:'Internacional. Clientes extranjeros y los tickets más altos de la ciudad.', vibe:'Gran escala' },
 };
 
@@ -5180,15 +5213,40 @@ function openBizAnim(id) {
   currentBizAnim = id;
   document.getElementById('bizAnimInfo').textContent = `${biz.name} — Ingresos sincronizados en tiempo real`;
 
+  // Try to lock to landscape on mobile
+  try {
+    screen.orientation?.lock?.('landscape').catch(() => {});
+  } catch(_) {}
+
+  // Show rotate prompt if portrait on mobile — works with both resize and orientationchange
+  const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (isMobile) {
+    const rp = document.getElementById('rotatePrompt');
+    const frame = document.getElementById('bizAnimFrame');
+    const checkOrient = () => {
+      const isPortrait = window.innerHeight > window.innerWidth;
+      if (rp) rp.style.display = isPortrait ? 'flex' : 'none';
+      if (frame) frame.style.visibility = isPortrait ? 'hidden' : 'visible';
+    };
+    checkOrient();
+    window._orientChecker = checkOrient;
+    window.addEventListener('resize', checkOrient);
+    window.addEventListener('orientationchange', checkOrient);
+  }
+
   // Send initial state to iframe once it loads
   iframe.onload = () => {
+    const upgrades = G.bizUpgrades?.[id] || {};
     iframe.contentWindow?.postMessage({
       type: 'bizInit',
       money: G.money,
-      chairLevel: G.bizUpgrades?.[id]?.sillas || 1,
-      speedLevel: G.bizUpgrades?.[id]?.velocidad || 1,
-      priceLevel: G.bizUpgrades?.[id]?.precio || 1,
-      marketingLevel: G.bizUpgrades?.[id]?.marketing || 1,
+      // Generic: send all stored upgrade levels for this biz
+      ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
+      // Backwards compat keys
+      chairLevel:     upgrades.sillas    || 1,
+      speedLevel:     upgrades.velocidad || 1,
+      priceLevel:     upgrades.precio    || 1,
+      marketingLevel: upgrades.marketing || 1,
     }, '*');
   };
 }
@@ -5200,6 +5258,18 @@ function closeBizAnim() {
   iframe.contentWindow?.postMessage({ type: 'bizClose' }, '*');
   setTimeout(() => { iframe.src = ''; }, 100);
   currentBizAnim = null;
+  // Release orientation lock
+  try { screen.orientation?.unlock?.(); } catch(_) {}
+  // Hide rotate prompt
+  const rp = document.getElementById('rotatePrompt');
+  if (rp) rp.style.display = 'none';
+  if (window._orientChecker) {
+    window.removeEventListener('resize', window._orientChecker);
+    window.removeEventListener('orientationchange', window._orientChecker);
+    window._orientChecker = null;
+    // Restore iframe visibility
+    document.getElementById('bizAnimFrame').style.visibility = '';
+  }
 }
 
 // Listen for postMessage from biz animations
@@ -5210,13 +5280,15 @@ window.addEventListener('message', e => {
   // Iframe ready — send init state
   if (e.data.type === 'bizReady' && currentBizAnim) {
     const id = currentBizAnim;
+    const upgrades = G.bizUpgrades?.[id] || {};
     iframe?.contentWindow?.postMessage({
       type: 'bizInit',
       money: G.money,
-      chairLevel: G.bizUpgrades?.[id]?.sillas || 1,
-      speedLevel: G.bizUpgrades?.[id]?.velocidad || 1,
-      priceLevel: G.bizUpgrades?.[id]?.precio || 1,
-      marketingLevel: G.bizUpgrades?.[id]?.marketing || 1,
+      ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
+      chairLevel:     upgrades.sillas    || 1,
+      speedLevel:     upgrades.velocidad || 1,
+      priceLevel:     upgrades.precio    || 1,
+      marketingLevel: upgrades.marketing || 1,
     }, '*');
   }
 
@@ -5255,7 +5327,7 @@ window.addEventListener('message', e => {
       }, '*');
       // Update header
       document.getElementById('hdrMoney').textContent = fmt(G.money);
-      notify(`🪑 ¡Mejora comprada! -${fmt(cost)}`);
+      notify(`✅ ¡Mejora comprada! -${fmt(cost)}`);
       saveGame();
     } else {
       iframe?.contentWindow?.postMessage({ type: 'purchaseDenied' }, '*');

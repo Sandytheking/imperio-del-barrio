@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>🛵 Mototaxi Express</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Nunito',sans-serif}
+#wrapper{width:100vw;max-width:1280px;aspect-ratio:16/9;position:relative;background:#001a00;overflow:hidden}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+#header{position:absolute;top:0;left:0;right:0;height:10.5%;background:linear-gradient(180deg,#060d1f,#0d1b36);border-bottom:3px solid #2DC653;display:flex;align-items:center;padding:0 1.5%;gap:2%;z-index:20}
+.hm-block{display:flex;flex-direction:column;min-width:17%}
+.hm-label{font-size:clamp(6px,.65vw,10px);font-weight:900;color:#556;text-transform:uppercase;letter-spacing:1px}
+.hm-val{font-family:'Fredoka One',cursive;font-size:clamp(15px,2vw,30px);color:#2DC653;line-height:1}
+.hm-sub{font-size:clamp(6px,.6vw,9px);font-weight:900;color:#4cd964}
+.hdr-center{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.level-name{font-family:'Fredoka One',cursive;font-size:clamp(9px,1vw,15px);color:#fff}
+.xp-bg{width:100%;max-width:300px;height:8px;background:rgba(255,255,255,.08);border-radius:99px;border:1px solid rgba(255,255,255,.12);overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,#2DC653,#00E676);border-radius:99px;transition:width .4s ease}
+.xp-lbl{font-size:clamp(5px,.55vw,8px);color:#888;font-weight:900}
+.hdr-right{display:flex;align-items:center;gap:.8%;min-width:22%;justify-content:flex-end}
+.hbtn{background:#0f3460;color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(8px,.85vw,13px);padding:.35em .8em;border:2px solid rgba(255,255,255,.12);border-radius:99px;cursor:pointer;transition:transform .1s}
+.hbtn:hover{transform:translateY(-2px)}
+.hbtn.red{background:#c0392b;border-color:#e74c3c}
+.combo-badge{background:linear-gradient(135deg,#FF6348,#FF4757);color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(7px,.75vw,11px);padding:.3em .7em;border-radius:99px;border:2px solid rgba(255,255,255,.3);display:none;animation:cbPop .4s cubic-bezier(.34,1.56,.64,1)}
+.combo-badge.show{display:block}@keyframes cbPop{from{transform:scale(0)}to{transform:scale(1)}}
+#panel{position:absolute;bottom:0;left:0;right:0;height:27%;background:linear-gradient(0deg,#060d1f,#0d1b36);border-top:3px solid #2DC653;display:grid;grid-template-columns:repeat(5,1fr);z-index:20}
+.upg-col{border-right:1px solid rgba(255,255,255,.05);padding:clamp(4px,.7vw,10px) clamp(5px,.9vw,12px);display:flex;flex-direction:column;gap:4px}
+.upg-col:last-child{border-right:none}
+.upg-top{display:flex;align-items:center;gap:5px}
+.upg-emo{font-size:clamp(12px,1.6vw,24px)}
+.upg-title{font-family:'Fredoka One',cursive;font-size:clamp(8px,.95vw,14px);color:#fff;flex:1}
+.upg-lv{background:#2DC653;color:#1a1a2e;font-weight:900;font-size:clamp(5px,.58vw,9px);padding:2px 5px;border-radius:99px}
+.upg-stat{font-size:clamp(6px,.62vw,9px);color:#aaa;font-weight:700;line-height:1.3}
+.upg-stat b{color:#4cd964}
+.upg-btn{margin-top:auto;background:linear-gradient(135deg,#2DC653,#27ae60);color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(8px,.85vw,13px);padding:.4em .8em;border:none;border-radius:99px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.4);transition:transform .1s;width:100%}
+.upg-btn:hover:not(:disabled){transform:translateY(-2px)}
+.upg-btn:disabled{background:linear-gradient(135deg,#333,#2a2a2a);color:#555;cursor:not-allowed;box-shadow:none}
+#achiev{position:absolute;top:13%;right:2%;z-index:50;pointer-events:none;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.ach-item{background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid #2DC653;border-radius:12px;padding:8px 14px;display:flex;align-items:center;gap:8px;animation:achIn .4s cubic-bezier(.34,1.56,.64,1),achOut .4s ease 3.5s forwards;max-width:260px}
+@keyframes achIn{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}
+@keyframes achOut{to{opacity:0;transform:translateX(120%)}}
+.ach-icon{font-size:1.4rem}.ach-title{font-family:'Fredoka One',cursive;font-size:.8rem;color:#2DC653}.ach-desc{font-size:.6rem;color:#aaa;font-weight:700}
+#notiflog{position:absolute;bottom:28%;left:1.5%;z-index:30;pointer-events:none;display:flex;flex-direction:column-reverse;gap:3px}
+.nlog{font-size:clamp(7px,.68vw,10px);font-weight:900;padding:3px 9px;border-radius:5px;background:rgba(0,0,0,.65);animation:nIn .25s ease,nOut .3s ease 3s forwards;border-left:3px solid #2DC653;color:#fff;max-width:270px}
+.nlog.good{border-color:#4cd964;color:#4cd964}.nlog.bad{border-color:#e74c3c;color:#e74c3c}.nlog.special{border-color:#2DC653;color:#2DC653}
+@keyframes nIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes nOut{to{opacity:0;transform:translateX(-18px)}}
+#flash{position:absolute;inset:0;pointer-events:none;z-index:60;border-radius:0;opacity:0}
+#flash.pop{animation:flashPop .35s ease}
+@keyframes flashPop{0%{opacity:.3}100%{opacity:0}}
+</style>
+</head>
+<body>
+<div id="wrapper">
+  <canvas id="c"></canvas>
+  <div id="header">
+    <div class="hm-block">
+      <div class="hm-label">💰 Caja</div>
+      <div class="hm-val" id="hMoney">$0</div>
+      <div class="hm-sub" id="hIPS">+$0/seg</div>
+    </div>
+    <div class="hdr-center">
+      <div class="level-name" id="hLevel">🛵 Mototaxi Express</div>
+      <div class="xp-bg"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+      <div class="xp-lbl" id="xpLbl">0 / 100 XP</div>
+    </div>
+    <div class="hdr-right">
+      <div class="combo-badge" id="comboBadge">🔥 COMBO x1</div>
+      <button class="hbtn red" onclick="activateBoost()">⚡ Boost x2 — $300</button>
+    </div>
+  </div>
+  <div id="panel">
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">🛵</span><span class="upg-title">Más Motos</span><span class="upg-lv" id="lv_motos">Nv.1</span></div>
+      <div class="upg-stat" id="st_motos"><b>Capacidad +1</b></div>
+      <button class="upg-btn" id="btn_motos" onclick="buyUpg('motos')" disabled>🛵 Mejorar $...</button>
+    </div>
+
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">⚡</span><span class="upg-title">Motor Turbo</span><span class="upg-lv" id="lv_velocidad">Nv.1</span></div>
+      <div class="upg-stat" id="st_velocidad"><b>Ciclo -22%</b></div>
+      <button class="upg-btn" id="btn_velocidad" onclick="buyUpg('velocidad')" disabled>⚡ Mejorar $...</button>
+    </div>
+
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">⛑️</span><span class="upg-title">Cascos Premium</span><span class="upg-lv" id="lv_casco">Nv.1</span></div>
+      <div class="upg-stat" id="st_casco"><b>Precio +25%</b></div>
+      <button class="upg-btn" id="btn_casco" onclick="buyUpg('casco')" disabled>⛑️ Mejorar $...</button>
+    </div>
+
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">🗺️</span><span class="upg-title">Rutas VIP</span><span class="upg-lv" id="lv_ruta">Nv.1</span></div>
+      <div class="upg-stat" id="st_ruta"><b>Ingresos +30%</b></div>
+      <button class="upg-btn" id="btn_ruta" onclick="buyUpg('ruta')" disabled>🗺️ Mejorar $...</button>
+    </div>
+
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">📢</span><span class="upg-title">App de Pedidos</span><span class="upg-lv" id="lv_marketing">Nv.1</span></div>
+      <div class="upg-stat" id="st_marketing"><b>Más clientes</b></div>
+      <button class="upg-btn" id="btn_marketing" onclick="buyUpg('marketing')" disabled>📢 Mejorar $...</button>
+    </div></div>
+  <div id="achiev"></div>
+  <div id="notiflog"></div>
+  <div id="flash"></div>
+</div>
+<script>
+
+// ─── COLOURS ───
+const SHIRTS=['#FF6348','#5BC8F5','#2DC653','#FF4FAD','#9B5DE5','#FF8C42','#00C9A7','#e74c3c','#f39c12','#1abc9c','#3498db','#e67e22'];
+const PANTS=['#2D2B3D','#3D5A80','#4a4e69','#1b4332','#6d3a3a','#16213e','#2c3e50','#34495e'];
+const SKINS=['#FDBCB4','#E8975A','#C07A3A','#8B5E3C','#6B3E26','#4A2C0A'];
+const HAIRS=['#1a1a1a','#4a2c0a','#C07A3A','#FFD200','#FF4757','#e8e8e8','#9B5DE5','#8B4513'];
+
+// ─── PARTICLES / FLOATS / BILLS ───
+let particles=[],floats=[],bills=[];
+function spawnParticles(x,y,color,n=12){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,sp=40+Math.random()*80;
+    particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:1,color,r:2+Math.random()*3});
+  }
+}
+function spawnFloat(x,y,text,color='#FFD200',big=false){
+  floats.push({x,y:y-5,text,t:0,color,big});
+}
+function spawnBills(x,y){
+  for(let i=0;i<8;i++)
+    bills.push({x:x+(Math.random()-.5)*60,y,vx:(Math.random()-.5)*50,vy:-70-Math.random()*50,life:1,rot:Math.random()*Math.PI,rotV:(Math.random()-.5)*3});
+}
+function updateFX(dt){
+  particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt*1.4;});
+  particles=particles.filter(p=>p.life>0);
+  floats.forEach(f=>{f.y-=28*dt;f.t+=dt;});
+  floats=floats.filter(f=>f.t<1.8);
+  bills.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.vy+=120*dt;b.rot+=b.rotV*dt;b.life-=dt*1.2;});
+  bills=bills.filter(b=>b.life>0);
+}
+function drawFX(){
+  particles.forEach(p=>{ctx.globalAlpha=p.life;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();});
+  bills.forEach(b=>{ctx.save();ctx.globalAlpha=b.life*.8;ctx.translate(b.x,b.y);ctx.rotate(b.rot);rr(-13,-6,26,12,3,'#2DC653','#1a5c28',1.5);ctx.font=`bold 8px Nunito`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#1a5c28';ctx.fillText('$',0,0);ctx.restore();});
+  floats.forEach(f=>{
+    const alpha=Math.max(0,1-f.t/1.6);
+    const fs=f.big?~~(CW*.016):~~(CW*.013);
+    ctx.save();ctx.globalAlpha=alpha;ctx.font=`900 ${fs}px "Fredoka One",cursive`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    const tw=ctx.measureText(f.text).width,pad=f.big?12:8;
+    rr(f.x-tw/2-pad,f.y-fs/2-4,tw+pad*2,fs+9,6,'rgba(0,0,0,.65)',f.color,f.big?2.5:1.5);
+    ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);ctx.restore();
+  });
+  ctx.globalAlpha=1;
+}
+
+// ─── GENERIC HELPERS ───
+function rr(x,y,w,h,r,fill,stroke,lw=2){
+  ctx.beginPath();
+  if(typeof r==='number')ctx.roundRect(x,y,w,h,r); else ctx.roundRect(x,y,w,h,r);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.lineWidth=lw;ctx.strokeStyle=stroke;ctx.stroke();}
+}
+function txt(t,x,y,font,color,align='center'){
+  ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(t,x,y);
+}
+function shadow(color,blur){ctx.shadowColor=color;ctx.shadowBlur=blur;}
+function noShadow(){ctx.shadowColor='transparent';ctx.shadowBlur=0;}
+
+// ─── DRAW CHARACTER (full body) ───
+// x,y = feet position; scale = size multiplier; state; progress; isVIP; skin; shirt; pants; hair; isAngry; expr
+function drawPerson(cfg){
+  const {x,y,scale:sc=1,state='idle',progress=0,isVIP=false,skin,shirt,pants,hair,isAngry=false,expr=0,bob=0,ws=1,seated=false,tool=null}=cfg;
+  const s=sc*(CW/1280);
+  const bx=x,by=y;
+  ctx.save();ctx.translate(bx,by);ctx.scale(s,s);
+
+  // legs (animated walk or static)
+  if(seated){
+    rr(-14*ws, 2,13*ws,9,3,pants,'#1a1a2e',1.5);
+    rr(  1*ws, 2,13*ws,9,3,pants,'#1a1a2e',1.5);
+    rr(-18*ws, 8,11*ws,7,2,'#222','#1a1a2e',1.2);
+    rr(  7*ws, 8,11*ws,7,2,'#222','#1a1a2e',1.2);
+  } else {
+    const ls=Math.sin(bob)*8;
+    ctx.save();ctx.translate(-6*ws,0);ctx.rotate(ls*Math.PI/180);
+    rr(-5*ws,0,10*ws,22,3,pants,'#1a1a2e',1.5);
+    rr(-7*ws,20,13*ws,8,2,'#222','#1a1a2e',1.2);
+    ctx.restore();
+    ctx.save();ctx.translate(6*ws,0);ctx.rotate(-ls*Math.PI/180);
+    rr(-5*ws,0,10*ws,22,3,pants,'#1a1a2e',1.5);
+    rr(-5*ws,20,13*ws,8,2,'#222','#1a1a2e',1.2);
+    ctx.restore();
+  }
+
+  const bodyY=seated?0:Math.sin(bob+Math.PI*.5)*2;
+  ctx.save();ctx.translate(0,bodyY);
+
+  // Body
+  rr(-16*ws,-26,32*ws,30,7,shirt,'#1a1a2e',1.5);
+  rr(-7*ws,-26,14*ws,8,2,'rgba(255,255,255,.18)',null);
+
+  // Arms
+  if(seated){
+    rr(-24*ws,-22,9*ws,16,3,skin,'#1a1a2e',1.2);
+    rr( 15*ws,-22,9*ws,16,3,skin,'#1a1a2e',1.2);
+  } else {
+    const arm=Math.sin(bob+Math.PI)*6;
+    ctx.save();ctx.translate(-16*ws,-20);ctx.rotate(arm*Math.PI/180);rr(-4*ws,0,8*ws,18,3,skin,'#1a1a2e',1.2);ctx.restore();
+    ctx.save();ctx.translate( 16*ws,-20);ctx.rotate(-arm*Math.PI/180);rr(-4*ws,0,8*ws,18,3,skin,'#1a1a2e',1.2);ctx.restore();
+  }
+  // Tool in hand
+  if(tool){
+    ctx.font=`${~~(18)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(tool, 26*ws, -16);
+  }
+
+  // Head
+  rr(-17*ws,-62,34*ws,36,[14,14,12,12],skin,'#1a1a2e',2);
+  // Hair
+  ctx.beginPath();ctx.ellipse(0,-62,17*ws,12,0,Math.PI,0);
+  ctx.fillStyle=hair;ctx.fill();ctx.strokeStyle='#1a1a2e';ctx.lineWidth=1.5;ctx.stroke();
+  // Crown
+  if(isVIP){ctx.font='16px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👑',0,-80);}
+
+  // Eyes
+  [[-7,-51],[7,-51]].forEach(([ex,ey])=>{
+    rr(ex-5.5,ey-6,11,12,[5,5,5,5],'white','#1a1a2e',1.5);
+    if(isAngry){
+      ctx.save();ctx.translate(ex,ey);ctx.rotate(.3*(ex<0?1:-1));
+      ctx.beginPath();ctx.ellipse(0,0,3.5,4.5,0,0,Math.PI*2);ctx.fillStyle='#1a1a2e';ctx.fill();ctx.restore();
+      ctx.strokeStyle='#1a1a2e';ctx.lineWidth=2;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(ex-5,ey-7);ctx.lineTo(ex+5,ey-10);ctx.stroke();
+    } else {
+      ctx.beginPath();ctx.ellipse(ex+.5,ey-.5,3.5,4.5,0,0,Math.PI*2);ctx.fillStyle='#1a1a2e';ctx.fill();
+      ctx.beginPath();ctx.arc(ex+1.5,ey-2,1.3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();
+    }
+  });
+  // Mouth
+  ctx.strokeStyle='#1a1a2e';ctx.lineWidth=1.5;ctx.beginPath();
+  if(isAngry)       {ctx.arc(0,-42,5,.2,Math.PI-.2,true);}
+  else if(expr===0) {ctx.arc(0,-42,6,.1,Math.PI-.1);}
+  else if(expr===2) {ctx.arc(0,-42,7,.05,Math.PI-.05);ctx.fillStyle='#FF6B6B';ctx.fill();}
+  else              {ctx.moveTo(-5,-42);ctx.lineTo(5,-42);}
+  ctx.stroke();
+
+  ctx.restore();// body offset
+  ctx.restore();// translate+scale
+
+  // Progress bar
+  if(state==='serving'||state==='seated'){
+    const bw=52*s,bh=9,px2=bx-bw/2,py2=by-(78)*s;
+    rr(px2,py2,bw,bh,3,'rgba(0,0,0,.6)',null);
+    const col=progress>.66?'#4cd964':progress>.33?'#FF8C42':'#e74c3c';
+    rr(px2+2,py2+2,(bw-4)*progress,bh-4,2,col,null);
+    rr(px2,py2,bw,bh,3,null,'rgba(0,0,0,.5)',1);
+    txt(`${~~(progress*100)}%`,bx,py2-9,`700 ${~~(8*s)}px Nunito`,col);
+  }
+  if(state==='waiting'){
+    const patience=cfg.patience||1;
+    const bw=42*s,bh=7,px2=bx-bw/2,py2=by-(78)*s;
+    rr(px2,py2,bw,bh,3,'rgba(0,0,0,.45)',null);
+    const col=patience>.55?'#FF8C42':patience>.25?'#FF6348':'#e74c3c';
+    rr(px2+1.5,py2+1.5,(bw-3)*patience,bh-3,2,col,null);
+    const em=patience>.6?'😊':patience>.3?'😐':'😤';
+    ctx.font=`${~~(11*s)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(em,bx,py2-11*s);
+  }
+}
+
+// ─── ZONE LABEL ───
+function drawZoneLabel(x,y,text,color='rgba(255,255,255,.18)'){
+  ctx.save();ctx.globalAlpha=.7;
+  ctx.font=`900 ${~~(CW*.008)}px Nunito`;ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(text.toUpperCase(),x,y);ctx.restore();
+}
+
+
+// ══════════════════════════════════════════════════
+// BUSINESS CONFIG
+// ══════════════════════════════════════════════════
+const BIZ_ID='motoconcho';
+const BIZ_ICON='🛵';
+const BIZ_NAME='Mototaxi Express';
+const ACCENT='#2DC653';
+const MAX_SLOTS=5;
+
+// ══════════════════════════════════════════════════
+// CANVAS SETUP
+// ══════════════════════════════════════════════════
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let CW,CH;
+function resize(){const wr=document.getElementById('wrapper');CW=canvas.width=wr.clientWidth;CH=canvas.height=wr.clientHeight;}
+resize();window.addEventListener('resize',resize);
+
+// ══════════════════════════════════════════════════
+// UPGRADES
+// ══════════════════════════════════════════════════
+const UPGS={
+  motos:{lv:1,base:200,icon:'🛵',name:'Más Motos',desc:'Capacidad +1'},
+  velocidad:{lv:1,base:300,icon:'⚡',name:'Motor Turbo',desc:'Ciclo -22%'},
+  casco:{lv:1,base:450,icon:'⛑️',name:'Cascos Premium',desc:'Precio +25%'},
+  ruta:{lv:1,base:800,icon:'🗺️',name:'Rutas VIP',desc:'Ingresos +30%'},
+  marketing:{lv:1,base:1200,icon:'📢',name:'App de Pedidos',desc:'Más clientes'}
+};
+
+function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}
+function nSlots(){return Math.min(MAX_SLOTS,1+(UPGS.capacidad?.lv||1)-1+(UPGS.sillas?.lv||1)-1+(UPGS.motos?.lv||1)-1+(UPGS.mesas?.lv||1)-1+(UPGS.rampas?.lv||1)-1+(UPGS.cajas?.lv||1)-1+(UPGS.habitaciones?.lv||1)-1+(UPGS.pistas?.lv||1)-1+(UPGS.barras?.lv||1)-1+(UPGS.locales?.lv||1)-1+(UPGS.ventanillas?.lv||1)-1);}
+function cycleTime(){const spd=UPGS.velocidad||UPGS.atencion||UPGS.horario||UPGS.servicio||UPGS.chef||UPGS.tecnico;return Math.max(1.5,BASE_CYCLE*(spd?Math.pow(0.82,spd.lv-1):1));}
+function spawnRate(){const mkt=UPGS.marketing||UPGS.publicidad||UPGS.viral;return Math.max(0.6,BASE_SPAWN*(mkt?Math.pow(0.85,mkt.lv-1):1));}
+function earnPerServe(){
+  let m=BASE_EARN;
+  for(const k in UPGS){
+    const u=UPGS[k];
+    if(['precio','tarifa','vino','vip','premium','lujo','suite','detailing','prestige','inversion'].includes(k)) m*=(1+(u.lv-1)*.25);
+  }
+  m*=(G.boost&&Date.now()<G.boostEnd?2:1);
+  m*=(1+(_prestige*.2));
+  return Math.floor(m);
+}
+
+// ══════════════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════════════
+const BASE_EARN=20;
+const BASE_CYCLE=7;
+const BASE_SPAWN=4;
+let _prestige=0;
+let _paused=false;
+let _earnedQ=0;
+
+const G={money:0,totalEarned:0,xp:0,level:0,served:0,combo:0,maxCombo:0,streak:0,boost:false,boostEnd:0,elapsed:0};
+const LVL={names:['Nuevo','Aprendiz','Trabajador','Experto','Maestro','Empresario','Magnate','Leyenda'],xp:[80,200,500,1200,3000,8000,20000,80000]};
+function xpReq(l){return LVL.xp[Math.min(l,LVL.xp.length-1)];}
+function addXP(a){G.xp+=a;while(G.level<LVL.names.length-1&&G.xp>=xpReq(G.level)){G.xp-=xpReq(G.level);G.level++;triggerFlash(ACCENT+'44');showAchievement('🏆',`¡Nivel ${G.level+1}!`,LVL.names[G.level]);nlog(`🏆 Nivel ${G.level+1} — ${LVL.names[G.level]}`,'special');}}
+
+// ══════════════════════════════════════════════════
+// CLIENTS
+// ══════════════════════════════════════════════════
+let clients=[];
+let spawnTimer=0;
+let cid=0;
+class Client{
+  constructor(){
+    this.id=cid++;
+    this.x=CW*-.04;this.y=0;// set by biz
+    this.tx=CW*.12;
+    this.state='entering';
+    this.slotIdx=-1;
+    this.progress=0;
+    this.patience=1;
+    this.speed=(100+Math.random()*50)*(CW/1280);
+    this.bob=Math.random()*Math.PI*2;
+    this.isVIP=Math.random()<.09;
+    this.isAngry=false;
+    this.skin=SKINS[~~(Math.random()*SKINS.length)];
+    this.shirt=SHIRTS[~~(Math.random()*SHIRTS.length)];
+    this.pants=PANTS[~~(Math.random()*PANTS.length)];
+    this.hair=HAIRS[~~(Math.random()*HAIRS.length)];
+    this.expr=~~(Math.random()*3);
+    this.scale=this.isVIP?1.1:[.85,.9,1,1,1.05][~~(Math.random()*5)];
+  }
+}
+
+let slots=[];
+function initSlots(){
+  const n=Math.min(MAX_SLOTS,nSlots());
+  slots=buildSlots(n);
+}
+function trySpawn(){
+  const free=slots.findIndex((s,i)=>!s.occ&&i<nSlots());
+  if(free<0)return;
+  const c=new Client();
+  c.y=slots[free].y;
+  c.tx=CW*.11;
+  clients.push(c);
+  slots[free].occ=true;slots[free].cid=c.id;
+  c.slotIdx=free;
+  nlog(`${c.isVIP?'⭐ VIP':'👤 '+(CUST_NAME)} llega`);
+}
+
+function onServed(c){
+  const inc=earnPerServe()*(c.isVIP?2:1)*(1+G.streak*.015);
+  G.money+=inc;G.totalEarned+=inc;_earnedQ+=inc;
+  addXP(inc*.1);G.served++;G.streak++;G.combo++;
+  if(G.combo>G.maxCombo)G.maxCombo=G.combo;
+  if(G.combo>=3){document.getElementById('comboBadge').textContent=`🔥 COMBO x${G.combo}`;document.getElementById('comboBadge').classList.add('show');}
+  if(_earnedQ>=3){window.parent?.postMessage({type:'bizEarned',earned:_earnedQ,xp:_earnedQ*.08},'*');_earnedQ=0;}
+  spawnFloat(c.x,c.y-70*(c.scale*(CW/1280)),`+$${inc}`,c.isVIP?'#FFD200':'#4cd964',c.isVIP);
+  spawnParticles(c.x,c.y-50*(c.scale*(CW/1280)),c.isVIP?'#FFD200':'#4cd964',c.isVIP?18:10);
+  if(c.isVIP||G.combo%5===0)spawnBills(c.x,c.y-60*(c.scale*(CW/1280)));
+  nlog(`${EARN_VERB} +$${inc}${c.isVIP?' ⭐ VIP':''}${G.combo>=3?' 🔥':''}`,c.isVIP?'special':'good');
+  checkAchievements();
+  if(c.slotIdx>=0){slots[c.slotIdx].occ=false;slots[c.slotIdx].cid=null;}
+  c.slotIdx=-1;c.state='leaving';c.tx=CW*1.08;
+}
+
+function onAngry(c){
+  G.streak=0;G.combo=0;G.rep=(G.rep||0)-2;
+  document.getElementById('comboBadge').classList.remove('show');
+  if(c.slotIdx>=0){slots[c.slotIdx].occ=false;slots[c.slotIdx].cid=null;}
+  c.slotIdx=-1;c.isAngry=true;c.state='leaving';c.tx=CW*-.08;
+  spawnFloat(c.x,c.y-60*(c.scale*(CW/1280)),'😤 ¡Se fue!','#e74c3c');
+  nlog('😤 ¡Cliente se fue enojado!','bad');checkAchievements();
+}
+
+// Achievements
+const ACHIEVEMENTS=[
+  {id:'first',icon:'🎉',title:'¡Primer cliente!',desc:'Servicio completo',check:()=>G.served>=1},
+  {id:'ten',icon:'✨',title:'10 servicios',desc:'El negocio crece',check:()=>G.served>=10},
+  {id:'combo5',icon:'🔥',title:'Combo x5',desc:'¡Imparable!',check:()=>G.maxCombo>=5},
+  {id:'rich',icon:'💰',title:'$1,000',desc:'Primera mil en caja',check:()=>G.money>=1000},
+  {id:'rich2',icon:'🤑',title:'$10,000',desc:'Empresario real',check:()=>G.money>=10000},
+];
+const _ach={};
+function checkAchievements(){ACHIEVEMENTS.forEach(a=>{if(!_ach[a.id]&&a.check()){_ach[a.id]=1;showAchievement(a.icon,a.title,a.desc);}});}
+
+// ══════════════════════════════════════════════════
+// DRAW SCENE
+// ══════════════════════════════════════════════════
+let gt=0;// global time
+
+function drawScene(gt){
+  const s=CW/1280, fy=CH*.73;
+
+  // SKY — tropical gradient with animated clouds
+  const skyG=ctx.createLinearGradient(0,0,0,CH*.42);
+  skyG.addColorStop(0,'#3a9fd8'); skyG.addColorStop(.6,'#7ec8e8'); skyG.addColorStop(1,'#b8dff0');
+  ctx.fillStyle=skyG; ctx.fillRect(0,0,CW,CH*.42);
+  // Clouds drifting
+  for(let c=0;c<5;c++){
+    const cx=((gt*18+c*260)%(CW+180))-90, cy=CH*(.04+c*.025);
+    ctx.save(); ctx.globalAlpha=.85;
+    ctx.fillStyle='white';
+    ctx.beginPath(); ctx.arc(cx,cy,CW*.038,0,Math.PI*2);
+    ctx.arc(cx+CW*.03,cy-CH*.012,CW*.025,0,Math.PI*2);
+    ctx.arc(cx+CW*.055,cy,CW*.032,0,Math.PI*2);
+    ctx.fill(); ctx.restore();
+  }
+  // Sun
+  ctx.save(); ctx.shadowColor='#FFD200'; ctx.shadowBlur=20;
+  ctx.beginPath(); ctx.arc(CW*.88,CH*.08,CW*.038,0,Math.PI*2);
+  ctx.fillStyle='#FFD200'; ctx.fill(); ctx.restore();
+  // Sun rays
+  for(let r=0;r<8;r++){
+    const a=r/8*Math.PI*2+gt*.2;
+    ctx.save(); ctx.globalAlpha=.25; ctx.strokeStyle='#FFD200'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(CW*.88+Math.cos(a)*CW*.048,CH*.08+Math.sin(a)*CW*.048);
+    ctx.lineTo(CW*.88+Math.cos(a)*CW*.068,CH*.08+Math.sin(a)*CW*.068);
+    ctx.stroke(); ctx.restore();
+  }
+
+  // SIDEWALK — textured concrete
+  ctx.fillStyle='#b8b8b8'; ctx.fillRect(0,CH*.1,CW,fy-CH*.18-CH*.1);
+  for(let i=0;i<22;i++){
+    ctx.fillStyle=i%2===0?'#b0b0b0':'#c0c0c0';
+    ctx.fillRect(i*CW/22,CH*.1,CW/22+1,fy-CH*.18-CH*.1);
+  }
+  // Sidewalk cracks
+  ctx.save(); ctx.globalAlpha=.18; ctx.strokeStyle='#888'; ctx.lineWidth=1;
+  [[CW*.2,CH*.2,CW*.28,CH*.35],[CW*.55,CH*.15,CW*.6,CH*.3]].forEach(([x1,y1,x2,y2])=>{
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  }); ctx.restore();
+
+  // ROAD — asphalt with animated traffic heat shimmer
+  ctx.fillStyle='#3a3a3a'; ctx.fillRect(0,fy-CH*.1,CW,CH*.1+10);
+  // Road texture
+  ctx.save(); ctx.globalAlpha=.08;
+  for(let i=0;i<30;i++){
+    ctx.fillStyle=i%2===0?'rgba(255,255,255,1)':'rgba(0,0,0,1)';
+    ctx.fillRect(i*CW/30,fy-CH*.1,CW/30,CH*.1);
+  }
+  ctx.restore();
+  // Center line dashes (animated scrolling)
+  ctx.strokeStyle='#FFD200'; ctx.lineWidth=3*s;
+  ctx.setLineDash([CW*.06,CW*.04]);
+  ctx.lineDashOffset=-(gt*60)%((CW*.06+CW*.04));
+  ctx.beginPath(); ctx.moveTo(0,fy-CH*.05); ctx.lineTo(CW,fy-CH*.05); ctx.stroke();
+  ctx.setLineDash([]); ctx.lineDashOffset=0;
+  // Road edge lines
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.globalAlpha=.5;
+  ctx.beginPath(); ctx.moveTo(0,fy-CH*.005); ctx.lineTo(CW,fy-CH*.005); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,fy-CH*.095); ctx.lineTo(CW,fy-CH*.095); ctx.stroke();
+  ctx.globalAlpha=1;
+  // Heat shimmer on road
+  ctx.save(); ctx.globalAlpha=.04+Math.sin(gt*3)*.02;
+  for(let i=0;i<5;i++){
+    const sx=CW*(.1+i*.2), sy=fy-CH*.09;
+    const shimG=ctx.createRadialGradient(sx,sy,0,sx,sy,CW*.06);
+    shimG.addColorStop(0,'rgba(255,220,100,1)'); shimG.addColorStop(1,'rgba(255,220,100,0)');
+    ctx.fillStyle=shimG; ctx.beginPath(); ctx.ellipse(sx,sy,CW*.06,CH*.015,0,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+  // Passing car (animated)
+  const carX=((gt*120)%(CW+200))-100;
+  ctx.font=`${~~(28*s)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🚕',carX,fy-CH*.06);
+
+  // SHED STRUCTURE
+  rr(CW*.08,CH*.13,CW*.57,fy-CH*.25-CH*.13,[6,6,0,0],'#5D4307','#3D2B0A',2.5);
+  // Shed roof (corrugated metal)
+  const roofG=ctx.createLinearGradient(CW*.06,CH*.06,CW*.06,CH*.14);
+  roofG.addColorStop(0,'#f55'); roofG.addColorStop(.5,'#e74c3c'); roofG.addColorStop(1,'#c0392b');
+  ctx.fillStyle=roofG;
+  ctx.beginPath(); ctx.moveTo(CW*.05,CH*.13); ctx.lineTo(CW*.7,CH*.13);
+  ctx.lineTo(CW*.66,CH*.055); ctx.lineTo(CW*.09,CH*.055); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#a93226'; ctx.lineWidth=2; ctx.stroke();
+  // Roof corrugation lines
+  ctx.save(); ctx.globalAlpha=.2; ctx.strokeStyle='#fff'; ctx.lineWidth=1;
+  for(let r=0;r<8;r++){
+    const rx=CW*(.09+r*.07);
+    ctx.beginPath(); ctx.moveTo(rx,CH*.055); ctx.lineTo(rx+CW*.01,CH*.13); ctx.stroke();
+  }
+  ctx.restore();
+  // Shed interior (dark)
+  rr(CW*.1,CH*.15,CW*.53,fy-CH*.27-CH*.15,4,'#2a1a00','#1a1000',1.5);
+  // Interior ambient light
+  ctx.save(); ctx.globalAlpha=.08+Math.sin(gt*.4)*.03;
+  const intG=ctx.createLinearGradient(CW*.1,CH*.15,CW*.63,fy-CH*.12);
+  intG.addColorStop(0,'rgba(255,200,80,.3)'); intG.addColorStop(1,'rgba(255,200,80,0)');
+  ctx.fillStyle=intG; ctx.fillRect(CW*.1,CH*.15,CW*.53,fy-CH*.27-CH*.15); ctx.restore();
+
+  // MOTORCYCLES PARKED — animated idle engine wobble
+  const nMotos=Math.min(5,nSlots());
+  for(let i=0;i<nMotos;i++){
+    const mx=CW*(.14+i*.093), my=fy-CH*.12;
+    const idleWobble=Math.sin(gt*8+i*1.4)*.004*CH;
+    ctx.save(); ctx.translate(mx,my+idleWobble);
+    ctx.font=`${~~(30*s)}px serif`; ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('🛵',0,0); ctx.restore();
+    // Exhaust puff
+    if(i<nMotos){
+      const pAge=(gt*.8+i*.3)%2;
+      ctx.save(); ctx.globalAlpha=Math.max(0,(1-pAge/1.8)*.25);
+      ctx.beginPath(); ctx.arc(mx+CW*.02,my-CH*.05-pAge*CH*.08,CW*(.005+pAge*.006),0,Math.PI*2);
+      ctx.fillStyle='rgba(180,180,180,1)'; ctx.fill(); ctx.restore();
+    }
+  }
+
+  // BENCH for waiting riders
+  rr(CW*.62,fy-CH*.13,CW*.08,CH*.055,3,'#8B5C35','#5D3010',1.5);
+  rr(CW*.61,fy-CH*.14,CW*.1,CH*.012,[2,2,0,0],'#A07030',null);
+  // Bench legs
+  rr(CW*.625,fy-CH*.075,CW*.01,CH*.075,1,'#6B3A1F',null);
+  rr(CW*.685,fy-CH*.075,CW*.01,CH*.075,1,'#6B3A1F',null);
+
+  // TREES — animated sway
+  [[CW*.01,fy-CH*.09],[CW*.96,fy-CH*.09]].forEach(([tx,ty],ti)=>{
+    // Trunk
+    rr(tx+CW*.012,ty-CH*.05,CW*.016,CH*.1,2,'#6B3A1F',null);
+    // Leaves (animated sway)
+    for(let l=0;l<3;l++){
+      const la=Math.sin(gt*.5+ti*2+l)*.04;
+      ctx.save(); ctx.translate(tx+CW*.02,ty-CH*.06);
+      ctx.rotate(la);
+      ctx.beginPath(); ctx.arc(0,-l*CH*.04,CW*.038,0,Math.PI*2);
+      ctx.fillStyle=['#2a8c3a','#1a7c2a','#38a848'][l]; ctx.fill(); ctx.restore();
+    }
+  });
+
+  // DISPATCH SIGN — animated glow
+  ctx.save(); ctx.shadowColor='#2DC653'; ctx.shadowBlur=15+Math.sin(gt*1.8)*6;
+  rr(CW*.73,CH*.12,CW*.24,CH*.14,8,'#1a3a20','#2DC653',3); ctx.restore();
+  rr(CW*.735,CH*.125,CW*.23,CH*.13,6,'rgba(255,255,255,.08)',null);
+  txt('🛵 MOTOTAXI EXPRESS',CW*.85,CH*.19,`900 ${~~(12*s)}px "Fredoka One",cursive`,'white');
+  // Dispatch board (showing trips)
+  rr(CW*.74,CH*.27,CW*.22,CH*.22,4,'#0d2a10','#2DC653',1.5);
+  txt('CARRERAS HOY',CW*.85,CH*.3,`700 ${~~(7*s)}px Nunito`,'#2DC653');
+  const trips=~~(gt*.15)%99+10;
+  ctx.save(); ctx.shadowColor='#4cd964'; ctx.shadowBlur=8;
+  txt(`${trips}`,CW*.85,CH*.38,`900 ${~~(18*s)}px "Fredoka One",cursive`,'#4cd964');
+  ctx.restore();
+
+  drawZoneLabel(CW*.37,CH*.12,'Parada','rgba(45,198,83,.7)');
+  drawZoneLabel(CW*.85,CH*.12,'Despacho','rgba(45,198,83,.6)');
+  drawZoneLabel(CW*.5,fy-CH*.07,'Calle Principal','rgba(45,198,83,.4)');
+}
+
+
+// ══════════════════════════════════════════════════
+// SLOT POSITIONS (defined per biz)
+// ══════════════════════════════════════════════════
+
+function buildSlots(n){
+  const fy=CH*.73;
+  return Array.from({length:Math.min(n,MAX_SLOTS)},(_,i)=>({x:CW*(.2+i*.12),y:fy-CH*.1,occ:false,cid:null}));
+}
+
+
+// ══════════════════════════════════════════════════
+// WORKERS (static staff)
+// ══════════════════════════════════════════════════
+
+function drawWorkers(gt){
+  const fy=CH*.73,s=CW/1280;
+  // Dispatcher — writes on clipboard, bobs
+  drawPerson({x:CW*.78,y:fy-CH*.14,scale:1,state:'idle',
+    skin:SKINS[4],shirt:'#2DC653',pants:PANTS[0],hair:HAIRS[0],
+    expr:0,bob:Math.sin(gt*.9)*.5,tool:'📋'});
+  // Motoconchista leaning on wall
+  drawPerson({x:CW*.68,y:fy-CH*.14,scale:.92,state:'idle',
+    skin:SKINS[2],shirt:'#FF8C42',pants:PANTS[1],hair:HAIRS[0],
+    expr:2,bob:Math.sin(gt*.4)*.2,tool:'🪖'});
+}
+
+
+const CUST_NAME='pasajero';
+const EARN_VERB='🛵 Carrera';
+
+// ══════════════════════════════════════════════════
+// MAIN LOOP
+// ══════════════════════════════════════════════════
+let lastT=performance.now();
+function loop(now){
+  if(_paused){lastT=now;requestAnimationFrame(loop);return;}
+  const dt=Math.min((now-lastT)/1000,.08);lastT=now;
+  gt+=dt;G.elapsed+=dt;
+  if(G.boost&&Date.now()>G.boostEnd){G.boost=false;nlog('⚡ Boost terminó','bad');}
+  spawnTimer+=dt;
+  if(spawnTimer>=spawnRate()){spawnTimer=0;trySpawn();}
+  // Update clients
+  for(let i=clients.length-1;i>=0;i--){
+    const c=clients[i];
+    c.bob+=dt*7;
+    const dx=c.tx-c.x;
+    if(Math.abs(dx)>2)c.x+=Math.sign(dx)*c.speed*dt;
+    switch(c.state){
+      case 'entering': if(Math.abs(dx)<6){c.x=c.tx;c.state='walkToSlot';c.tx=slots[c.slotIdx]?.x||CW*.4;c.y=slots[c.slotIdx]?.y||c.y;} break;
+      case 'walkToSlot': if(Math.abs(dx)<6){c.x=c.tx;c.state='serving';c.progress=0;} break;
+      case 'serving':
+        c.progress+=dt/cycleTime();
+        if(c.progress>=1)onServed(c);
+        break;
+      case 'waiting':
+        c.patience-=dt/(12+nSlots()*3);
+        if(c.patience<=0)onAngry(c);
+        break;
+      case 'leaving': if(Math.abs(dx)<8)clients.splice(i,1); break;
+    }
+  }
+  updateFX(dt);
+  ctx.clearRect(0,0,CW,CH);
+  drawScene(gt);
+  drawWorkers(gt);
+  clients.forEach(c=>drawClient(c));
+  drawFX();
+  updateHUD();
+  requestAnimationFrame(loop);
+}
+
+function drawClient(c){
+  drawPerson({
+    x:c.x,y:c.y,scale:c.scale,state:c.state==='serving'?'serving':c.state==='waiting'?'waiting':'idle',
+    progress:c.progress,patience:c.patience,isVIP:c.isVIP,
+    skin:c.skin,shirt:c.shirt,pants:c.pants,hair:c.hair,isAngry:c.isAngry,expr:c.expr,
+    bob:c.bob,ws:1
+  });
+}
+
+// ══════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════
+function fmt(n){if(n>=1e9)return`$${(n/1e9).toFixed(1)}B`;if(n>=1e6)return`$${(n/1e6).toFixed(2)}M`;if(n>=1e3)return`$${(n/1e3).toFixed(1)}k`;return`$${~~n}`;}
+function updateHUD(){
+  document.getElementById('hMoney').textContent=fmt(G.money);
+  const ips=earnPerServe()*nSlots()/cycleTime();
+  document.getElementById('hIPS').textContent=`+${fmt(ips)}/seg`;
+  document.getElementById('hLevel').textContent=`${BIZ_ICON} ${BIZ_NAME} — Nv.${G.level+1} ${LVL.names[G.level]}`;
+  const req=xpReq(G.level);
+  document.getElementById('xpFill').style.width=`${Math.min(100,(G.xp/req)*100).toFixed(1)}%`;
+  document.getElementById('xpLbl').textContent=`${~~G.xp} / ${req} XP`;
+  for(const k in UPGS){
+    const u=UPGS[k],btn=document.getElementById('btn_'+k),lv=document.getElementById('lv_'+k),st=document.getElementById('st_'+k);
+    if(!btn)continue;
+    const cost=upgCost(k);
+    lv.textContent=`Nv.${u.lv}`;
+    st.innerHTML=`<b>${u.desc}</b> · <span style="color:#FFD200">$${fmtN(cost)}</span>`;
+    btn.disabled=G.money<cost;
+    btn.textContent=`${u.icon} Mejorar $${fmtN(cost)}`;
+  }
+}
+function fmtN(n){if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return Math.floor(n).toString();}
+function nlog(msg,cls){const el=document.createElement('div');el.className='nlog'+(cls?' '+cls:'');el.textContent=msg;const l=document.getElementById('notiflog');l.prepend(el);setTimeout(()=>el.remove(),4000);}
+function showAchievement(icon,title,desc){const el=document.createElement('div');el.className='ach-item';el.innerHTML=`<span class="ach-icon">${icon}</span><div><div class="ach-title">${title}</div><div class="ach-desc">${desc}</div></div>`;document.getElementById('achiev').prepend(el);setTimeout(()=>el.remove(),4200);}
+function triggerFlash(c){const f=document.getElementById('flash');f.style.background=c;f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');}
+function activateBoost(){if(G.money<300){nlog('💸 Necesitas $300','bad');return;}G.money-=300;G.boost=true;G.boostEnd=Date.now()+60000;nlog('⚡ ¡BOOST x2 por 60s!','special');}
+
+// ══════════════════════════════════════════════════
+// PARENT BRIDGE
+// ══════════════════════════════════════════════════
+function buyUpg(k){
+  const cost=upgCost(k);
+  if(window.parent&&window.parent!==window){window.parent.postMessage({type:'bizPurchase',upg:k,cost},'*');nlog('💳 Procesando...');}
+  else{if(G.money<cost){nlog('💸 Sin fondos','bad');return;}G.money-=cost;UPGS[k].lv++;onUpgApplied(k);}
+}
+function onUpgApplied(k){
+  initSlots();
+  nlog(`${UPGS[k].icon} ${UPGS[k].name} Nv.${UPGS[k].lv}!`,'good');
+  showAchievement(UPGS[k].icon,`¡${UPGS[k].name}!`,`Nivel ${UPGS[k].lv}`);
+  triggerFlash(ACCENT+'33');
+}
+window.addEventListener('message',e=>{
+  if(!e.data)return;
+  if(e.data.type==='bizClose')_paused=true;
+  if(e.data.type==='purchaseDenied')nlog('💸 ¡Sin fondos!','bad');
+  if(e.data.type==='purchaseOk'){UPGS[e.data.upg].lv++;G.money=e.data.newMoney;onUpgApplied(e.data.upg);}
+  if(e.data.type==='bizInit'){
+    G.money=e.data.money||0;
+    for(const k in UPGS){const lv=e.data[k+'Level']||1;UPGS[k].lv=lv;}
+    initSlots();
+    nlog(`${BIZ_ICON} ¡${BIZ_NAME} abierto!`,'good');
+  }
+});
+document.addEventListener('visibilitychange',()=>{_paused=document.hidden;});
+if(window.parent&&window.parent!==window)window.parent.postMessage({type:'bizReady'},'*');
+initSlots();
+nlog(`${BIZ_ICON} ¡${BIZ_NAME} listo!`,'good');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
