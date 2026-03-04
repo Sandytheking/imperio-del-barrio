@@ -3192,7 +3192,7 @@ window.addEventListener('message', function _cloudLoadHandler(e) {
     applyTheme(G.theme || 'gold');
     const elapsed = (Date.now() - G.lastSave) / 1000;
     if (elapsed > 30 && Object.keys(G.businesses).filter(k=>bizLevel(k)>0).length > 0) {
-      const offlineMult = G.upgrades['offlineBoost'] ? 1.0 : 0.0;
+      const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.0) * getStageOfflineMult();
       const offlineInc  = totalIPS() * elapsed * offlineMult;
       if (offlineInc > 0) {
         const banner = document.getElementById('offlineBanner');
@@ -3255,7 +3255,11 @@ function bizIncome(biz) {
 
 function bizCycle(biz) {
   const lvl = bizLevel(biz.id);
-  return Math.max(biz.baseCycle / (1 + lvl * 0.04), 0.5);
+  const stage = SOCIAL_STAGES[G.socialStage || 0] || SOCIAL_STAGES[0];
+  let speedMult = stage.speedMult || 1;
+  // Also apply influence network upgrade
+  if (G.influenceUpgrades?.inf_network) speedMult *= 1.08;
+  return Math.max(biz.baseCycle / ((1 + lvl * 0.04) * speedMult), 0.5);
 }
 
 function bizCost(biz) {
@@ -3395,6 +3399,14 @@ function getStageMult() {
   if (!G.influenceUpgrades) G.influenceUpgrades = {};
   INFLUENCE_UPGRADES.forEach(u => { if (G.influenceUpgrades[u.id] && u.incomeMult) mult *= u.incomeMult; });
   return mult;
+}
+function getStageOfflineMult() {
+  const s = SOCIAL_STAGES[G.socialStage] || SOCIAL_STAGES[0];
+  return s.offlineMult || 1;
+}
+function getStageVipMult() {
+  const s = SOCIAL_STAGES[G.socialStage] || SOCIAL_STAGES[0];
+  return s.vipMult || 1;
 }
 
 function canAscend() {
@@ -7044,7 +7056,7 @@ if (hadSave) {
   // Calculate offline earnings with boost upgrade
   const elapsed = (Date.now() - G.lastSave) / 1000;
   if (elapsed > 10 && Object.keys(G.businesses).filter(k=>bizLevel(k)>0).length > 0) {
-    const offlineMult = G.upgrades['offlineBoost'] ? 1.0 : 0.0;
+    const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.0) * getStageOfflineMult();
     const offlineInc = totalIPS() * elapsed * offlineMult;
     if (offlineInc > 0) {
       const banner = document.getElementById('offlineBanner');
