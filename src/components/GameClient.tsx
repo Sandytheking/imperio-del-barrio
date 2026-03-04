@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
-import { smartSave, smartLoad, getLeaderboard, getMyRank, signIn, signUp, signOut, subscribePush, unsubscribePush, getPushStatus } from '@/lib/gameService';
+import { smartSave, smartLoad, getLeaderboard, getMyRank, signIn, signUp, signOut, subscribePush, unsubscribePush, getPushStatus, createGuild, findGuildByCode, joinGuild, getGuildMembers, leaveGuild, syncGuildMember } from '@/lib/gameService';
 
 // ── Types ───────────────────────────────────────────────────
 interface LeaderboardEntry {
@@ -121,7 +121,47 @@ export default function GameClient() {
         case 'OPEN_AUTH':
           setShowAuth(true);
           break;
-      }
+
+        case 'GUILD_REQUEST': {
+          const { id, action, payload } = e.data;
+          let result: unknown = null;
+          try {
+            if (action === 'create') {
+              result = await createGuild(payload.name, payload.emoji, payload.code);
+            } else if (action === 'join') {
+              const guild = await findGuildByCode(payload.code);
+              if (!guild) {
+                result = { error: 'Código inválido — ese clan no existe' };
+              } else {
+                await joinGuild(guild.id, payload.code, payload.gameState);
+                result = { guild };
+              }
+            } else if (action === 'getMembers') {
+              // payload.code is the guild code string
+              const guild = await findGuildByCode(payload.code);
+              if (guild) {
+                const members = await getGuildMembers(guild.id);
+                result = { guild, members };
+              } else {
+                result = { guild: null, members: [] };
+              }
+            } else if (action === 'leave') {
+              const guild = await findGuildByCode(payload.code);
+              if (guild) await leaveGuild(guild.id);
+              result = { ok: true };
+            } else if (action === 'sync') {
+              await syncGuildMember(payload.gameState);
+              result = { ok: true };
+            }
+          } catch (err) {
+            result = { error: err instanceof Error ? err.message : 'Error desconocido' };
+          }
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: 'GUILD_RESPONSE', id, result },
+            '*'
+          );
+          break;
+        }
     };
 
     window.addEventListener('message', handle);
@@ -403,7 +443,7 @@ export default function GameClient() {
 
             {/* Table header */}
             <div style={{ display: 'grid', gridTemplateColumns: '40px 32px 1fr 90px 60px 50px', gap: '8px', padding: '6px 12px', color: '#888', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-              <span>#</span><span></span><span>Jugador</span><span style={{ textAlign: 'right' }}>Ganado</span><span style={{ textAlign: 'right' }}>Nivel</span><span style={{ textAlign: 'right' }}>💎</span>
+              <span>#</span><span></span><span>Jugador</span><span style={{ textAlign: 'right' }}>Ganado</span><span style={{ textAlign: 'right' }}>Nivel</span><span style={{ textAlign: 'right' }}>⭐</span>
             </div>
 
             {/* Rows */}
@@ -412,11 +452,17 @@ export default function GameClient() {
                 <div style={{ textAlign: 'center', color: '#555', padding: '40px', fontSize: '14px' }}>
                   Cargando ranking... 🏘️
                 </div>
-              ) : leaderboard.map((p, i) => {
+              ) : [...leaderboard]
+                  .sort((a, b) =>
+                    (b.influence * 1_000_000_000 + b.total_earned) -
+                    (a.influence * 1_000_000_000 + a.total_earned)
+                  )
+                  .map((p, i) => {
                 const isMe = user?.email?.startsWith(p.username);
                 const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
                 const STAGE_ICONS = ['🏠','🏡','🏖️','🏙️','🛩️','🌎'];
                 const stageIcon = p.social_stage > 0 ? STAGE_ICONS[Math.min(p.social_stage - 1, 5)] : '';
+                const inf = p.influence || 0;
                 return (
                   <div
                     key={p.username}
@@ -428,7 +474,7 @@ export default function GameClient() {
                     }}
                   >
                     <span style={{ fontFamily: 'Fredoka One', color: i < 3 ? '#FFE135' : '#666', fontSize: '14px' }}>
-                      {medal || `#${p.rank}`}
+                      {medal || `#${i + 1}`}
                     </span>
                     <span style={{ fontSize: '1.3rem' }}>{p.avatar}</span>
                     <div>
@@ -444,8 +490,8 @@ export default function GameClient() {
                       Nv.{p.level + 1}<br />
                       <span style={{ fontSize: '10px', color: '#666' }}>{LEVEL_NAMES[p.level] || ''}</span>
                     </span>
-                    <span style={{ textAlign: 'right', color: '#D4A8FF', fontSize: '12px', fontWeight: 900 }}>
-                      {(p.influence || 0)}💎
+                    <span style={{ textAlign: 'right', color: inf > 0 ? '#FFD700' : '#555', fontSize: '13px', fontWeight: 900 }}>
+                      {inf > 0 ? `⭐${inf}` : '—'}
                     </span>
                   </div>
                 );
@@ -453,7 +499,7 @@ export default function GameClient() {
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '12px', color: '#555', fontSize: '11px' }}>
-              Actualizado cada 30 segundos · Top 100 jugadores
+              Ordenado por ⭐ Influencia · Actualizado cada 30s · Top 100 jugadores
             </div>
           </div>
         </div>

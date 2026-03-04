@@ -3440,8 +3440,8 @@ function showAscendCelebration(stage) {
     <div style="font-size:5rem;margin:12px 0">${stage.icon}</div>
     <div class="ascend-cel-sub">${stage.name}</div>
     <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button onclick="shareAscend('${stage.icon}','${stage.name}')" style="background:linear-gradient(135deg,#25D366,#128C7E);border:3px solid white;border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-        📲 ¡Compartir en WhatsApp!
+      <button onclick="shareAscend('${stage.icon}','${stage.name}')" style="background:linear-gradient(135deg,#1877F2,#0a5dc9);border:3px solid white;border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+        📘 ¡Compartir en Facebook!
       </button>
       <button onclick="this.closest('.ascend-celebration').remove()" style="background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.4);border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px 16px;cursor:pointer;">
         Continuar →
@@ -3456,25 +3456,17 @@ function shareAscend(icon, stageName) {
   const inf     = G.totalInfluence || 0;
   const lvl     = (G.level||0) + 1;
   const company = G.companyName || 'mi empresa';
-  const text = [
+  const url     = 'https://imperio-del-barrio.vercel.app';
+  const quote   = [
     `${icon} ¡Ascendí a ${stageName} en Imperio del Barrio! 🏘️`,
-    ``,
-    `📊 Mis estadísticas:`,
-    `💰 Total ganado: ${money}`,
-    `⭐ Influencia: ${inf}`,
-    `📈 Nivel: ${lvl}`,
+    `💰 Total ganado: ${money} · ⭐ Influencia: ${inf} · Nivel: ${lvl}`,
     `🏢 Empresa: ${company}`,
-    ``,
-    `¿Puedes superarme? ⚔️`,
-    `👉 https://imperio-del-barrio.vercel.app`,
+    `¿Puedes superarme? ⚔️ Juega gratis 👉 ${url}`,
   ].join('\n');
 
-  if (navigator.share) {
-    navigator.share({ title: '🏘️ Imperio del Barrio', text }).catch(() => {});
-  } else {
-    const wa = 'https://wa.me/?text=' + encodeURIComponent(text);
-    window.open(wa, '_blank');
-  }
+  // Facebook sharer — works on mobile and desktop
+  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(quote)}`;
+  window.open(fbUrl, '_blank', 'width=600,height=500,noopener');
 }
 
 function doPrestige() { showAscendModal(); }
