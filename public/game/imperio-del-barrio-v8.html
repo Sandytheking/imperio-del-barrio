@@ -7698,7 +7698,7 @@ setTimeout(() => {
 }, 2500);
 
 // Sync guild every 2 minutes while playing
-setInterval(() => { if (G.guildCode) syncGuildData(); }, 120000);
+setInterval(() => { if (G.guildCode) _guildRequest('sync', { code: G.guildCode, gameState: G }).catch(() => {}); }, 120000);
 
 
 
