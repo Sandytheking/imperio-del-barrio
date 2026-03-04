@@ -162,6 +162,7 @@ export default function GameClient() {
           );
           break;
         }
+      }
     };
 
     window.addEventListener('message', handle);
