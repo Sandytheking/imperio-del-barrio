@@ -3375,7 +3375,7 @@ function showAscendModal() {
     <div class="ascend-modal-sub">${next.label} · ${next.bonus}</div>
     <div class="ascend-keep-lose">
       <div class="akl-box akl-keep"><div class="akl-title">✅ Conservas</div>⭐ Influencia<br>🏆 Logros<br>⚡ Bonos permanentes</div>
-      <div class="akl-box akl-lose"><div class="akl-title">❌ Se reinicia</div>💰 Dinero<br>🏪 Negocios<br>📈 Nivel XP</div>
+      <div class="akl-box akl-lose"><div class="akl-title">❌ Se reinicia</div>💰 Dinero (empiezas con $5k)<br>🏪 Negocios<br>📈 Nivel XP</div>
     </div>
     <div style="font-size:0.75rem;font-weight:700;color:#888;margin-bottom:16px">+${next.influenceReward||1} ⭐ Influencia al ascender</div>
     <div class="ascend-confirm-btns">
@@ -3395,8 +3395,7 @@ function doAscend() {
   G.influence = (G.influence||0) + influenceReward;
   G.totalInfluence = (G.totalInfluence||0) + influenceReward;
   G.prestigeStars++;
-  G.money = 500;
-  G.totalEarned = 0;
+  G.money = 5000;
   G.xp = 0;
   G.level = 0;
   G.businesses = {};
