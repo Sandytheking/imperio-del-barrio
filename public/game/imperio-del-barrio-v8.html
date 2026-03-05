@@ -2162,14 +2162,7 @@ body.night-mode .night-stars { opacity: 0.35; }
 @keyframes rotSpin { 0%{transform:rotate(0deg)} 40%{transform:rotate(90deg)} 60%{transform:rotate(90deg)} 100%{transform:rotate(0deg)} }
 #rotatePrompt p { font-family: 'Fredoka One',cursive; color: white; font-size: 1.2rem; text-align: center; }
 
-/* iOS portrait — rotate iframe via transform */
-#bizAnimFrame.ios-rotated {
-  top: 0; left: 0;
-  width: 100vh;
-  height: 100vw;
-  transform-origin: 0 0;
-  transform: rotate(90deg) translateY(-100%);
-}
+/* Portrait mobile — rotation applied via JS inline styles */
 
 /* ═══ FLOATING INCOME COUNTER ═══ */
 .biz-earned-float { font-family: 'Fredoka One',cursive; font-size: 0.75rem; color: #2DC653; font-weight: 900; text-align: right; min-width: 80px; }
@@ -5270,22 +5263,27 @@ function openBizAnim(id) {
     const portrait = window.innerHeight > window.innerWidth;
     const rp = document.getElementById('rotatePrompt');
     if (!portrait) {
-      // Landscape on any device — normal fullscreen
-      frame.classList.remove('ios-rotated');
-      frame.style.width = '';
-      frame.style.height = '';
-      frame.style.transform = '';
-      if (rp) rp.style.display = 'none';
-    } else if (isIOS) {
-      // Portrait on iPhone/iPad — CSS rotate trick
-      frame.classList.add('ios-rotated');
+      // Landscape — show normally, clear any rotation
+      frame.style.cssText = '';
       if (rp) rp.style.display = 'none';
     } else if (isMobile) {
-      // Portrait on Android — show rotate prompt
-      frame.classList.remove('ios-rotated');
-      if (rp) rp.style.display = 'flex';
+      // Portrait on ANY mobile (iOS Safari, Chrome, Firefox) — rotate via CSS
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      frame.style.cssText = [
+        'position:fixed',
+        'top:0', 'left:0',
+        `width:${H}px`,
+        `height:${W}px`,
+        'transform-origin:top left',
+        `transform:rotate(90deg) translateX(0) translateY(-${W}px)`,
+        'z-index:701',
+        'border:none',
+        'background:#000'
+      ].join(';');
+      if (rp) rp.style.display = 'none';
     }
-    // Desktop portrait: do nothing, aspect ratio handles it
+    // Desktop portrait: do nothing
   };
 
   checkOrient();
@@ -5323,7 +5321,7 @@ function closeBizAnim() {
   const rp = document.getElementById('rotatePrompt');
   if (rp) rp.style.display = 'none';
   const frame2 = document.getElementById('bizAnimFrame');
-  if (frame2) { frame2.classList.remove('ios-rotated'); frame2.style.cssText = ''; }
+  if (frame2) { frame2.style.cssText = ''; }
   if (window._orientChecker) {
     window.removeEventListener('resize', window._orientChecker);
     window.removeEventListener('orientationchange', window._orientChecker);
