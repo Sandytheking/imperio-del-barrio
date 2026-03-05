@@ -2141,8 +2141,20 @@ body.night-mode .night-stars { opacity: 0.35; }
 @keyframes rotSpin { 0%{transform:rotate(0deg)} 40%{transform:rotate(90deg)} 60%{transform:rotate(90deg)} 100%{transform:rotate(0deg)} }
 #rotatePrompt p { font-family: 'Fredoka One',cursive; color: white; font-size: 1.2rem; text-align: center; }
 
+/* ── iOS landscape rotation trick ── */
+#bizAnimFrame.ios-rotate {
+  position: fixed !important;
+  top: 0; left: 0;
+  width: 100vh !important;
+  height: 100vw !important;
+  transform: rotate(90deg);
+  transform-origin: top left;
+  margin-top: 100vw;
+  z-index: 701;
+}
+
 @media (orientation: portrait) and (max-width: 768px) {
-  #bizAnimOverlay.open #bizAnimFrame { display: none; }
+  /* hide the iframe normally — iOS rotation handles it via JS */
 }
 
 /* ═══ FLOATING INCOME COUNTER ═══ */
@@ -5232,25 +5244,42 @@ function openBizAnim(id) {
   currentBizAnim = id;
   document.getElementById('bizAnimInfo').textContent = `${biz.name} — Ingresos sincronizados en tiempo real`;
 
-  // Try to lock to landscape on mobile
+  // Try to lock to landscape on Android (iOS ignores this)
   try {
     screen.orientation?.lock?.('landscape').catch(() => {});
   } catch(_) {}
 
-  // Show rotate prompt if portrait on mobile — works with both resize and orientationchange
+  // Smart orientation handler — works on Android AND iPhone
   const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
   if (isMobile) {
-    const rp = document.getElementById('rotatePrompt');
     const frame = document.getElementById('bizAnimFrame');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
     const checkOrient = () => {
       const isPortrait = window.innerHeight > window.innerWidth;
-      if (rp) rp.style.display = isPortrait ? 'flex' : 'none';
-      if (frame) frame.style.visibility = isPortrait ? 'hidden' : 'visible';
+      if (!isPortrait) {
+        // Landscape — show normally
+        frame.classList.remove('ios-rotate');
+        frame.style.cssText = '';
+      } else if (isIOS) {
+        // Portrait on iOS — rotate content via CSS transform
+        const vw = window.innerWidth, vh = window.innerHeight;
+        frame.style.cssText = `position:fixed;top:0;left:0;width:${vh}px;height:${vw}px;transform:rotate(90deg);transform-origin:top left;margin-top:${vw}px;z-index:701;border:none;`;
+      } else {
+        // Portrait on Android — show rotate prompt
+        frame.style.visibility = 'hidden';
+        const rp = document.getElementById('rotatePrompt');
+        if (rp) rp.style.display = 'flex';
+        return;
+      }
+      const rp = document.getElementById('rotatePrompt');
+      if (rp) rp.style.display = 'none';
     };
     checkOrient();
     window._orientChecker = checkOrient;
     window.addEventListener('resize', checkOrient);
-    window.addEventListener('orientationchange', checkOrient);
+    window.addEventListener('orientationchange', () => setTimeout(checkOrient, 100));
   }
 
   // Send initial state to iframe once it loads
@@ -5279,15 +5308,15 @@ function closeBizAnim() {
   currentBizAnim = null;
   // Release orientation lock
   try { screen.orientation?.unlock?.(); } catch(_) {}
-  // Hide rotate prompt
+  // Hide rotate prompt + clear iOS rotation
   const rp = document.getElementById('rotatePrompt');
   if (rp) rp.style.display = 'none';
+  const frame2 = document.getElementById('bizAnimFrame');
+  if (frame2) { frame2.style.cssText = ''; frame2.classList.remove('ios-rotate'); }
   if (window._orientChecker) {
     window.removeEventListener('resize', window._orientChecker);
     window.removeEventListener('orientationchange', window._orientChecker);
     window._orientChecker = null;
-    // Restore iframe visibility
-    document.getElementById('bizAnimFrame').style.visibility = '';
   }
 }
 
@@ -5338,10 +5367,18 @@ window.addEventListener('message', e => {
       if (!G.bizUpgrades) G.bizUpgrades = {};
       if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
       G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
-      // ✅ Also increment the main biz level so Nv. badge updates
-      if (!G.businesses[id]) G.businesses[id] = { level: 1, progress: 0 };
-      G.businesses[id].level = (G.businesses[id].level || 1) + 1;
-      const newLvl = G.businesses[id].level;
+      // Count total animation upgrades for this biz (across all upgrade types)
+      if (!G.bizUpgradeCount) G.bizUpgradeCount = {};
+      G.bizUpgradeCount[id] = (G.bizUpgradeCount[id] || 0) + 1;
+      // Every 3 animation upgrades = +1 main level
+      const totalUpgs = G.bizUpgradeCount[id];
+      let leveledUp = false;
+      if (totalUpgs % 3 === 0) {
+        if (!G.businesses[id]) G.businesses[id] = { level: 1, progress: 0 };
+        G.businesses[id].level = (G.businesses[id].level || 1) + 1;
+        leveledUp = true;
+      }
+      const newLvl = G.businesses[id]?.level || 1;
       // Confirm to iframe
       iframe?.contentWindow?.postMessage({
         type: 'purchaseOk',
@@ -5350,9 +5387,13 @@ window.addEventListener('message', e => {
       }, '*');
       // Update header money
       document.getElementById('hdrMoney').textContent = fmt(G.money);
-      notify(`✅ ¡${upg} mejorado! Nv.${newLvl} -${fmt(cost)}`);
-      // Re-render the biz card so Nv. badge, income and cycle update live
-      renderAll();
+      const remaining = 3 - (totalUpgs % 3 || 3);
+      if (leveledUp) {
+        notify(`🎉 ¡Negocio subió a Nv.${newLvl}!`);
+        renderAll();
+      } else {
+        notify(`✅ ¡${upg} mejorado! (${remaining} mejora${remaining!==1?'s':''} para Nv.${newLvl+1})`);
+      }
       saveGame();
     } else {
       iframe?.contentWindow?.postMessage({ type: 'purchaseDenied' }, '*');
