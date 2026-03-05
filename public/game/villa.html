@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover">
+<title>🏖️ Villa del Sol</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Nunito',sans-serif}
+#wrapper{width:100vw;max-width:1280px;aspect-ratio:16/9;position:relative;background:#87ceeb;overflow:hidden}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+#header{position:absolute;top:0;left:0;right:0;height:10.5%;background:linear-gradient(180deg,#0077b6,#00b4d8);border-bottom:3px solid #90e0ef;display:flex;align-items:center;padding:0 1.5%;gap:2%;z-index:20}
+.hm-block{display:flex;flex-direction:column;min-width:17%}
+.hm-label{font-size:clamp(6px,.65vw,10px);font-weight:900;color:#90e0ef;text-transform:uppercase;letter-spacing:1px}
+.hm-val{font-family:'Fredoka One',cursive;font-size:clamp(15px,2vw,30px);color:#caf0f8;line-height:1}
+.hm-sub{font-size:clamp(6px,.6vw,9px);font-weight:900;color:#48cae4}
+.hdr-center{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.level-name{font-family:'Fredoka One',cursive;font-size:clamp(9px,1vw,15px);color:#fff}
+.xp-bg{width:100%;max-width:300px;height:8px;background:rgba(255,255,255,.1);border-radius:99px;border:1px solid rgba(255,255,255,.15);overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,#00b4d8,#90e0ef);border-radius:99px;transition:width .4s ease}
+.xp-lbl{font-size:clamp(5px,.55vw,8px);color:#90e0ef;font-weight:900}
+.hdr-right{display:flex;align-items:center;gap:.8%;min-width:22%;justify-content:flex-end}
+.hbtn{background:#0077b6;color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(8px,.85vw,13px);padding:.35em .8em;border:2px solid #00b4d8;border-radius:99px;cursor:pointer;transition:transform .1s}
+.hbtn.red{background:#c0392b;border-color:#e74c3c}
+.combo-badge{background:linear-gradient(135deg,#00b4d8,#0077b6);color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(7px,.75vw,11px);padding:.3em .7em;border-radius:99px;border:2px solid rgba(255,255,255,.3);display:none;animation:cbPop .4s cubic-bezier(.34,1.56,.64,1)}
+.combo-badge.show{display:block}@keyframes cbPop{from{transform:scale(0)}to{transform:scale(1)}}
+#panel{position:absolute;bottom:0;left:0;right:0;height:27%;background:linear-gradient(0deg,#0077b6,#00b4d8);border-top:3px solid #90e0ef;display:grid;grid-template-columns:repeat(5,1fr);z-index:20}
+.upg-col{border-right:1px solid rgba(255,255,255,.1);padding:clamp(4px,.7vw,10px) clamp(5px,.9vw,12px);display:flex;flex-direction:column;gap:4px}
+.upg-col:last-child{border-right:none}
+.upg-top{display:flex;align-items:center;gap:5px}
+.upg-emo{font-size:clamp(12px,1.6vw,24px)}
+.upg-title{font-family:'Fredoka One',cursive;font-size:clamp(8px,.95vw,14px);color:#fff;flex:1}
+.upg-lv{background:#90e0ef;color:#0077b6;font-weight:900;font-size:clamp(5px,.58vw,9px);padding:2px 5px;border-radius:99px}
+.upg-stat{font-size:clamp(6px,.62vw,9px);color:#caf0f8;font-weight:700;line-height:1.3}
+.upg-stat b{color:#48cae4}
+.upg-btn{margin-top:auto;background:linear-gradient(135deg,#00b4d8,#0096c7);color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(8px,.85vw,13px);padding:.4em .8em;border:none;border-radius:99px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.4);transition:transform .1s;width:100%}
+.upg-btn:hover:not(:disabled){transform:translateY(-2px)}
+.upg-btn:disabled{background:linear-gradient(135deg,#333,#2a2a2a);color:#555;cursor:not-allowed;box-shadow:none}
+#achiev{position:absolute;top:13%;right:2%;z-index:50;pointer-events:none;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.ach-item{background:linear-gradient(135deg,#0077b6,#00b4d8);border:2px solid #90e0ef;border-radius:12px;padding:8px 14px;display:flex;align-items:center;gap:8px;animation:achIn .4s cubic-bezier(.34,1.56,.64,1),achOut .4s ease 3.5s forwards;max-width:260px}
+@keyframes achIn{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}
+@keyframes achOut{to{opacity:0;transform:translateX(120%)}}
+.ach-icon{font-size:1.4rem}.ach-title{font-family:'Fredoka One',cursive;font-size:.8rem;color:#90e0ef}.ach-desc{font-size:.6rem;color:#caf0f8;font-weight:700}
+#notiflog{position:absolute;bottom:28%;left:1.5%;z-index:30;pointer-events:none;display:flex;flex-direction:column-reverse;gap:3px}
+.nlog{font-size:clamp(7px,.68vw,10px);font-weight:900;padding:3px 9px;border-radius:5px;background:rgba(0,0,0,.65);animation:nIn .25s ease,nOut .3s ease 3s forwards;border-left:3px solid #90e0ef;color:#fff;max-width:270px}
+.nlog.good{border-color:#4cd964;color:#4cd964}.nlog.bad{border-color:#e74c3c;color:#e74c3c}.nlog.special{border-color:#90e0ef;color:#90e0ef}
+@keyframes nIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes nOut{to{opacity:0;transform:translateX(-18px)}}
+#flash{position:absolute;inset:0;pointer-events:none;z-index:60;opacity:0}
+#flash.pop{animation:flashPop .35s ease}
+@keyframes flashPop{0%{opacity:.3}100%{opacity:0}}
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  #panel{padding-bottom:env(safe-area-inset-bottom);height:calc(27% + env(safe-area-inset-bottom))}
+  #notiflog{bottom:calc(28% + env(safe-area-inset-bottom))}
+}
+@media(max-width:480px){#panel{height:32%}}
+</style>
+</head>
+<body>
+<div id="wrapper">
+  <canvas id="c"></canvas>
+  <div id="header">
+    <div class="hm-block">
+      <div class="hm-label">💰 Fortuna</div>
+      <div class="hm-val" id="hMoney">$0</div>
+      <div class="hm-sub" id="hIPS">+$0/seg</div>
+    </div>
+    <div class="hdr-center">
+      <div class="level-name" id="hLevel">🏖️ Villa del Sol</div>
+      <div class="xp-bg"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+      <div class="xp-lbl" id="xpLbl">0 / 80 XP</div>
+    </div>
+    <div class="hdr-right">
+      <div class="combo-badge" id="comboBadge">🌊 VILLA x1</div>
+      <button class="hbtn red" onclick="activateBoost()">⚡ Boost x2 — $1500</button>
+    </div>
+  </div>
+  <div id="panel">
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">🏊</span><span class="upg-title">Piscina</span><span class="upg-lv" id="lv_piscina">Nv.1</span></div>
+      <div class="upg-stat" id="st_piscina">Siguiente: <b>+lujo</b></div>
+      <button class="upg-btn" id="btn_piscina" onclick="buyUpg('piscina')" disabled>🏊 Mejorar $...</button>
+    </div>
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">🌴</span><span class="upg-title">Jardín</span><span class="upg-lv" id="lv_jardin">Nv.1</span></div>
+      <div class="upg-stat" id="st_jardin">Siguiente: <b>+ambiente</b></div>
+      <button class="upg-btn" id="btn_jardin" onclick="buyUpg('jardin')" disabled>🌴 Mejorar $...</button>
+    </div>
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">🍹</span><span class="upg-title">Beach Bar</span><span class="upg-lv" id="lv_bar">Nv.1</span></div>
+      <div class="upg-stat" id="st_bar">Siguiente: <b>+ingresos</b></div>
+      <button class="upg-btn" id="btn_bar" onclick="buyUpg('bar')" disabled>🍹 Mejorar $...</button>
+    </div>
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">⛵</span><span class="upg-title">Marina</span><span class="upg-lv" id="lv_marina">Nv.1</span></div>
+      <div class="upg-stat" id="st_marina">Siguiente: <b>+estatus</b></div>
+      <button class="upg-btn" id="btn_marina" onclick="buyUpg('marina')" disabled>⛵ Mejorar $...</button>
+    </div>
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">🎪</span><span class="upg-title">Eventos</span><span class="upg-lv" id="lv_eventos">Nv.1</span></div>
+      <div class="upg-stat" id="st_eventos">Siguiente: <b>+VIP</b></div>
+      <button class="upg-btn" id="btn_eventos" onclick="buyUpg('eventos')" disabled>🎪 Mejorar $...</button>
+    </div>
+  </div>
+  <div id="achiev"></div>
+  <div id="notiflog"></div>
+  <div id="flash"></div>
+</div>
+<script>
+const SHIRTS=['#FF6348','#5BC8F5','#FF4FAD','#FFE135','#FF8C42','#00C9A7','#fff','#FF6B6B'];
+const PANTS=['#2D2B3D','#3D5A80','#0077b6','#1b4332','#e74c3c','#2c3e50'];
+const SKINS=['#FDBCB4','#E8975A','#C07A3A','#8B5E3C','#6B3E26','#4A2C0A'];
+const HAIRS=['#1a1a1a','#4a2c0a','#C07A3A','#FFD200','#e8e8e8','#FF4FAD'];
+
+let particles=[],floats=[],bills=[];
+function spawnParticles(x,y,color,n=12){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=40+Math.random()*80;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:1,color,r:2+Math.random()*3});}}
+function spawnFloat(x,y,text,color='#90e0ef',big=false){floats.push({x,y:y-5,text,t:0,color,big});}
+function spawnBills(x,y){for(let i=0;i<8;i++)bills.push({x:x+(Math.random()-.5)*60,y,vx:(Math.random()-.5)*50,vy:-70-Math.random()*50,life:1,rot:Math.random()*Math.PI,rotV:(Math.random()-.5)*3});}
+function updateFX(dt){particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt*1.4;});particles=particles.filter(p=>p.life>0);floats.forEach(f=>{f.y-=28*dt;f.t+=dt;});floats=floats.filter(f=>f.t<1.8);bills.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.vy+=120*dt;b.rot+=b.rotV*dt;b.life-=dt*1.2;});bills=bills.filter(b=>b.life>0);}
+function drawFX(){particles.forEach(p=>{ctx.globalAlpha=p.life;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();});bills.forEach(b=>{ctx.save();ctx.globalAlpha=b.life*.8;ctx.translate(b.x,b.y);ctx.rotate(b.rot);rr(-13,-6,26,12,3,'#2DC653','#1a5c28',1.5);ctx.font='bold 8px Nunito';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#1a5c28';ctx.fillText('$',0,0);ctx.restore();});floats.forEach(f=>{const alpha=Math.max(0,1-f.t/1.6);const fs=f.big?~~(CW*.016):~~(CW*.013);ctx.save();ctx.globalAlpha=alpha;ctx.font=`900 ${fs}px "Fredoka One",cursive`;ctx.textAlign='center';ctx.textBaseline='middle';const tw=ctx.measureText(f.text).width,pad=f.big?12:8;rr(f.x-tw/2-pad,f.y-fs/2-4,tw+pad*2,fs+9,6,'rgba(0,0,0,.65)',f.color,f.big?2.5:1.5);ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);ctx.restore();});ctx.globalAlpha=1;}
+
+function rr(x,y,w,h,r,fill,stroke,lw=2){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.lineWidth=lw;ctx.strokeStyle=stroke;ctx.stroke();}}
+function txt(t,x,y,font,color,align='center'){ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(t,x,y);}
+function shadow(col,blur){ctx.shadowColor=col;ctx.shadowBlur=blur;}
+function noShadow(){ctx.shadowColor='transparent';ctx.shadowBlur=0;}
+
+function drawPerson(cfg){
+  var x=cfg.x,y=cfg.y,sc=cfg.scale||1,state=cfg.state||'idle',isVIP=cfg.isVIP||false;
+  var skin=cfg.skin,shirt=cfg.shirt,pants=cfg.pants,hair=cfg.hair,swimwear=cfg.swimwear||false;
+  var isAngry=cfg.isAngry||false,expr=cfg.expr||0,bob=cfg.bob||0,dir=cfg.dir||1;
+  var s=sc*(CW/1280);
+  ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+  var legSwing=(state==='walking'?Math.sin(bob*4)*0.3:0)*dir;
+  var legColor=swimwear?shirt:pants;
+  var legH=swimwear?20:28;
+  ctx.save();ctx.rotate(legSwing);rr(-14,2,13,legH,4,legColor,'#1a1a2e',1.5);ctx.restore();
+  ctx.save();ctx.rotate(-legSwing);rr(1,2,13,legH,4,legColor,'#1a1a2e',1.5);ctx.restore();
+  if(!swimwear){ctx.save();ctx.rotate(legSwing);rr(-16,28,15,8,3,'#222','#000',1);ctx.restore();ctx.save();ctx.rotate(-legSwing);rr(1,28,15,8,3,'#222','#000',1);ctx.restore();}
+  ctx.save();ctx.scale(dir,1);
+  rr(-18,-18,36,22,6,shirt,'#1a1a2e',1.5);
+  if(isVIP)rr(-18,-18,36,22,6,'rgba(255,215,0,.2)','#FFD700',2);
+  var armSwing=state==='walking'?Math.sin(bob*4)*0.25:0;
+  ctx.save();ctx.rotate(-armSwing);rr(-26,-16,10,20,4,skin,'#1a1a2e',1);ctx.restore();
+  ctx.save();ctx.rotate(armSwing);rr(16,-16,10,20,4,skin,'#1a1a2e',1);ctx.restore();
+  var hb=state==='walking'?Math.sin(bob*4)*0.8:0;
+  ctx.save();ctx.translate(0,hb);
+  rr(-16,-52,32,30,10,skin,'#1a1a2e',2);
+  ctx.beginPath();ctx.ellipse(0,-52,17,10,0,Math.PI,0);ctx.fillStyle=hair;ctx.fill();
+  if(isVIP){ctx.font='14px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('😎',0,-40);}
+  else{ctx.fillStyle='#1a1a2e';ctx.beginPath();ctx.arc(-6,-43,3,0,Math.PI*2);ctx.arc(6,-43,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-5,-44,1.5,0,Math.PI*2);ctx.arc(7,-44,1.5,0,Math.PI*2);ctx.fill();}
+  ctx.beginPath();ctx.strokeStyle='#1a1a2e';ctx.lineWidth=2;
+  if(expr===2){ctx.arc(0,-37,6,0.1,Math.PI-0.1);ctx.fillStyle='#FF6B6B';ctx.fill();}
+  else{ctx.moveTo(-4,-36);ctx.lineTo(4,-36);}
+  ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+  ctx.restore();
+}
+
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let CW,CH;
+function resize(){const wr=document.getElementById('wrapper');CW=canvas.width=wr.clientWidth;CH=canvas.height=wr.clientHeight;}
+resize();window.addEventListener('resize',resize);
+
+const UPGS={
+  piscina:{lv:1,base:500,icon:'🏊',name:'Piscina'},
+  jardin:{lv:1,base:350,icon:'🌴',name:'Jardín'},
+  bar:{lv:1,base:600,icon:'🍹',name:'Beach Bar'},
+  marina:{lv:1,base:900,icon:'⛵',name:'Marina'},
+  eventos:{lv:1,base:800,icon:'🎪',name:'Eventos'}
+};
+function upgCost(k){return Math.floor(UPGS[k].base*Math.pow(1.55,UPGS[k].lv-1));}
+
+const BASE_EARN=45,BASE_CYCLE=5,BASE_SPAWN=3;
+let _paused=false,_earnedQ=0,_prestige=0;
+const G={money:0,totalEarned:0,xp:0,level:0,served:0,combo:0,maxCombo:0,boost:false,boostEnd:0};
+const LVL={names:['Turista','Veraneante','Residente','Elite','Magnate'],xp:[80,200,500,1200,3000]};
+function xpReq(l){return LVL.xp[Math.min(l,LVL.xp.length-1)];}
+function addXP(a){G.xp+=a;while(G.level<LVL.names.length-1&&G.xp>=xpReq(G.level)){G.xp-=xpReq(G.level);G.level++;triggerFlash('#00b4d844');showAchievement('🏖️',`¡Nivel ${G.level+1}!`,LVL.names[G.level]);nlog(`🏆 ${LVL.names[G.level]}`,'special');}}
+function earnPerServe(){return Math.floor(BASE_EARN*(1+(UPGS.bar.lv-1)*.3)*(1+(UPGS.marina.lv-1)*.25)*(1+(UPGS.eventos.lv-1)*.2)*(G.boost&&Date.now()<G.boostEnd?2:1)*(1+_prestige*.2));}
+function cycleTime(){return Math.max(1.0,BASE_CYCLE*Math.pow(0.82,UPGS.piscina.lv-1));}
+function spawnRate(){return Math.max(0.6,BASE_SPAWN*Math.pow(0.88,UPGS.jardin.lv-1));}
+
+let people=[],spawnTimer=0,pid=0;
+class Person{
+  constructor(){
+    this.id=pid++;this.x=Math.random()>.5?CW*-.05:CW*1.05;
+    this.y=CH*(.58+Math.random()*.08);
+    this.tx=CW*(.15+Math.random()*.65);
+    this.state='walking';this.timer=0;this.talkTimer=cycleTime();
+    this.skin=SKINS[~~(Math.random()*SKINS.length)];
+    this.shirt=SHIRTS[~~(Math.random()*SHIRTS.length)];
+    this.pants=PANTS[~~(Math.random()*PANTS.length)];
+    this.hair=HAIRS[~~(Math.random()*HAIRS.length)];
+    this.scale=.9+Math.random()*.2;this.speed=(85+Math.random()*50)*(CW/1280);
+    this.bob=Math.random()*Math.PI*2;this.dir=this.x<CW/2?1:-1;
+    this.leaving=false;this.expr=~~(Math.random()*3);
+    this.isVIP=Math.random()<.12;
+    this.swimwear=Math.random()>.4;
+  }
+}
+function trySpawn(){if(people.length>=2+UPGS.jardin.lv||_paused)return;people.push(new Person());nlog(`🏖️ ${Math.random()>.5?'Huésped VIP':'Visitante'} llegó`);}
+function onServed(p){
+  const inc=earnPerServe()*(p.isVIP?2:1);G.money+=inc;G.totalEarned+=inc;_earnedQ+=inc;
+  addXP(inc*.1);G.served++;G.combo++;if(G.combo>G.maxCombo)G.maxCombo=G.combo;
+  if(G.combo>=3){document.getElementById('comboBadge').textContent=`🌊 VILLA x${G.combo}`;document.getElementById('comboBadge').classList.add('show');}
+  if(_earnedQ>=3){window.parent?.postMessage({type:'bizEarned',earned:_earnedQ,xp:_earnedQ*.08},'*');_earnedQ=0;}
+  spawnFloat(p.x,p.y-70*(p.scale*(CW/1280)),`+$${inc>=1000?(inc/1000).toFixed(1)+'k':inc}`,p.isVIP?'#FFD200':'#90e0ef',p.isVIP);
+  spawnParticles(p.x,p.y-50*(p.scale*(CW/1280)),p.isVIP?'#FFD200':'#00b4d8',p.isVIP?20:12);
+  if(p.isVIP||G.combo%5===0)spawnBills(p.x,p.y-60*(p.scale*(CW/1280)));
+  nlog(`🌊 +$${inc}${p.isVIP?' ⭐ VIP':''}`,p.isVIP?'special':'good');
+  checkAchievements();p.leaving=true;p.dir*=-1;p.tx=p.dir>0?CW*1.08:CW*-.08;
+}
+
+const ACHIEVEMENTS=[
+  {id:'first',icon:'🏖️',title:'¡Bienvenido a la Villa!',desc:'El lujo es tuyo',check:()=>G.served>=1},
+  {id:'ten',icon:'🌊',title:'10 huéspedes',desc:'La villa está de moda',check:()=>G.served>=10},
+  {id:'combo5',icon:'🔥',title:'Combo x5',desc:'¡Esto es vida!',check:()=>G.maxCombo>=5},
+];
+const _done=new Set();
+function checkAchievements(){ACHIEVEMENTS.forEach(a=>{if(!_done.has(a.id)&&a.check()){_done.add(a.id);showAchievement(a.icon,a.title,a.desc);}});}
+function showAchievement(icon,title,desc){const d=document.getElementById('achiev');const el=document.createElement('div');el.className='ach-item';el.innerHTML=`<div class="ach-icon">${icon}</div><div><div class="ach-title">${title}</div><div class="ach-desc">${desc}</div></div>`;d.appendChild(el);setTimeout(()=>el.remove(),4200);}
+function nlog(t,type=''){const el=document.createElement('div');el.className='nlog'+(type?' '+type:'');el.textContent=t;const c=document.getElementById('notiflog');c.appendChild(el);setTimeout(()=>el.remove(),3500);if(c.children.length>4)c.firstChild.remove();}
+function triggerFlash(color){const f=document.getElementById('flash');f.style.background=color;f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');}
+function activateBoost(){if(G.money<1500){nlog('💸 Sin fondos','bad');return;}G.money-=1500;G.boost=true;G.boostEnd=Date.now()+15000;nlog('⚡ ¡Boost x2! 15s','special');triggerFlash('#00b4d844');}
+
+let t=0,waveOff=0,boatX=CW*.1,boatDir=1;
+function drawScene(dt){
+  t+=dt;waveOff+=dt*.8;boatX+=boatDir*dt*30*(CW/1280);
+  if(boatX>CW*.5)boatDir=-1;if(boatX<CW*.05)boatDir=1;
+  const s=CW/1280;
+
+  // tropical sky
+  const sky=ctx.createLinearGradient(0,0,0,CH*.5);
+  sky.addColorStop(0,'#48cae4');sky.addColorStop(.5,'#90e0ef');sky.addColorStop(1,'#caf0f8');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,CW,CH*.5);
+
+  // sun — big tropical
+  shadow('#FFE13580',50);
+  ctx.beginPath();ctx.arc(CW*.88,CH*.15,CW*.065,0,Math.PI*2);ctx.fillStyle='#FFE135';ctx.fill();
+  // sun glow rings
+  for(let i=1;i<=3;i++){ctx.beginPath();ctx.arc(CW*.88,CH*.15,CW*.065+i*CW*.02,0,Math.PI*2);ctx.strokeStyle=`rgba(255,225,53,${.15-i*.04})`;ctx.lineWidth=4*s;ctx.stroke();}
+  noShadow();
+
+  // clouds
+  function cloud(cx,cy,sc2){
+    ctx.fillStyle='rgba(255,255,255,.9)';
+    [[0,0,32],[28,8,24],[-28,8,22],[12,-10,18],[-14,-10,16]].forEach(([ox,oy,r])=>{ctx.beginPath();ctx.arc(cx+ox*sc2,cy+oy*sc2,r*sc2,0,Math.PI*2);ctx.fill();});
+  }
+  cloud(CW*.1+(Math.sin(t*.1)*CW*.01),CH*.1,s*.9);
+  cloud(CW*.45+(Math.cos(t*.07)*CW*.01),CH*.07,s*1.05);
+
+  // OCEAN / POOL AREA
+  const oceanY=CH*.48;
+  // deep ocean bg
+  const ocean=ctx.createLinearGradient(0,oceanY,0,CH*.62);
+  ocean.addColorStop(0,'#0096c7');ocean.addColorStop(1,'#0077b6');
+  ctx.fillStyle=ocean;ctx.fillRect(0,oceanY,CW,CH*.15);
+  // animated waves
+  for(let w=0;w<4;w++){
+    ctx.beginPath();ctx.moveTo(0,oceanY+w*CH*.03);
+    for(let x2=0;x2<=CW;x2+=CW*.02){
+      const waveY=Math.sin((x2/CW)*Math.PI*6+waveOff+w)*CH*.008;
+      ctx.lineTo(x2,oceanY+w*CH*.03+waveY);
+    }
+    ctx.lineTo(CW,oceanY+w*CH*.04);ctx.lineTo(0,oceanY+w*CH*.04);ctx.closePath();
+    ctx.fillStyle=`rgba(144,224,239,${.15-w*.03})`;ctx.fill();
+  }
+
+  // BEACH/GROUND
+  const beach=ctx.createLinearGradient(0,CH*.6,0,CH);
+  beach.addColorStop(0,'#f4d03f');beach.addColorStop(.3,'#e8c547');beach.addColorStop(1,'#d4a017');
+  ctx.fillStyle=beach;ctx.fillRect(0,CH*.6,CW,CH*.4);
+  // wet sand edge
+  ctx.fillStyle='rgba(0,150,199,.2)';ctx.fillRect(0,CH*.6,CW,CH*.025);
+
+  // BOAT on water
+  if(UPGS.marina.lv>1){
+    ctx.save();ctx.translate(boatX,CH*.54);ctx.scale(s,s);
+    if(boatDir===-1){ctx.scale(-1,1);}
+    ctx.font='30px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⛵',0,0);ctx.restore();
+  }
+
+  // VILLA BUILDING
+  const vx=CW*.35,vy=CH*.18,vw=CW*.35,vh=CH*.44;
+  // main white villa walls
+  shadow('rgba(0,0,0,.2)',20);
+  rr(vx,vy,vw,vh,8,'#fffdf5','#e8d5a3',3);noShadow();
+  // terracotta roof
+  ctx.fillStyle='#c0522b';
+  ctx.beginPath();ctx.moveTo(vx-CW*.015,vy+4*s);ctx.lineTo(vx+vw/2,vy-CH*.1);ctx.lineTo(vx+vw+CW*.015,vy+4*s);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#9e3d1e';ctx.lineWidth=2.5;ctx.stroke();
+  // roof tiles
+  ctx.strokeStyle='rgba(0,0,0,.15)';ctx.lineWidth=1;
+  for(let i=0;i<6;i++){
+    ctx.beginPath();ctx.moveTo(vx+i*vw/6,vy);ctx.lineTo(vx+vw/2+(vx+i*vw/6-vx-vw/2)*.15,vy-CH*.1);ctx.stroke();
+  }
+  // arched windows
+  function archWindow(wx,wy,ww,wh){
+    ctx.beginPath();ctx.moveTo(wx,wy+wh);ctx.lineTo(wx,wy+wh*.4);ctx.arc(wx+ww/2,wy+wh*.4,ww/2,Math.PI,0);ctx.lineTo(wx+ww,wy+wh);ctx.closePath();
+    ctx.fillStyle='rgba(135,206,250,.65)';ctx.fill();ctx.strokeStyle='#4a90d9';ctx.lineWidth=2.5;ctx.stroke();
+  }
+  archWindow(vx+vw*.06,vy+vh*.18,vw*.2,vh*.35);
+  archWindow(vx+vw*.74,vy+vh*.18,vw*.2,vh*.35);
+  // front door arch
+  ctx.beginPath();ctx.moveTo(vx+vw*.38,vy+vh);ctx.lineTo(vx+vw*.38,vy+vh*.55);ctx.arc(vx+vw*.5,vy+vh*.55,vw*.12,Math.PI,0);ctx.lineTo(vx+vw*.62,vy+vh);ctx.closePath();
+  ctx.fillStyle='#8B4513';ctx.fill();ctx.strokeStyle='#5d2e0c';ctx.lineWidth=3;ctx.stroke();
+  // door details
+  rr(vx+vw*.44,vy+vh*.65,vw*.05,vw*.05,99,'#FFD200',null);// knob
+
+  // POOL — main feature
+  const px=vx-CW*.14,py=CH*.65,pw=CW*.22,poh=CH*.1;
+  shadow('rgba(0,180,216,.5)',25);
+  rr(px,py,pw,poh,12,'#48cae4','#0096c7',4);noShadow();
+  // pool shimmer
+  for(let w2=0;w2<3;w2++){
+    const waveP=Math.sin(t*2+w2*1.5);
+    ctx.fillStyle='rgba(255,255,255,.2)';ctx.beginPath();
+    ctx.ellipse(px+pw*.3+w2*pw*.2,py+poh*.5,pw*.06*(1+waveP*.1),poh*.1,0,0,Math.PI*2);ctx.fill();
+  }
+  // pool ladder
+  ctx.strokeStyle='#aaa';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(px+pw*.9,py);ctx.lineTo(px+pw*.9,py+poh*.6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(px+pw*.9-8*s,py+poh*.2);ctx.lineTo(px+pw*.9+8*s,py+poh*.2);ctx.stroke();
+
+  // BEACH BAR
+  if(UPGS.bar.lv>1){
+    rr(CW*.76,CH*.6,CW*.14,CH*.08,4,'#8B4513','#5d2e0c',2);
+    // thatch roof
+    ctx.fillStyle='#d4a017';
+    ctx.beginPath();ctx.moveTo(CW*.74,CH*.6);ctx.lineTo(CW*.83,CH*.54);ctx.lineTo(CW*.92,CH*.6);ctx.closePath();ctx.fill();
+    ctx.font=`${~~(14*s)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🍹🥥',CW*.83,CH*.635);
+  }
+
+  // PALM TREES — swaying
+  function drawPalm(tx,ty,sc2){
+    const sway=Math.sin(t*.8+tx)*3;
+    const tc=s*sc2;
+    // trunk with curve
+    ctx.beginPath();ctx.moveTo(tx,ty);ctx.quadraticCurveTo(tx+15*tc*sc2,ty-60*tc,tx+sway*4*tc,ty-80*tc);
+    ctx.lineWidth=8*tc;ctx.strokeStyle='#8B4513';ctx.stroke();
+    ctx.lineWidth=6*tc;ctx.strokeStyle='#a0522d';ctx.stroke();
+    // fronds
+    const fx=tx+sway*4*tc,fy=ty-80*tc;
+    for(const[ox,oy]of[[-45,-15],[-30,-25],[-10,-30],[10,-28],[30,-20],[45,-8]]){
+      ctx.beginPath();ctx.moveTo(fx,fy);
+      ctx.quadraticCurveTo(fx+ox*.6*tc*sc2,fy+oy*.8*tc*sc2,fx+ox*tc*sc2,fy+oy*tc*sc2);
+      ctx.lineWidth=5*tc;ctx.strokeStyle='#2DC653';ctx.stroke();
+      ctx.lineWidth=3*tc;ctx.strokeStyle='#40916c';ctx.stroke();
+    }
+    // coconuts
+    ctx.font=`${~~(10*tc/tc)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🥥',fx,fy+8*tc);
+  }
+  drawPalm(CW*.06,CH*.68,1.3);
+  drawPalm(CW*.12,CH*.7,1.0);
+  drawPalm(CW*.93,CH*.67,1.2);
+  drawPalm(CW*.88,CH*.7,.95);
+
+  // umbrellas on beach
+  const umbColors=['#FF6348','#FFE135','#5BC8F5','#2DC653'];
+  for(let i=0;i<3;i++){
+    const ux=CW*(.15+i*.22),uy=CH*.68;
+    ctx.beginPath();ctx.moveTo(ux,uy);ctx.lineTo(ux,uy+CH*.06);ctx.strokeStyle='#888';ctx.lineWidth=2*s;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(ux-CW*.04,uy);ctx.arc(ux,uy,CW*.04,Math.PI,0);ctx.closePath();
+    ctx.fillStyle=umbColors[i%4];ctx.fill();ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=1;ctx.stroke();
+    // lounge chair
+    rr(ux-CW*.025,uy+CH*.045,CW*.05,CH*.025,3,'#f4d03f','#d4a017',1.5);
+  }
+
+  // distant boat on horizon
+  ctx.font=`${~~(18*s)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('🚢',CW*.7,CH*.5);
+}
+
+let lastT=0;
+function loop(ts){
+  if(_paused){lastT=ts;requestAnimationFrame(loop);return;}
+  const dt=Math.min((ts-lastT)/1000,.05);lastT=ts;
+  ctx.clearRect(0,0,CW,CH);drawScene(dt);
+  spawnTimer+=dt;if(spawnTimer>=spawnRate()){spawnTimer=0;trySpawn();}
+  people.forEach(p=>{
+    p.bob+=dt*4;const dx=p.tx-p.x;
+    if(Math.abs(dx)<3){if(p.leaving)people=people.filter(x=>x!==p);else if(p.state==='walking'){p.state='idle';p.timer=0;}}
+    else{p.x+=Math.sign(dx)*p.speed*dt;p.dir=dx>0?1:-1;}
+    if(p.state==='idle'&&!p.leaving){p.timer+=dt;if(p.timer>=p.talkTimer)onServed(p);}
+    const prog=p.state==='idle'?Math.min(p.timer/p.talkTimer,1):0;
+    drawPerson({x:p.x,y:p.y,scale:p.scale,state:p.state==='walking'||p.leaving?'walking':'idle',progress:prog,isVIP:p.isVIP,skin:p.skin,shirt:p.shirt,pants:p.pants,hair:p.hair,expr:p.expr,bob:p.bob,dir:p.dir,swimwear:p.swimwear});
+    if(p.state==='idle'&&!p.leaving){const s2=p.scale*(CW/1280);const bw=52*s2,bh=9,px2=p.x-bw/2,py2=p.y-78*s2;rr(px2,py2,bw,bh,3,'rgba(0,0,0,.6)',null);rr(px2+2,py2+2,(bw-4)*prog,bh-4,2,'#90e0ef',null);rr(px2,py2,bw,bh,3,null,'rgba(0,0,0,.5)',1);}
+  });
+  drawFX();updateFX(dt);updateUI();requestAnimationFrame(loop);
+}
+
+function updateUI(){
+  const m=G.money;document.getElementById('hMoney').textContent=`$${m>=1000?(m/1000).toFixed(1)+'k':~~m}`;
+  document.getElementById('hIPS').textContent=`+$${(earnPerServe()/cycleTime()).toFixed(1)}/seg`;
+  document.getElementById('xpFill').style.width=`${(G.xp/xpReq(G.level))*100}%`;
+  document.getElementById('xpLbl').textContent=`${~~G.xp} / ${xpReq(G.level)} XP`;
+  document.getElementById('hLevel').textContent=`🏖️ ${LVL.names[G.level]}`;
+  for(const k in UPGS){
+    const u=UPGS[k];const cost=upgCost(k);const can=G.money>=cost;
+    const btn=document.getElementById('btn_'+k);if(!btn)continue;
+    btn.disabled=!can;btn.textContent=`${u.icon} $${cost>=1000?(cost/1000).toFixed(1)+'k':cost}`;
+    document.getElementById('lv_'+k).textContent=`Nv.${u.lv}`;
+    document.getElementById('st_'+k).innerHTML=`Sig: <b>+${u.lv*15}%</b>`;
+  }
+}
+function buyUpg(k){const cost=upgCost(k);if(G.money<cost)return;G.money-=cost;UPGS[k].lv++;window.parent?.postMessage({type:'bizPurchase',upg:k,cost},'*');nlog(`✅ ${UPGS[k].name} Nv.${UPGS[k].lv}`,'special');triggerFlash('#00b4d844');}
+window.addEventListener('message',e=>{if(!e.data)return;if(e.data.type==='bizClose')_paused=true;if(e.data.type==='purchaseDenied')nlog('💸 ¡Sin fondos!','bad');if(e.data.type==='purchaseOk'){UPGS[e.data.upg].lv++;G.money=e.data.newMoney;}if(e.data.type==='bizInit'){G.money=e.data.money||0;for(const k in UPGS){const lv=e.data[k+'Level']||1;UPGS[k].lv=lv;}nlog('🏖️ ¡Bienvenido a la Villa!','good');}});
+document.addEventListener('visibilitychange',()=>{_paused=document.hidden;});
+if(window.parent&&window.parent!==window)window.parent.postMessage({type:'bizReady'},'*');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

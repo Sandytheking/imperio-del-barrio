@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover">
+<title>🏚️ El Comienzo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Nunito',sans-serif}
+#wrapper{width:100vw;max-width:1280px;aspect-ratio:16/9;position:relative;background:#8B7355;overflow:hidden}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+#header{position:absolute;top:0;left:0;right:0;height:10.5%;background:linear-gradient(180deg,#2c1810,#4a2c1a);border-bottom:3px solid #c8963c;display:flex;align-items:center;padding:0 1.5%;gap:2%;z-index:20}
+.hm-block{display:flex;flex-direction:column;min-width:17%}
+.hm-label{font-size:clamp(6px,.65vw,10px);font-weight:900;color:#a0785a;text-transform:uppercase;letter-spacing:1px}
+.hm-val{font-family:'Fredoka One',cursive;font-size:clamp(15px,2vw,30px);color:#c8963c;line-height:1}
+.hm-sub{font-size:clamp(6px,.6vw,9px);font-weight:900;color:#e8a84a}
+.hdr-center{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.level-name{font-family:'Fredoka One',cursive;font-size:clamp(9px,1vw,15px);color:#fff}
+.xp-bg{width:100%;max-width:300px;height:8px;background:rgba(255,255,255,.08);border-radius:99px;border:1px solid rgba(255,255,255,.12);overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,#c8963c,#e8a84a);border-radius:99px;transition:width .4s ease}
+.xp-lbl{font-size:clamp(5px,.55vw,8px);color:#a0785a;font-weight:900}
+.hdr-right{display:flex;align-items:center;gap:.8%;min-width:22%;justify-content:flex-end}
+.hbtn{background:#2c1810;color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(8px,.85vw,13px);padding:.35em .8em;border:2px solid #c8963c;border-radius:99px;cursor:pointer;transition:transform .1s}
+.hbtn.red{background:#c0392b;border-color:#e74c3c}
+.combo-badge{background:linear-gradient(135deg,#c8963c,#e8a84a);color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(7px,.75vw,11px);padding:.3em .7em;border-radius:99px;border:2px solid rgba(255,255,255,.3);display:none;animation:cbPop .4s cubic-bezier(.34,1.56,.64,1)}
+.combo-badge.show{display:block}@keyframes cbPop{from{transform:scale(0)}to{transform:scale(1)}}
+#panel{position:absolute;bottom:0;left:0;right:0;height:27%;background:linear-gradient(0deg,#2c1810,#4a2c1a);border-top:3px solid #c8963c;display:grid;grid-template-columns:repeat(5,1fr);z-index:20}
+.upg-col{border-right:1px solid rgba(255,255,255,.08);padding:clamp(4px,.7vw,10px) clamp(5px,.9vw,12px);display:flex;flex-direction:column;gap:4px}
+.upg-col:last-child{border-right:none}
+.upg-top{display:flex;align-items:center;gap:5px}
+.upg-emo{font-size:clamp(12px,1.6vw,24px)}
+.upg-title{font-family:'Fredoka One',cursive;font-size:clamp(8px,.95vw,14px);color:#fff;flex:1}
+.upg-lv{background:#c8963c;color:#2c1810;font-weight:900;font-size:clamp(5px,.58vw,9px);padding:2px 5px;border-radius:99px}
+.upg-stat{font-size:clamp(6px,.62vw,9px);color:#a0785a;font-weight:700;line-height:1.3}
+.upg-stat b{color:#e8a84a}
+.upg-btn{margin-top:auto;background:linear-gradient(135deg,#c8963c,#a67c2e);color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(8px,.85vw,13px);padding:.4em .8em;border:none;border-radius:99px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.4);transition:transform .1s;width:100%}
+.upg-btn:hover:not(:disabled){transform:translateY(-2px)}
+.upg-btn:disabled{background:linear-gradient(135deg,#333,#2a2a2a);color:#555;cursor:not-allowed;box-shadow:none}
+#achiev{position:absolute;top:13%;right:2%;z-index:50;pointer-events:none;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.ach-item{background:linear-gradient(135deg,#2c1810,#4a2c1a);border:2px solid #c8963c;border-radius:12px;padding:8px 14px;display:flex;align-items:center;gap:8px;animation:achIn .4s cubic-bezier(.34,1.56,.64,1),achOut .4s ease 3.5s forwards;max-width:260px}
+@keyframes achIn{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}
+@keyframes achOut{to{opacity:0;transform:translateX(120%)}}
+.ach-icon{font-size:1.4rem}.ach-title{font-family:'Fredoka One',cursive;font-size:.8rem;color:#c8963c}.ach-desc{font-size:.6rem;color:#a0785a;font-weight:700}
+#notiflog{position:absolute;bottom:28%;left:1.5%;z-index:30;pointer-events:none;display:flex;flex-direction:column-reverse;gap:3px}
+.nlog{font-size:clamp(7px,.68vw,10px);font-weight:900;padding:3px 9px;border-radius:5px;background:rgba(0,0,0,.65);animation:nIn .25s ease,nOut .3s ease 3s forwards;border-left:3px solid #c8963c;color:#fff;max-width:270px}
+.nlog.good{border-color:#4cd964;color:#4cd964}.nlog.bad{border-color:#e74c3c;color:#e74c3c}.nlog.special{border-color:#c8963c;color:#c8963c}
+@keyframes nIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes nOut{to{opacity:0;transform:translateX(-18px)}}
+#flash{position:absolute;inset:0;pointer-events:none;z-index:60;opacity:0}
+#flash.pop{animation:flashPop .35s ease}
+@keyframes flashPop{0%{opacity:.3}100%{opacity:0}}
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  #panel{padding-bottom:env(safe-area-inset-bottom);height:calc(27% + env(safe-area-inset-bottom))}
+  #notiflog{bottom:calc(28% + env(safe-area-inset-bottom))}
+}
+@media(max-width:480px){#panel{height:32%}}
+</style>
+</head>
+<body>
+<div id="wrapper">
+  <canvas id="c"></canvas>
+  <div id="header">
+    <div class="hm-block">
+      <div class="hm-label">💰 Dinero</div>
+      <div class="hm-val" id="hMoney">$0</div>
+      <div class="hm-sub" id="hIPS">+$0/seg</div>
+    </div>
+    <div class="hdr-center">
+      <div class="level-name" id="hLevel">🏚️ El Comienzo</div>
+      <div class="xp-bg"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+      <div class="xp-lbl" id="xpLbl">0 / 80 XP</div>
+    </div>
+    <div class="hdr-right">
+      <div class="combo-badge" id="comboBadge">💪 COMBO x1</div>
+      <button class="hbtn red" onclick="activateBoost()">⚡ Boost x2 — $100</button>
+    </div>
+  </div>
+  <div id="panel">
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">🔨</span><span class="upg-title">Reparar</span><span class="upg-lv" id="lv_reparar">Nv.1</span></div>
+      <div class="upg-stat" id="st_reparar">Siguiente: <b>+valor</b></div>
+      <button class="upg-btn" id="btn_reparar" onclick="buyUpg('reparar')" disabled>🔨 Mejorar $...</button>
+    </div>
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">💡</span><span class="upg-title">Electricidad</span><span class="upg-lv" id="lv_luz">Nv.1</span></div>
+      <div class="upg-stat" id="st_luz">Siguiente: <b>+comodidad</b></div>
+      <button class="upg-btn" id="btn_luz" onclick="buyUpg('luz')" disabled>💡 Mejorar $...</button>
+    </div>
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">🚿</span><span class="upg-title">Agua</span><span class="upg-lv" id="lv_agua">Nv.1</span></div>
+      <div class="upg-stat" id="st_agua">Siguiente: <b>+comfort</b></div>
+      <button class="upg-btn" id="btn_agua" onclick="buyUpg('agua')" disabled>🚿 Mejorar $...</button>
+    </div>
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">📺</span><span class="upg-title">Electrodomésticos</span><span class="upg-lv" id="lv_electro">Nv.1</span></div>
+      <div class="upg-stat" id="st_electro">Siguiente: <b>+ingresos</b></div>
+      <button class="upg-btn" id="btn_electro" onclick="buyUpg('electro')" disabled>📺 Mejorar $...</button>
+    </div>
+    <div class="upg-col">
+      <div class="upg-top"><span class="upg-emo">🏘️</span><span class="upg-title">Vecinos</span><span class="upg-lv" id="lv_vecinos">Nv.1</span></div>
+      <div class="upg-stat" id="st_vecinos">Siguiente: <b>+red</b></div>
+      <button class="upg-btn" id="btn_vecinos" onclick="buyUpg('vecinos')" disabled>🏘️ Mejorar $...</button>
+    </div>
+  </div>
+  <div id="achiev"></div>
+  <div id="notiflog"></div>
+  <div id="flash"></div>
+</div>
+<script>
+const SHIRTS=['#FF6348','#5BC8F5','#2DC653','#FF4FAD','#c8963c','#FF8C42','#aaa','#e74c3c'];
+const PANTS=['#2D2B3D','#3D5A80','#4a4e69','#1b4332','#6d3a3a','#2c3e50'];
+const SKINS=['#FDBCB4','#E8975A','#C07A3A','#8B5E3C','#6B3E26','#4A2C0A'];
+const HAIRS=['#1a1a1a','#4a2c0a','#C07A3A','#FFD200','#e8e8e8','#8B4513'];
+
+let particles=[],floats=[],bills=[];
+function spawnParticles(x,y,color,n=12){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=40+Math.random()*80;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:1,color,r:2+Math.random()*3});}}
+function spawnFloat(x,y,text,color='#c8963c',big=false){floats.push({x,y:y-5,text,t:0,color,big});}
+function spawnBills(x,y){for(let i=0;i<6;i++)bills.push({x:x+(Math.random()-.5)*60,y,vx:(Math.random()-.5)*50,vy:-70-Math.random()*50,life:1,rot:Math.random()*Math.PI,rotV:(Math.random()-.5)*3});}
+function updateFX(dt){particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt*1.4;});particles=particles.filter(p=>p.life>0);floats.forEach(f=>{f.y-=28*dt;f.t+=dt;});floats=floats.filter(f=>f.t<1.8);bills.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.vy+=120*dt;b.rot+=b.rotV*dt;b.life-=dt*1.2;});bills=bills.filter(b=>b.life>0);}
+function drawFX(){particles.forEach(p=>{ctx.globalAlpha=p.life;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();});bills.forEach(b=>{ctx.save();ctx.globalAlpha=b.life*.8;ctx.translate(b.x,b.y);ctx.rotate(b.rot);rr(-13,-6,26,12,3,'#2DC653','#1a5c28',1.5);ctx.font='bold 8px Nunito';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#1a5c28';ctx.fillText('$',0,0);ctx.restore();});floats.forEach(f=>{const alpha=Math.max(0,1-f.t/1.6);const fs=f.big?~~(CW*.016):~~(CW*.013);ctx.save();ctx.globalAlpha=alpha;ctx.font=`900 ${fs}px "Fredoka One",cursive`;ctx.textAlign='center';ctx.textBaseline='middle';const tw=ctx.measureText(f.text).width,pad=f.big?12:8;rr(f.x-tw/2-pad,f.y-fs/2-4,tw+pad*2,fs+9,6,'rgba(0,0,0,.65)',f.color,f.big?2.5:1.5);ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);ctx.restore();});ctx.globalAlpha=1;}
+
+function rr(x,y,w,h,r,fill,stroke,lw=2){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.lineWidth=lw;ctx.strokeStyle=stroke;ctx.stroke();}}
+function txt(t,x,y,font,color,align='center'){ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(t,x,y);}
+function shadow(col,blur){ctx.shadowColor=col;ctx.shadowBlur=blur;}
+function noShadow(){ctx.shadowColor='transparent';ctx.shadowBlur=0;}
+
+function drawPerson(cfg){
+  var x=cfg.x,y=cfg.y,sc=cfg.scale||1,state=cfg.state||'idle',isVIP=cfg.isVIP||false;
+  var skin=cfg.skin,shirt=cfg.shirt,pants=cfg.pants,hair=cfg.hair;
+  var isAngry=cfg.isAngry||false,expr=cfg.expr||0,bob=cfg.bob||0,dir=cfg.dir||1;
+  var s=sc*(CW/1280);
+  ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+  var legSwing=(state==='walking'?Math.sin(bob*4)*0.3:0)*dir;
+  ctx.save();ctx.rotate(legSwing);rr(-14,2,13,28,4,pants,'#1a1a2e',1.5);ctx.restore();
+  ctx.save();ctx.rotate(-legSwing);rr(1,2,13,28,4,pants,'#1a1a2e',1.5);ctx.restore();
+  ctx.save();ctx.rotate(legSwing);rr(-16,28,15,8,3,'#222','#000',1);ctx.restore();
+  ctx.save();ctx.rotate(-legSwing);rr(1,28,15,8,3,'#222','#000',1);ctx.restore();
+  ctx.save();ctx.scale(dir,1);
+  rr(-18,-18,36,22,6,shirt,'#1a1a2e',1.5);
+  if(isVIP)rr(-18,-18,36,22,6,'rgba(255,215,0,.2)','#FFD700',2);
+  var armSwing=state==='walking'?Math.sin(bob*4)*0.25:0;
+  ctx.save();ctx.rotate(-armSwing);rr(-26,-16,10,20,4,skin,'#1a1a2e',1);ctx.restore();
+  ctx.save();ctx.rotate(armSwing);rr(16,-16,10,20,4,skin,'#1a1a2e',1);ctx.restore();
+  var hb=state==='walking'?Math.sin(bob*4)*0.8:0;
+  ctx.save();ctx.translate(0,hb);
+  rr(-16,-52,32,30,10,skin,'#1a1a2e',2);
+  ctx.beginPath();ctx.ellipse(0,-52,17,10,0,Math.PI,0);ctx.fillStyle=hair;ctx.fill();
+  if(isVIP){ctx.font='14px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👑',0,-58);}
+  ctx.fillStyle='#1a1a2e';ctx.beginPath();ctx.arc(-6,-43,3,0,Math.PI*2);ctx.arc(6,-43,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-5,-44,1.5,0,Math.PI*2);ctx.arc(7,-44,1.5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.strokeStyle='#1a1a2e';ctx.lineWidth=2;
+  if(isAngry){ctx.arc(0,-37,5,0.2,Math.PI-0.2,true);}
+  else if(expr===2){ctx.arc(0,-37,6,0.1,Math.PI-0.1);ctx.fillStyle='#FF6B6B';ctx.fill();}
+  else{ctx.moveTo(-4,-36);ctx.lineTo(4,-36);}
+  ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+  ctx.restore();
+}
+
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let CW,CH;
+function resize(){const wr=document.getElementById('wrapper');CW=canvas.width=wr.clientWidth;CH=canvas.height=wr.clientHeight;}
+resize();window.addEventListener('resize',resize);
+
+const UPGS={
+  reparar:{lv:1,base:50,icon:'🔨',name:'Reparar'},
+  luz:{lv:1,base:80,icon:'💡',name:'Electricidad'},
+  agua:{lv:1,base:100,icon:'🚿',name:'Agua'},
+  electro:{lv:1,base:150,icon:'📺',name:'Electrodomésticos'},
+  vecinos:{lv:1,base:120,icon:'🏘️',name:'Vecinos'}
+};
+function upgCost(k){return Math.floor(UPGS[k].base*Math.pow(1.55,UPGS[k].lv-1));}
+
+const BASE_EARN=6,BASE_CYCLE=7,BASE_SPAWN=5;
+let _paused=false,_earnedQ=0,_prestige=0;
+const G={money:0,totalEarned:0,xp:0,level:0,served:0,combo:0,maxCombo:0,boost:false,boostEnd:0};
+const LVL={names:['Novato','Vecino','Conocido','Referente','Leyenda'],xp:[80,200,500,1200,3000]};
+function xpReq(l){return LVL.xp[Math.min(l,LVL.xp.length-1)];}
+function addXP(a){G.xp+=a;while(G.level<LVL.names.length-1&&G.xp>=xpReq(G.level)){G.xp-=xpReq(G.level);G.level++;triggerFlash('#c8963c44');showAchievement('🏆',`¡Nivel ${G.level+1}!`,LVL.names[G.level]);nlog(`🏆 ${LVL.names[G.level]}`,'special');}}
+function earnPerServe(){return Math.floor(BASE_EARN*(1+(UPGS.electro.lv-1)*.2)*(1+(UPGS.reparar.lv-1)*.15)*(G.boost&&Date.now()<G.boostEnd?2:1)*(1+_prestige*.2));}
+function cycleTime(){return Math.max(1.5,BASE_CYCLE*Math.pow(0.82,UPGS.agua.lv-1));}
+function spawnRate(){return Math.max(0.8,BASE_SPAWN*Math.pow(0.88,UPGS.vecinos.lv-1));}
+
+let people=[],spawnTimer=0,pid=0;
+class Person{
+  constructor(){
+    this.id=pid++;this.x=Math.random()<.5?CW*-.04:CW*1.04;
+    this.y=CH*(.58+Math.random()*.08);
+    this.tx=CW*(.15+Math.random()*.7);
+    this.state='walking';this.timer=0;this.talkTimer=cycleTime();
+    this.skin=SKINS[~~(Math.random()*SKINS.length)];
+    this.shirt=SHIRTS[~~(Math.random()*SHIRTS.length)];
+    this.pants=PANTS[~~(Math.random()*PANTS.length)];
+    this.hair=HAIRS[~~(Math.random()*HAIRS.length)];
+    this.scale=.8+Math.random()*.25;this.speed=(70+Math.random()*40)*(CW/1280);
+    this.bob=Math.random()*Math.PI*2;this.dir=this.x<CW/2?1:-1;
+    this.leaving=false;this.expr=~~(Math.random()*3);
+  }
+}
+function trySpawn(){if(people.length>=3+UPGS.vecinos.lv||_paused)return;const p=new Person();people.push(p);nlog(`🚶 Vecino del barrio llegó`);}
+
+function onServed(p){
+  const inc=earnPerServe();G.money+=inc;G.totalEarned+=inc;_earnedQ+=inc;
+  addXP(inc*.1);G.served++;G.combo++;if(G.combo>G.maxCombo)G.maxCombo=G.combo;
+  if(G.combo>=3){document.getElementById('comboBadge').textContent=`💪 COMBO x${G.combo}`;document.getElementById('comboBadge').classList.add('show');}
+  if(_earnedQ>=3){window.parent?.postMessage({type:'bizEarned',earned:_earnedQ,xp:_earnedQ*.08},'*');_earnedQ=0;}
+  spawnFloat(p.x,p.y-70*(p.scale*(CW/1280)),`+$${inc}`,'#c8963c');
+  spawnParticles(p.x,p.y-50*(p.scale*(CW/1280)),'#c8963c',10);
+  if(G.combo%5===0)spawnBills(p.x,p.y-60*(p.scale*(CW/1280)));
+  nlog(`💪 +$${inc}${G.combo>=3?' 🔥':''}`,G.combo>=3?'special':'good');
+  checkAchievements();p.leaving=true;p.dir*=-1;p.tx=p.dir>0?CW*1.08:CW*-.08;
+}
+
+const ACHIEVEMENTS=[
+  {id:'first',icon:'💪',title:'¡Primer paso!',desc:'Comenzaste desde abajo',check:()=>G.served>=1},
+  {id:'ten',icon:'🏚️',title:'10 vecinos',desc:'El barrio te conoce',check:()=>G.served>=10},
+  {id:'combo5',icon:'🔥',title:'Combo x5',desc:'¡El barrio está contigo!',check:()=>G.maxCombo>=5},
+];
+const _done=new Set();
+function checkAchievements(){ACHIEVEMENTS.forEach(a=>{if(!_done.has(a.id)&&a.check()){_done.add(a.id);showAchievement(a.icon,a.title,a.desc);}});}
+function showAchievement(icon,title,desc){const d=document.getElementById('achiev');const el=document.createElement('div');el.className='ach-item';el.innerHTML=`<div class="ach-icon">${icon}</div><div><div class="ach-title">${title}</div><div class="ach-desc">${desc}</div></div>`;d.appendChild(el);setTimeout(()=>el.remove(),4200);}
+function nlog(t,type=''){const el=document.createElement('div');el.className='nlog'+(type?' '+type:'');el.textContent=t;const c=document.getElementById('notiflog');c.appendChild(el);setTimeout(()=>el.remove(),3500);if(c.children.length>4)c.firstChild.remove();}
+function triggerFlash(color){const f=document.getElementById('flash');f.style.background=color;f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');}
+function activateBoost(){if(G.money<100){nlog('💸 Sin fondos','bad');return;}G.money-=100;G.boost=true;G.boostEnd=Date.now()+15000;nlog('⚡ ¡Boost x2! 15s','special');triggerFlash('#c8963c44');}
+
+// SCENE
+let t=0,catX=CW*.3,catDir=1;
+function drawScene(dt){
+  t+=dt;catX+=catDir*dt*35*(CW/1280);
+  if(catX>CW*.8)catDir=-1;if(catX<CW*.15)catDir=1;
+  const s=CW/1280;
+
+  // dusty sky
+  const sky=ctx.createLinearGradient(0,0,0,CH*.55);
+  sky.addColorStop(0,'#b8d4e8');sky.addColorStop(1,'#d4e8f0');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,CW,CH*.55);
+
+  // hazy sun
+  ctx.beginPath();ctx.arc(CW*.85,CH*.15,CW*.045,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,200,100,.7)';ctx.fill();
+
+  // GROUND
+  ctx.fillStyle='#8B7355';ctx.fillRect(0,CH*.55,CW,CH*.45);
+  ctx.fillStyle='#7a6345';ctx.fillRect(0,CH*.55,CW,CH*.04);
+  // dirt patches
+  for(let i=0;i<8;i++){ctx.beginPath();ctx.ellipse(CW*(.1+i*.12),CH*.6,CW*.04,CH*.015,0,0,Math.PI*2);ctx.fillStyle='rgba(100,70,40,.3)';ctx.fill();}
+
+  // Utility pole
+  rr(CW*.82,CH*.2,CW*.008,CH*.4,2,'#5d3a1a',null);
+  rr(CW*.79,CH*.28,CW*.06,CW*.008,2,'#5d3a1a',null);
+  ctx.strokeStyle='#555';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(CW*.8,CH*.28);ctx.lineTo(CW*.72,CH*.48);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(CW*.84,CH*.28);ctx.lineTo(CW*.78,CH*.48);ctx.stroke();
+
+  // Broken fence
+  for(let i=0;i<18;i++){
+    if(i===4||i===9||i===13)continue;// missing boards
+    const fx=CW*(.08+i*.047),tilt=(i%3-.5)*.05;
+    ctx.save();ctx.translate(fx,CH*.58);ctx.rotate(tilt);
+    rr(-5,0,10,CH*.08,1,'#8B6914','#5d4a10',1);ctx.restore();
+  }
+
+  // SHACK — main building
+  const hx=CW*.25,hy=CH*.28,hw=CW*.28,hh=CH*.32;
+  // walls — old wood
+  rr(hx,hy,hw,hh,2,'#c4a46e','#8B6914',3);
+  // wood plank lines
+  ctx.strokeStyle='rgba(100,70,20,.4)';ctx.lineWidth=1;
+  for(let i=1;i<6;i++){ctx.beginPath();ctx.moveTo(hx,hy+hh*i/6);ctx.lineTo(hx+hw,hy+hh*i/6);ctx.stroke();}
+  // roof — corrugated metal
+  ctx.fillStyle='#7a7a7a';
+  ctx.beginPath();ctx.moveTo(hx-CW*.025,hy+4*s);ctx.lineTo(hx+hw/2,hy-CH*.09);ctx.lineTo(hx+hw+CW*.025,hy+4*s);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#555';ctx.lineWidth=2;ctx.stroke();
+  // roof texture strips
+  ctx.strokeStyle='rgba(0,0,0,.2)';ctx.lineWidth=1;
+  for(let i=0;i<8;i++){
+    const rx=hx+i*hw/8,ry=hy+4*s;
+    ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(hx+hw/2+(rx-hx-hw/2)*.1,hy-CH*.09);ctx.stroke();
+  }
+  // single small window
+  rr(hx+hw*.12,hy+hh*.2,hw*.22,hh*.28,3,'#87CEEB','#555',2);
+  // cracked window tape
+  ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(hx+hw*.12,hy+hh*.2);ctx.lineTo(hx+hw*.34,hy+hh*.48);ctx.stroke();
+  // door — simple
+  rr(hx+hw*.62,hy+hh*.52,hw*.25,hh*.47,2,'#6b4c11','#4a2c0a',2);
+  // light on/off
+  if(UPGS.luz.lv>1){
+    const lit=Math.sin(t*2)>.95?'#FF8C00':'#FFE135';
+    ctx.beginPath();ctx.arc(hx+hw*.04,hy+hh*.08,5*s,0,Math.PI*2);
+    ctx.fillStyle=lit;shadow(lit,12);ctx.fill();noShadow();
+  }
+  // water barrel
+  if(UPGS.agua.lv>1){
+    rr(hx+hw+CW*.01,hy+hh*.5,CW*.03,CH*.1,3,'#3D5A80','#2c3e50',2);
+    ctx.fillStyle='rgba(135,206,235,.5)';ctx.fillRect(hx+hw+CW*.011,hy+hh*.5,CW*.028,CH*.04);
+  }
+  // TV antenna
+  rr(hx+hw*.45,hy-CH*.11,CW*.005,CH*.04,1,'#888',null);
+  ctx.beginPath();ctx.moveTo(hx+hw*.452,hy-CH*.11);ctx.lineTo(hx+hw*.41,hy-CH*.065);
+  ctx.moveTo(hx+hw*.452,hy-CH*.11);ctx.lineTo(hx+hw*.49,hy-CH*.065);
+  ctx.strokeStyle='#aaa';ctx.lineWidth=1.5;ctx.stroke();
+
+  // Trash cans
+  rr(CW*.62,CH*.5,CW*.025,CH*.1,3,'#555','#333',2);
+  rr(CW*.65,CH*.52,CW*.025,CH*.09,3,'#444','#333',2);
+
+  // Stray cat
+  ctx.save();ctx.translate(catX,CH*.59);ctx.scale(s,s);
+  if(catDir===-1){ctx.scale(-1,1);}
+  ctx.font='22px serif';ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText('🐈',0,0);ctx.restore();
+
+  // Distant shacks
+  rr(CW*.75,CH*.36,CW*.1,CH*.22,2,'#b8935a','#8B6914',2);
+  ctx.beginPath();ctx.moveTo(CW*.74,CH*.36);ctx.lineTo(CW*.8,CH*.27);ctx.lineTo(CW*.86,CH*.36);ctx.closePath();ctx.fillStyle='#666';ctx.fill();
+  rr(CW*.88,CH*.38,CW*.09,CH*.2,2,'#c4a46e','#8B6914',2);
+
+  // Laundry line
+  ctx.strokeStyle='#888';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(CW*.04,CH*.4);ctx.lineTo(CW*.22,CH*.38);ctx.stroke();
+  const clothes=['👕','👖','🧦','🧦','👗'];
+  clothes.forEach((c,i)=>{
+    const cx2=CW*(.06+i*.036),cy=CH*.38+i*.01*CH;
+    ctx.font=`${~~(14*s)}px serif`;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(c,cx2,cy);
+    ctx.beginPath();ctx.arc(cx2,cy,2*s,0,Math.PI*2);ctx.fillStyle='#888';ctx.fill();
+  });
+}
+
+let lastT=0;
+function loop(ts){
+  if(_paused){lastT=ts;requestAnimationFrame(loop);return;}
+  const dt=Math.min((ts-lastT)/1000,.05);lastT=ts;
+  ctx.clearRect(0,0,CW,CH);
+  drawScene(dt);
+
+  spawnTimer+=dt;
+  if(spawnTimer>=spawnRate()){spawnTimer=0;trySpawn();}
+
+  people.forEach(p=>{
+    p.bob+=dt*4;
+    const dx=p.tx-p.x;
+    if(Math.abs(dx)<3){
+      if(p.leaving){people=people.filter(x=>x!==p);}
+      else if(p.state==='walking'){p.state='idle';p.timer=0;}
+    } else {p.x+=Math.sign(dx)*p.speed*dt;p.dir=dx>0?1:-1;}
+    if(p.state==='idle'&&!p.leaving){p.timer+=dt;if(p.timer>=p.talkTimer)onServed(p);}
+    const prog=p.state==='idle'?Math.min(p.timer/p.talkTimer,1):0;
+    drawPerson({x:p.x,y:p.y,scale:p.scale,state:p.state==='walking'||p.leaving?'walking':'idle',progress:prog,skin:p.skin,shirt:p.shirt,pants:p.pants,hair:p.hair,expr:p.expr,bob:p.bob,dir:p.dir});
+    if(p.state==='idle'&&!p.leaving){
+      const s2=p.scale*(CW/1280);const bw=48*s2,bh=8,px=p.x-bw/2,py=p.y-75*s2;
+      rr(px,py,bw,bh,3,'rgba(0,0,0,.6)',null);rr(px+2,py+2,(bw-4)*prog,bh-4,2,'#c8963c',null);
+      rr(px,py,bw,bh,3,null,'rgba(0,0,0,.5)',1);
+    }
+  });
+
+  drawFX();updateFX(dt);updateUI();
+  requestAnimationFrame(loop);
+}
+
+function updateUI(){
+  const m=G.money;document.getElementById('hMoney').textContent=`$${m>=1000?(m/1000).toFixed(1)+'k':~~m}`;
+  document.getElementById('hIPS').textContent=`+$${(earnPerServe()/cycleTime()).toFixed(1)}/seg`;
+  document.getElementById('xpFill').style.width=`${(G.xp/xpReq(G.level))*100}%`;
+  document.getElementById('xpLbl').textContent=`${~~G.xp} / ${xpReq(G.level)} XP`;
+  document.getElementById('hLevel').textContent=`🏚️ ${LVL.names[G.level]}`;
+  for(const k in UPGS){
+    const u=UPGS[k];const cost=upgCost(k);const can=G.money>=cost;
+    const btn=document.getElementById('btn_'+k);if(!btn)continue;
+    btn.disabled=!can;btn.textContent=`${u.icon} Mejorar $${cost>=1000?(cost/1000).toFixed(1)+'k':cost}`;
+    document.getElementById('lv_'+k).textContent=`Nv.${u.lv}`;
+    document.getElementById('st_'+k).innerHTML=`Siguiente: <b>+${u.lv*10}%</b>`;
+  }
+}
+function buyUpg(k){const cost=upgCost(k);if(G.money<cost)return;G.money-=cost;UPGS[k].lv++;window.parent?.postMessage({type:'bizPurchase',upg:k,cost},'*');nlog(`✅ ${UPGS[k].name} Nv.${UPGS[k].lv}`,'special');triggerFlash('#c8963c44');}
+
+window.addEventListener('message',e=>{
+  if(!e.data)return;
+  if(e.data.type==='bizClose')_paused=true;
+  if(e.data.type==='purchaseDenied')nlog('💸 ¡Sin fondos!','bad');
+  if(e.data.type==='purchaseOk'){UPGS[e.data.upg].lv++;G.money=e.data.newMoney;}
+  if(e.data.type==='bizInit'){G.money=e.data.money||0;for(const k in UPGS){const lv=e.data[k+'Level']||1;UPGS[k].lv=lv;}nlog('🏚️ ¡El Comienzo!','good');}
+});
+document.addEventListener('visibilitychange',()=>{_paused=document.hidden;});
+if(window.parent&&window.parent!==window)window.parent.postMessage({type:'bizReady'},'*');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

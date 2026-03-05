@@ -1656,103 +1656,172 @@ body.super-empresa .hdr {
 /* ═══ ASCENSO SOCIAL ═══ */
 .ascenso-wrap { padding: 0 0 24px; }
 
-/* Background scene */
+/* ═══ PROPERTY BANNER — clickeable, animated per stage ═══ */
 .ascenso-scene {
   position: relative;
-  border: var(--outline);
+  border: 3px solid #1E1B2E;
   border-radius: 20px;
   overflow: hidden;
-  height: 180px;
+  height: 200px;
   margin-bottom: 16px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.scene-bg {
-  position: absolute; inset: 0;
-  transition: background 1s ease;
-}
-/* Stage 1 – Barrio */
-.scene-stage-0 .scene-bg { background: linear-gradient(180deg, #87CEEB 0%, #B0C4DE 60%, #8B7355 100%); }
-/* Stage 2 – Casa */
-.scene-stage-1 .scene-bg { background: linear-gradient(180deg, #98D8C8 0%, #7BC8A4 50%, #5CB85C 100%); }
-/* Stage 3 – Casa Moderna */
-.scene-stage-2 .scene-bg { background: linear-gradient(180deg, #E0F0FF 0%, #B8D8F0 50%, #7CB87C 100%); }
-/* Stage 4 – Villa */
-.scene-stage-3 .scene-bg { background: linear-gradient(180deg, #FFE5A0 0%, #87CEEB 40%, #00B4D8 100%); }
-/* Stage 5 – Penthouse */
-.scene-stage-4 .scene-bg { background: linear-gradient(180deg, #0A0A2E 0%, #1A1A5E 40%, #2D2D8E 100%); }
-/* Stage 6 – Jet */
-.scene-stage-5 .scene-bg { background: linear-gradient(180deg, #E8F4FD 0%, #87CEEB 50%, #C8E6C9 100%); }
-/* Stage 7 – Corporación */
-.scene-stage-6 .scene-bg { background: linear-gradient(180deg, #0D0D0D 0%, #1A1A2E 50%, #16213E 100%); }
+.ascenso-scene:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,0.4); }
+.ascenso-scene:active { transform: scale(0.98); }
 
-.scene-emoji {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 5rem;
-  filter: drop-shadow(3px 4px 0px rgba(0,0,0,0.3));
-  animation: floatScene 3s ease-in-out infinite;
+/* ── click ripple ── */
+.ascenso-scene::after {
+  content:''; position:absolute; inset:0;
+  background: rgba(255,255,255,0);
+  transition: background 0.3s;
+  border-radius: 18px;
+  pointer-events: none;
 }
+.ascenso-scene:active::after { background: rgba(255,255,255,0.08); }
+
+.scene-bg { position: absolute; inset: 0; }
+
+/* ── STAGE 0: El Comienzo — Barrio humilde ── */
+.scene-stage-0 .scene-bg { background: linear-gradient(180deg,#87CEEB 0%,#c9dff0 55%,#8B7355 55%,#7a6345 100%); }
+
+/* ── STAGE 1: Casa Propia ── */
+.scene-stage-1 .scene-bg { background: linear-gradient(180deg,#a8e6cf 0%,#88d8b0 45%,#5cb85c 45%,#4a9e4a 100%); }
+
+/* ── STAGE 2: Casa Moderna ── */
+.scene-stage-2 .scene-bg { background: linear-gradient(180deg,#deeeff 0%,#b8d8f5 50%,#6aaa6a 50%,#5a9a5a 100%); }
+
+/* ── STAGE 3: Villa con piscina ── */
+.scene-stage-3 .scene-bg { background: linear-gradient(180deg,#ffe9a0 0%,#87ceeb 45%,#00b4d8 45%,#0096c7 70%,#48cae4 70%,#90e0ef 100%); }
+
+/* ── STAGE 4: Penthouse — luxury night ── */
+.scene-stage-4 .scene-bg {
+  background: linear-gradient(180deg,#020412 0%,#050d2e 30%,#0a1554 55%,#0d1a60 70%,#1a2070 100%);
+}
+
+/* ── STAGE 5: Jet Privado ── */
+.scene-stage-5 .scene-bg { background: linear-gradient(180deg,#e8f4fd 0%,#87ceeb 60%,#c8e6c9 100%); }
+
+/* ── STAGE 6: Corporación ── */
+.scene-stage-6 .scene-bg { background: linear-gradient(180deg,#050505 0%,#0d0d1a 40%,#16213e 75%,#1a1a2e 100%); }
+
+/* ════ SHARED SCENE ELEMENTS ════ */
+
+/* Walking characters */
+.sc-person {
+  position: absolute;
+  bottom: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  filter: drop-shadow(1px 2px 1px rgba(0,0,0,0.4));
+  animation: walkPerson var(--walk-dur, 8s) linear infinite var(--walk-del, 0s);
+}
+@keyframes walkPerson {
+  0%   { left: -60px; transform: scaleX(1); }
+  49%  { left: calc(100% + 60px); transform: scaleX(1); }
+  50%  { left: calc(100% + 60px); transform: scaleX(-1); }
+  99%  { left: -60px; transform: scaleX(-1); }
+  100% { left: -60px; transform: scaleX(1); }
+}
+/* bob while walking */
+.sc-person::before {
+  content: attr(data-e);
+  display: block;
+  animation: bobWalk 0.4s ease-in-out infinite alternate;
+}
+@keyframes bobWalk { from{transform:translateY(0)} to{transform:translateY(-3px)} }
+
+/* Floating money */
+.sc-money {
+  position: absolute;
+  font-size: 0.85rem;
+  font-family: 'Fredoka One',cursive;
+  color: #FFE135;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  animation: floatMoney 3s ease-in-out infinite var(--md,0s);
+  pointer-events: none;
+}
+@keyframes floatMoney { 0%,100%{transform:translateY(0) rotate(-5deg);opacity:.8} 50%{transform:translateY(-10px) rotate(5deg);opacity:1} }
+
+/* Stars sky */
+.sc-stars { position:absolute; inset:0; pointer-events:none; }
+.sc-star {
+  position:absolute; border-radius:50%;
+  background:white;
+  animation: scTwinkle var(--sd,2s) ease-in-out infinite var(--sl,0s);
+}
+@keyframes scTwinkle { 0%,100%{opacity:0.15} 50%{opacity:1} }
+
+/* Ground / floor */
+.sc-ground { position:absolute; bottom:0; left:0; right:0; }
+
+/* Building silhouettes (penthouse BG) */
+.sc-building {
+  position: absolute; bottom: 0;
+  background: var(--bc, #0a1040);
+  border-radius: 4px 4px 0 0;
+}
+/* Windows on buildings */
+.sc-win {
+  position:absolute;
+  background: var(--wc, #FFE135);
+  border-radius: 2px;
+  animation: winBlink var(--wd,3s) ease-in-out infinite var(--wdl,0s);
+}
+@keyframes winBlink { 0%,90%,100%{opacity:1} 93%{opacity:0.1} }
+
+/* Pool */
+.sc-pool {
+  position:absolute; bottom:8px;
+  height:22px; border-radius:12px;
+  background: linear-gradient(90deg,#00b4d8,#48cae4,#90e0ef);
+  border: 2px solid rgba(255,255,255,0.5);
+  overflow:hidden;
+}
+.sc-pool::after {
+  content:'';
+  position:absolute; top:40%; left:-20%; right:-20%; height:40%;
+  background: rgba(255,255,255,0.25);
+  border-radius:50%;
+  animation: waveAnim 2s ease-in-out infinite;
+}
+@keyframes waveAnim { 0%,100%{transform:scaleX(1) translateX(0)} 50%{transform:scaleX(1.2) translateX(5%)} }
+
+/* Palm tree */
+.sc-palm { position:absolute; bottom:0; font-size:2.5rem; animation:palmSway 3s ease-in-out infinite; transform-origin:bottom center; }
+@keyframes palmSway { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+
+/* Penthouse floor terrace */
+.sc-terrace {
+  position:absolute; bottom:0; left:0; right:0;
+  height:32px;
+  background: linear-gradient(180deg,#c9a96e,#b8935a);
+  border-top: 2px solid #d4af70;
+}
+
+/* City glow */
+.sc-glow {
+  position:absolute;
+  border-radius:50%;
+  filter: blur(20px);
+  animation: glowPulse var(--gd,4s) ease-in-out infinite var(--gdl,0s);
+  pointer-events:none;
+}
+@keyframes glowPulse { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
+@keyframes flyJet { from{left:-80px;opacity:0} 10%{opacity:1} 90%{opacity:1} to{left:110%;opacity:0} }
 @keyframes floatScene { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-8px)} }
 
-/* Stage 5 penthouse – city lights blinking */
-.city-lights {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 80px;
-  display: none;
-}
-.scene-stage-4 .city-lights { display: block; }
-.city-light {
-  position: absolute;
-  width: 4px; height: 4px;
-  background: #FFE135;
-  border-radius: 50%;
-  animation: blinkLight 1.5s ease-in-out infinite;
-}
-@keyframes blinkLight { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-/* Pool waves stage 4 */
-.pool-wave {
-  position: absolute;
-  bottom: 8px; left: 20%; right: 20%;
-  height: 18px;
-  border-radius: 50%;
-  background: rgba(0,180,216,0.5);
-  display: none;
-  animation: wavePool 2s ease-in-out infinite;
+/* Champagne bubbles */
+.sc-bubble {
+  position:absolute;
+  border-radius:50%;
+  background: rgba(255,225,53,0.6);
+  animation: bubbleRise var(--bd,2s) ease-in infinite var(--bdl,0s);
+  pointer-events:none;
 }
-.scene-stage-3 .pool-wave { display: block; }
-@keyframes wavePool { 0%,100%{transform:scaleX(1)} 50%{transform:scaleX(1.15)} }
-
-/* Jet flying stage 6 */
-.jet-fly {
-  position: absolute;
-  top: 30px;
-  font-size: 2rem;
-  display: none;
-  animation: flyJet 4s linear infinite;
-}
-.scene-stage-5 .jet-fly { display: block; }
-@keyframes flyJet { from{left:-60px;opacity:0} 10%{opacity:1} 90%{opacity:1} to{left:110%;opacity:0} }
-
-/* Stars stage 5 + 7 */
-.scene-stars {
-  position: absolute; top: 0; left: 0; right: 0; height: 80px;
-  display: none;
-  overflow: hidden;
-}
-.scene-stage-4 .scene-stars,
-.scene-stage-6 .scene-stars { display: block; }
-.star-dot {
-  position: absolute;
-  width: 3px; height: 3px;
-  background: white;
-  border-radius: 50%;
-  animation: twinkle 2s ease-in-out infinite;
-}
-@keyframes twinkle { 0%,100%{opacity:1} 50%{opacity:0.1} }
+@keyframes bubbleRise { 0%{transform:translateY(0);opacity:.8} 100%{transform:translateY(-40px);opacity:0} }
 
 /* Scene label */
 .scene-label {
@@ -2988,6 +3057,13 @@ const EVENTS = [
 // ═══════════════════════════════════════════════
 // BIZ ANIMATIONS MAP
 // ═══════════════════════════════════════════════
+const STAGE_ANIMATIONS = {
+  0: 'el_comienzo.html',
+  1: 'casa_propia.html',
+  2: 'casa_moderna.html',
+  3: 'villa.html',
+};
+
 const BIZ_ANIMATIONS = {
   barberia:     'barberia-ultra.html',
   salon:        'salon-bella-imagen.html',
@@ -5240,6 +5316,38 @@ function spawnBizFloat(bizId, amount) {
 // ═══════════════════════════════════════════════
 let currentBizAnim = null;
 
+function openStageAnim(stageIdx) {
+  const url = STAGE_ANIMATIONS[stageIdx];
+  if (!url) { showAscendModal(); return; }
+  const overlay = document.getElementById('bizAnimOverlay');
+  const iframe  = document.getElementById('bizAnimFrame');
+  const stage   = SOCIAL_STAGES[stageIdx];
+  iframe.src = url;
+  overlay.classList.add('open');
+  currentBizAnim = '__stage_' + stageIdx;
+  document.getElementById('bizAnimInfo').textContent = `${stage.name} — Tu propiedad`;
+
+  // orientation handling (same as biz)
+  try { screen.orientation?.lock?.('landscape').catch(()=>{}); } catch(_) {}
+  const frame = document.getElementById('bizAnimFrame');
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isMobile = ('ontouchstart' in window)||navigator.maxTouchPoints>0;
+  const checkOrient2 = () => {
+    const portrait = window.innerHeight > window.innerWidth;
+    const rp = document.getElementById('rotatePrompt');
+    if (!portrait) { frame.style.cssText=''; if(rp)rp.style.display='none'; }
+    else if (isMobile) {
+      const W=window.innerWidth,H=window.innerHeight;
+      frame.style.cssText=`position:fixed;top:0;left:0;width:${H}px;height:${W}px;transform-origin:top left;transform:rotate(90deg) translateX(0) translateY(-${W}px);z-index:701;border:none;background:#000`;
+      if(rp)rp.style.display='none';
+    }
+  };
+  checkOrient2();
+  window._orientChecker = checkOrient2;
+  window.addEventListener('resize', checkOrient2);
+  window.addEventListener('orientationchange', ()=>setTimeout(checkOrient2,150));
+}
+
 function openBizAnim(id) {
   const url = BIZ_ANIMATIONS[id];
   if (!url) return;
@@ -5372,6 +5480,23 @@ window.addEventListener('message', e => {
   if (e.data.type === 'bizPurchase' && currentBizAnim) {
     const { upg, cost } = e.data;
     const id = currentBizAnim;
+    // Stage animations: just handle money, no biz level
+    if (id && id.startsWith('__stage_')) {
+      if (G.money >= cost) {
+        G.money -= cost;
+        if (!G.bizUpgrades) G.bizUpgrades = {};
+        if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
+        G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
+        iframe?.contentWindow?.postMessage({ type:'purchaseOk', upg, newMoney:G.money }, '*');
+        document.getElementById('hdrMoney').textContent = fmt(G.money);
+        notify(`✅ ¡${upg} mejorado! -${fmt(cost)}`);
+        saveGame();
+      } else {
+        iframe?.contentWindow?.postMessage({ type:'purchaseDenied' }, '*');
+        notify('💸 Sin fondos');
+      }
+      return;
+    }
     if (G.money >= cost) {
       G.money -= cost;
       // Persist upgrade level for this biz animation
@@ -6995,8 +7120,122 @@ function renderPrestige() {
   const can = canAscend();
   if (!G.influenceUpgrades) G.influenceUpgrades = {};
 
-  const starDots = (stageIdx===4||stageIdx===6) ? Array.from({length:15},()=>`<div class="star-dot" style="left:${Math.random()*95}%;top:${Math.random()*75}%;animation-delay:${(Math.random()*2).toFixed(1)}s"></div>`).join('') : '';
-  const cityLights = stageIdx===4 ? Array.from({length:20},(_,i)=>`<div class="city-light" style="left:${i*5}%;bottom:${(5+Math.random()*55).toFixed(0)}%;animation-delay:${(Math.random()*2).toFixed(1)}s"></div>`).join('') : '';
+  // ── Build rich scene HTML per stage ──
+  function buildPropertyScene(idx) {
+    const stars = (n,dark) => Array.from({length:n},()=>{
+      const s=(1+Math.random()*3).toFixed(1);
+      return `<div class="sc-star" style="left:${(Math.random()*98).toFixed(1)}%;top:${(Math.random()*65).toFixed(1)}%;width:${s}px;height:${s}px;--sd:${(1.5+Math.random()*2.5).toFixed(1)}s;--sl:${(Math.random()*2).toFixed(1)}s"></div>`;
+    }).join('');
+
+    // Building with windows helper
+    const building = (l,w,h,col,wins) => {
+      let winHtml = '';
+      for(let r=0;r<Math.floor(h/22);r++) for(let c=0;c<Math.floor(w/14);c++) {
+        const on=Math.random()>.3;
+        winHtml+=`<div class="sc-win" style="left:${5+c*14}px;bottom:${8+r*22}px;width:8px;height:10px;--wc:${on?'#FFE135':'#1a2060'};--wd:${(2+Math.random()*5).toFixed(1)}s;--wdl:${(Math.random()*4).toFixed(1)}s"></div>`;
+      }
+      return `<div class="sc-building" style="left:${l}%;width:${w}px;height:${h}px;--bc:${col}">${winHtml}</div>`;
+    };
+
+    const scenes = {
+      0: `<!-- Barrio El Comienzo -->
+        <div class="sc-ground" style="height:40px;background:linear-gradient(#8B7355,#7a6345)"></div>
+        <div style="position:absolute;bottom:38px;left:10%;font-size:2.5rem;filter:drop-shadow(2px 3px 0 rgba(0,0,0,.3))">🏚️</div>
+        <div style="position:absolute;bottom:38px;left:55%;font-size:2rem">🛖</div>
+        <div style="position:absolute;bottom:38px;right:8%;font-size:2.2rem">🌵</div>
+        <div class="sc-person" style="bottom:38px;--walk-dur:10s;--walk-del:0s" data-e="🚶"></div>
+        <div class="sc-person" style="bottom:38px;--walk-dur:14s;--walk-del:3s" data-e="🧍"></div>`,
+
+      1: `<!-- Casa Propia -->
+        <div class="sc-ground" style="height:45px;background:linear-gradient(#5cb85c,#4a9e4a)"></div>
+        <div style="position:absolute;bottom:44px;left:50%;transform:translateX(-50%);font-size:3.5rem">🏠</div>
+        <div class="sc-palm" style="left:8%;bottom:44px;font-size:2rem">🌳</div>
+        <div class="sc-palm" style="right:10%;bottom:44px;font-size:1.8rem;animation-delay:1s">🌳</div>
+        <div style="position:absolute;bottom:44px;left:22%;font-size:1.5rem">🚗</div>
+        <div class="sc-person" style="bottom:44px;--walk-dur:9s;--walk-del:1s" data-e="🚶‍♀️"></div>
+        <div class="sc-person" style="bottom:44px;--walk-dur:12s;--walk-del:5s" data-e="🐕"></div>`,
+
+      2: `<!-- Casa Moderna -->
+        <div class="sc-ground" style="height:45px;background:linear-gradient(#6aaa6a,#5a9a5a)"></div>
+        <div style="position:absolute;bottom:44px;left:50%;transform:translateX(-50%);font-size:3.5rem">🏡</div>
+        <div style="position:absolute;bottom:44px;left:15%;font-size:2rem">🚙</div>
+        <div style="position:absolute;bottom:44px;right:12%;font-size:1.8rem">🌿</div>
+        <div class="sc-palm" style="left:5%;bottom:44px">🌴</div>
+        <div class="sc-person" style="bottom:44px;--walk-dur:10s;--walk-del:0s" data-e="🧑‍💼"></div>
+        <div class="sc-person" style="bottom:44px;--walk-dur:15s;--walk-del:4s" data-e="👶"></div>`,
+
+      3: `<!-- Villa con Piscina -->
+        <div class="sc-ground" style="height:40px;background:linear-gradient(#48cae4,#0096c7)"></div>
+        <div style="position:absolute;bottom:38px;left:50%;transform:translateX(-50%);font-size:3.5rem">🏖️</div>
+        <div class="sc-pool" style="left:5%;right:5%;bottom:40px"></div>
+        <div class="sc-palm" style="left:3%;bottom:38px;font-size:2.8rem">🌴</div>
+        <div class="sc-palm" style="right:5%;bottom:38px;font-size:2.5rem;animation-delay:1.5s">🌴</div>
+        <div class="sc-person" style="bottom:60px;--walk-dur:11s;--walk-del:0s" data-e="👙"></div>
+        <div class="sc-person" style="bottom:60px;--walk-dur:9s;--walk-del:4s" data-e="🩱"></div>
+        <div class="sc-money" style="top:30px;right:20%;--md:0.5s">☀️</div>`,
+
+      4: `<!-- PENTHOUSE — luxury night sky -->
+        <div class="sc-stars">${stars(35,true)}</div>
+        ${building(0,60,130,'#070d30')}
+        ${building(8,45,100,'#050b28')}
+        ${building(18,80,150,'#060c2e')}
+        ${building(33,55,110,'#070d32')}
+        ${building(45,70,140,'#050b28')}
+        ${building(58,50,120,'#070e35')}
+        ${building(68,90,160,'#060d32')}
+        ${building(82,65,130,'#050b2a')}
+        ${building(90,75,145,'#070e36')}
+        <!-- City glow orbs -->
+        <div class="sc-glow" style="bottom:-20px;left:15%;width:120px;height:80px;background:#1a3aff;--gd:5s;--gdl:0s"></div>
+        <div class="sc-glow" style="bottom:-20px;right:10%;width:100px;height:70px;background:#9b59b6;--gd:4s;--gdl:1.5s"></div>
+        <div class="sc-glow" style="bottom:-10px;left:50%;width:140px;height:60px;background:#e74c3c;--gd:6s;--gdl:0.5s"></div>
+        <!-- Penthouse terrace floor -->
+        <div class="sc-terrace"></div>
+        <!-- Luxury elements on terrace -->
+        <div style="position:absolute;bottom:32px;left:10%;font-size:1.4rem;animation:floatScene 4s ease-in-out infinite">🥂</div>
+        <div style="position:absolute;bottom:32px;left:25%;font-size:1.2rem;animation:floatScene 3s ease-in-out infinite .5s">🍾</div>
+        <div style="position:absolute;bottom:34px;right:12%;font-size:1.5rem">🛋️</div>
+        <div style="position:absolute;bottom:34px;right:25%;font-size:1.3rem;animation:floatScene 5s ease-in-out infinite 1s">🌃</div>
+        <!-- Champagne bubbles -->
+        <div class="sc-bubble" style="left:12%;bottom:50px;width:4px;height:4px;--bd:2.2s;--bdl:0s"></div>
+        <div class="sc-bubble" style="left:14%;bottom:50px;width:3px;height:3px;--bd:1.8s;--bdl:0.5s"></div>
+        <div class="sc-bubble" style="left:27%;bottom:50px;width:5px;height:5px;--bd:2.5s;--bdl:0.3s"></div>
+        <!-- 3 walking characters on terrace -->
+        <div class="sc-person" style="bottom:32px;--walk-dur:12s;--walk-del:0s;font-size:1.8rem" data-e="🧑‍💼"></div>
+        <div class="sc-person" style="bottom:32px;--walk-dur:18s;--walk-del:5s;font-size:1.7rem" data-e="👸"></div>
+        <div class="sc-person" style="bottom:32px;--walk-dur:15s;--walk-del:9s;font-size:1.6rem" data-e="🕴️"></div>
+        <!-- Moon -->
+        <div style="position:absolute;top:14px;right:18%;font-size:2rem;opacity:0.9;animation:floatScene 8s ease-in-out infinite">🌙</div>
+        <!-- Gold money floats -->
+        <div class="sc-money" style="top:25%;left:20%;--md:0s">💰</div>
+        <div class="sc-money" style="top:18%;right:30%;--md:1.5s;font-size:1rem">💎</div>`,
+
+      5: `<!-- Jet Privado -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(#c8e6c9,#a5d6a7)"></div>
+        <div class="sc-person" style="bottom:50px;--walk-dur:11s" data-e="🧑‍✈️"></div>
+        <div style="position:absolute;top:30px;left:-80px;font-size:3rem;animation:flyJet 5s linear infinite">✈️</div>
+        <div style="position:absolute;top:55px;left:-80px;font-size:1.5rem;animation:flyJet 8s linear infinite 2s">🛩️</div>
+        <div class="sc-money" style="top:20%;left:60%;--md:0s">💵</div>
+        <div class="sc-money" style="top:35%;right:15%;--md:2s">🌍</div>`,
+
+      6: `<!-- Corporación Global -->
+        <div class="sc-stars">${stars(25,true)}</div>
+        ${building(0,50,180,'#0a0a1a')}
+        ${building(12,100,200,'#080818')}
+        ${building(30,60,160,'#0a0a1e')}
+        ${building(45,120,220,'#070715')}
+        ${building(65,80,185,'#090918')}
+        ${building(82,55,165,'#0a0a1c')}
+        <div class="sc-glow" style="bottom:-10px;left:35%;width:200px;height:100px;background:#ffd700;--gd:6s"></div>
+        <div class="sc-ground" style="height:28px;background:linear-gradient(#1a1a2e,#0d0d1a)"></div>
+        <div class="sc-person" style="bottom:28px;--walk-dur:14s;--walk-del:0s;font-size:1.8rem" data-e="👑"></div>
+        <div class="sc-person" style="bottom:28px;--walk-dur:20s;--walk-del:7s;font-size:1.6rem" data-e="🤵"></div>
+        <div class="sc-money" style="top:20%;left:20%;--md:0s;color:#ffd700;font-size:1.1rem">👑</div>
+        <div class="sc-money" style="top:30%;right:15%;--md:2s">💎</div>`
+    };
+    return scenes[idx] || scenes[0];
+  }
+  const starDots = ''; const cityLights = '';
 
   const stageCards = SOCIAL_STAGES.map((s,i) => {
     let cls='', badge='';
@@ -7027,15 +7266,12 @@ function renderPrestige() {
   }
 
   sec.innerHTML = `<div class="ascenso-wrap">
-    <div class="ascenso-scene scene-stage-${stageIdx}">
+    <div class="ascenso-scene scene-stage-${stageIdx}" onclick="openStageAnim(${stageIdx})" title="Click para ver animación de tu propiedad">
       <div class="scene-bg"></div>
-      <div class="scene-stars">${starDots}</div>
-      <div class="city-lights">${cityLights}</div>
-      <div class="pool-wave"></div>
-      <div class="jet-fly">✈️</div>
-      <div class="scene-emoji">${stage.icon}</div>
+      ${buildPropertyScene(stageIdx)}
       <div class="scene-label">${stage.name}</div>
       <div class="scene-influence">⭐ ${G.influence||0}</div>
+      <div style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,0.6);color:white;font-family:'Fredoka One',cursive;font-size:0.7rem;padding:3px 10px;border-radius:99px;pointer-events:none">${nextStage ? '🚀 Ascender' : '👑 Máximo'}</div>
     </div>
     <div class="influence-panel">
       <div class="influence-title">⭐ Influencia — Mejoras Permanentes</div>
