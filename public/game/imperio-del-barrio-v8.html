@@ -2120,20 +2120,41 @@ body.night-mode .night-stars { opacity: 0.35; }
 .ach-toast-text p { font-size: 0.7rem; color: rgba(255,255,255,0.8); font-weight: 700; }
 
 /* ═══ BIZ ANIMATION OVERLAY ═══ */
+/* ══ BIZ ANIMATION OVERLAY — mobile-first ══ */
 #bizAnimOverlay {
-  display: none; position: fixed; inset: 0; z-index: 700;
-  background: rgba(0,0,0,0.95); flex-direction: column; align-items: center; justify-content: center;
+  display: none;
+  position: fixed; inset: 0; z-index: 700;
+  background: #000;
+  -webkit-overflow-scrolling: touch;
 }
-#bizAnimOverlay.open { display: flex; }
-#bizAnimFrame { width: 100%; max-width: 1280px; aspect-ratio: 16/9; border: none; border-radius: 12px; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
-.biz-anim-close { position: absolute; top: 16px; right: 16px; background: #FF4757; color: white; border: 3px solid white; border-radius: 99px; font-family: 'Fredoka One',cursive; font-size: 1rem; padding: 8px 20px; cursor: pointer; z-index: 10; box-shadow: 3px 3px 0 rgba(0,0,0,0.5); }
-.biz-anim-close:hover { transform: scale(1.05); }
-.biz-anim-info { color: white; font-family: 'Fredoka One',cursive; font-size: 0.85rem; margin-top: 10px; opacity: 0.7; }
+#bizAnimOverlay.open { display: block; }
 
-/* Rotate prompt — shown on portrait mobile */
+/* iframe fills the entire screen always */
+#bizAnimFrame {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+  background: #000;
+}
+
+/* Close button — always visible top-right */
+.biz-anim-close {
+  position: fixed; top: 12px; right: 12px;
+  background: #FF4757; color: white;
+  border: 3px solid white; border-radius: 99px;
+  font-family: 'Fredoka One',cursive; font-size: 1rem;
+  padding: 8px 20px; cursor: pointer;
+  z-index: 720;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+  -webkit-tap-highlight-color: transparent;
+}
+.biz-anim-info { display: none; }
+
+/* Rotate prompt — Android portrait only */
 #rotatePrompt {
   display: none;
-  position: fixed; inset: 0; z-index: 710;
+  position: fixed; inset: 0; z-index: 730;
   background: #0d1b36;
   flex-direction: column; align-items: center; justify-content: center; gap: 16px;
 }
@@ -2141,20 +2162,13 @@ body.night-mode .night-stars { opacity: 0.35; }
 @keyframes rotSpin { 0%{transform:rotate(0deg)} 40%{transform:rotate(90deg)} 60%{transform:rotate(90deg)} 100%{transform:rotate(0deg)} }
 #rotatePrompt p { font-family: 'Fredoka One',cursive; color: white; font-size: 1.2rem; text-align: center; }
 
-/* ── iOS landscape rotation trick ── */
-#bizAnimFrame.ios-rotate {
-  position: fixed !important;
+/* iOS portrait — rotate iframe via transform */
+#bizAnimFrame.ios-rotated {
   top: 0; left: 0;
-  width: 100vh !important;
-  height: 100vw !important;
-  transform: rotate(90deg);
-  transform-origin: top left;
-  margin-top: 100vw;
-  z-index: 701;
-}
-
-@media (orientation: portrait) and (max-width: 768px) {
-  /* hide the iframe normally — iOS rotation handles it via JS */
+  width: 100vh;
+  height: 100vw;
+  transform-origin: 0 0;
+  transform: rotate(90deg) translateY(-100%);
 }
 
 /* ═══ FLOATING INCOME COUNTER ═══ */
@@ -5244,43 +5258,40 @@ function openBizAnim(id) {
   currentBizAnim = id;
   document.getElementById('bizAnimInfo').textContent = `${biz.name} — Ingresos sincronizados en tiempo real`;
 
-  // Try to lock to landscape on Android (iOS ignores this)
-  try {
-    screen.orientation?.lock?.('landscape').catch(() => {});
-  } catch(_) {}
+  // Try to lock landscape on Android (Safari ignores)
+  try { screen.orientation?.lock?.('landscape').catch(()=>{}); } catch(_) {}
 
-  // Smart orientation handler — works on Android AND iPhone
-  const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  if (isMobile) {
-    const frame = document.getElementById('bizAnimFrame');
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const frame = document.getElementById('bizAnimFrame');
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
-    const checkOrient = () => {
-      const isPortrait = window.innerHeight > window.innerWidth;
-      if (!isPortrait) {
-        // Landscape — show normally
-        frame.classList.remove('ios-rotate');
-        frame.style.cssText = '';
-      } else if (isIOS) {
-        // Portrait on iOS — rotate content via CSS transform
-        const vw = window.innerWidth, vh = window.innerHeight;
-        frame.style.cssText = `position:fixed;top:0;left:0;width:${vh}px;height:${vw}px;transform:rotate(90deg);transform-origin:top left;margin-top:${vw}px;z-index:701;border:none;`;
-      } else {
-        // Portrait on Android — show rotate prompt
-        frame.style.visibility = 'hidden';
-        const rp = document.getElementById('rotatePrompt');
-        if (rp) rp.style.display = 'flex';
-        return;
-      }
-      const rp = document.getElementById('rotatePrompt');
+  const checkOrient = () => {
+    const portrait = window.innerHeight > window.innerWidth;
+    const rp = document.getElementById('rotatePrompt');
+    if (!portrait) {
+      // Landscape on any device — normal fullscreen
+      frame.classList.remove('ios-rotated');
+      frame.style.width = '';
+      frame.style.height = '';
+      frame.style.transform = '';
       if (rp) rp.style.display = 'none';
-    };
-    checkOrient();
-    window._orientChecker = checkOrient;
-    window.addEventListener('resize', checkOrient);
-    window.addEventListener('orientationchange', () => setTimeout(checkOrient, 100));
-  }
+    } else if (isIOS) {
+      // Portrait on iPhone/iPad — CSS rotate trick
+      frame.classList.add('ios-rotated');
+      if (rp) rp.style.display = 'none';
+    } else if (isMobile) {
+      // Portrait on Android — show rotate prompt
+      frame.classList.remove('ios-rotated');
+      if (rp) rp.style.display = 'flex';
+    }
+    // Desktop portrait: do nothing, aspect ratio handles it
+  };
+
+  checkOrient();
+  window._orientChecker = checkOrient;
+  window.addEventListener('resize', checkOrient);
+  window.addEventListener('orientationchange', () => setTimeout(checkOrient, 150));
 
   // Send initial state to iframe once it loads
   iframe.onload = () => {
@@ -5312,12 +5323,14 @@ function closeBizAnim() {
   const rp = document.getElementById('rotatePrompt');
   if (rp) rp.style.display = 'none';
   const frame2 = document.getElementById('bizAnimFrame');
-  if (frame2) { frame2.style.cssText = ''; frame2.classList.remove('ios-rotate'); }
+  if (frame2) { frame2.classList.remove('ios-rotated'); frame2.style.cssText = ''; }
   if (window._orientChecker) {
     window.removeEventListener('resize', window._orientChecker);
     window.removeEventListener('orientationchange', window._orientChecker);
     window._orientChecker = null;
   }
+  // Release orientation lock
+  try { screen.orientation?.unlock?.(); } catch(_) {}
 }
 
 // Listen for postMessage from biz animations
