@@ -2352,8 +2352,8 @@ body.night-mode .night-stars { opacity: 0.35; }
 .xp-circle-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 0.6rem; color: white; }
 
 /* ═══ TAB TRANSITIONS ═══ */
-.tab-panel { opacity: 0; transform: translateY(8px); transition: opacity 0.22s ease, transform 0.22s ease; pointer-events: none; }
-.tab-panel.active { opacity: 1; transform: translateY(0); pointer-events: all; }
+.tab-panel { display: none; opacity: 0; transform: translateY(8px); transition: opacity 0.22s ease, transform 0.22s ease; pointer-events: none; }
+.tab-panel.active { display: block; opacity: 1; transform: translateY(0); pointer-events: all; }
 
 /* ═══ GEM SOURCES PANEL ═══ */
 #gemSourcesOverlay { display:none; position:fixed; inset:0; z-index:650; background:rgba(0,0,0,0.88); backdrop-filter:blur(8px); align-items:flex-end; justify-content:center; }
@@ -2835,14 +2835,14 @@ body.night-mode .night-stars { opacity: 0.35; }
     </div>
   </div>
 
-</div>
+  <!-- Prestige (always shown at bottom of negocios) -->
+  <div id="prestigeSection" style="display:none; padding: 0 0 20px">
+  </div>
 
-<!-- Prestige (always shown at bottom of negocios) -->
-<div id="prestigeSection" style="display:none; padding: 0 0 20px">
-</div>
+  <div class="tab-panel" id="tab-ascenso">
+    <div id="ascensoTabContent"></div>
+  </div>
 
-<div class="tab-panel" id="tab-ascenso">
-  <div id="ascensoTabContent"></div>
 </div>
 
 <!-- Night stars overlay -->
@@ -2888,16 +2888,6 @@ body.night-mode .night-stars { opacity: 0.35; }
     </div>
     <!-- Controls -->
     <div id="mgControls" style="width:100%;margin-top:8px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;"></div>
-    <!-- Result -->
-    <div id="mgResult" style="display:none;text-align:center;margin-top:8px;padding:12px 20px;background:rgba(255,255,255,0.06);border-radius:14px;width:100%;">
-      <div id="mgResultText" style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#FFE135;"></div>
-      <button id="mgPlayAgain" onclick="playMiniGameAgain()" style="margin-top:8px;background:#2DC653;border:2px solid #1E1B2E;border-radius:99px;color:white;font-family:'Fredoka One',cursive;font-size:0.85rem;padding:7px 20px;cursor:pointer;">🔄 Otro juego</button>
-    </div>
-  </div>
-</div>
-    <canvas id="mgCanvas" width="360" height="320" style="border-radius:16px;border:3px solid rgba(255,255,255,0.1);touch-action:none;display:block;"></canvas>
-    <!-- Controls -->
-    <div id="mgControls" style="width:100%;margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;"></div>
     <!-- Result -->
     <div id="mgResult" style="display:none;text-align:center;margin-top:8px;padding:12px 20px;background:rgba(255,255,255,0.06);border-radius:14px;width:100%;">
       <div id="mgResultText" style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#FFE135;"></div>
@@ -3341,15 +3331,70 @@ const LEVEL_STORIES = [
 ];
 
 // ═══════════════════════════════════════════════
-// DAILY OBJECTIVES TEMPLATES
+// DAILY OBJECTIVES TEMPLATES — escalables por nivel
 // ═══════════════════════════════════════════════
-const OBJ_TEMPLATES = [
-  { id:'earn50k', desc:'Gana $50,000 hoy', reward:3, target: g => g.dailyEarned >= 50000, max: g => 50000, prog: g => Math.min(g.dailyEarned, 50000) },
-  { id:'earn200k', desc:'Gana $200,000 hoy', reward:8, target: g => g.dailyEarned >= 200000, max: g => 200000, prog: g => Math.min(g.dailyEarned, 200000) },
-  { id:'negotiate3', desc:'Negocia 3 veces', reward:2, target: g => (g.dailyNegotiations||0) >= 3, max: g => 3, prog: g => Math.min(g.dailyNegotiations||0, 3) },
-  { id:'lvl5goal', desc:'Llega a Nivel 5', reward:5, target: g => g.level >= 4, max: g => 5, prog: g => Math.min(g.level+1, 5) },
-  { id:'open3biz', desc:'Ten 3 negocios abiertos', reward:3, target: g => Object.values(g.businesses).filter(b=>b.level>0).length >= 3, max: g => 3, prog: g => Math.min(Object.values(g.businesses).filter(b=>b.level>0).length, 3) },
-];
+// Se llama en runtime (no en carga), así que G, fmt y totalIPS ya existen
+function getScaledObjectives() {
+  const lvl      = (G.level || 0) + 1;
+  const ips      = totalIPS();
+  const t1       = Math.max(50000,    Math.round(ips * 300  / 1000)  * 1000);
+  const t2       = Math.max(200000,   Math.round(ips * 1200 / 1000)  * 1000);
+  const t3       = Math.max(1000000,  Math.round(ips * 6000 / 10000) * 10000);
+  const bizGoal  = Math.min(BUSINESSES.length, Math.max(3, Math.floor(lvl / 2) + 2));
+  const lvlGoal  = Math.min(30, lvl + 2);
+  const negoGoal = Math.max(3, Math.min(10, Math.floor(lvl / 3) + 2));
+  const blGoal   = Math.max(3, Math.min(20, Math.floor(lvl / 2) + 2));
+
+  const all = [
+    { id:'earn_s1',    desc:'Gana ' + fmt(t1) + ' hoy',
+      reward: Math.max(3, Math.floor(lvl/3)+2),
+      target: g => (g.dailyEarned||0) >= t1,
+      max: g => t1,      prog: g => Math.min(g.dailyEarned||0, t1) },
+    { id:'earn_s2',    desc:'Gana ' + fmt(t2) + ' hoy',
+      reward: Math.max(6, Math.floor(lvl/2)+3),
+      target: g => (g.dailyEarned||0) >= t2,
+      max: g => t2,      prog: g => Math.min(g.dailyEarned||0, t2) },
+    { id:'earn_s3',    desc:'Acumula ' + fmt(t3) + ' hoy',
+      reward: Math.max(12, lvl),
+      target: g => (g.dailyEarned||0) >= t3,
+      max: g => t3,      prog: g => Math.min(g.dailyEarned||0, t3) },
+    { id:'nego_s',     desc:'Juega ' + negoGoal + ' mini-juegos',
+      reward: Math.max(2, Math.floor(negoGoal/2)+1),
+      target: g => (g.dailyNegotiations||0) >= negoGoal,
+      max: g => negoGoal, prog: g => Math.min(g.dailyNegotiations||0, negoGoal) },
+    { id:'biz_s',      desc:'Ten ' + bizGoal + ' negocios activos',
+      reward: Math.max(3, Math.floor(bizGoal/2)),
+      target: g => Object.values(g.businesses||{}).filter(b=>b.level>0).length >= bizGoal,
+      max: g => bizGoal,
+      prog: g => Math.min(Object.values(g.businesses||{}).filter(b=>b.level>0).length, bizGoal) },
+    { id:'lvl_s',      desc:'Llega al Nivel ' + lvlGoal,
+      reward: Math.max(5, lvlGoal - lvl + 3),
+      target: g => (g.level+1) >= lvlGoal,
+      max: g => lvlGoal,  prog: g => Math.min(g.level+1, lvlGoal) },
+    { id:'bizlvl_s',   desc:'Mejora un negocio a Nv.' + blGoal,
+      reward: Math.max(4, Math.floor(blGoal/3)+2),
+      target: g => Object.values(g.businesses||{}).some(b => b.level >= blGoal),
+      max: g => blGoal,
+      prog: g => Math.max(0, ...Object.values(g.businesses||{}).map(b => b.level||0)) },
+    { id:'upgrades_s', desc:'Compra 2 mejoras hoy',
+      reward: 4,
+      target: g => (g.dailyUpgradesBought||0) >= 2,
+      max: g => 2,        prog: g => Math.min(g.dailyUpgradesBought||0, 2) },
+  ];
+
+  // Selecciona 3 usando seed diario, sin repetir
+  const seed = G.dailyObjSeed || Date.now();
+  const picked = [];
+  let s = Math.abs(Math.floor(seed / 1000));
+  while (picked.length < 3 && picked.length < all.length) {
+    const i = s % all.length;
+    if (!picked.includes(i)) picked.push(i);
+    s = Math.floor(s / all.length) + i * 7 + 3;
+  }
+  return picked.map(i => all[i]);
+}
+// Legacy alias — no se usa pero evita ReferenceError en código externo
+const OBJ_TEMPLATES = [];
 
 // ═══════════════════════════════════════════════
 // GEM SHOP ITEMS
@@ -3382,14 +3427,37 @@ const ACHIEVEMENTS = [
   { id:'clientes500', icon:'👥', name:'500 Clientes',          desc:'Atendiste 500 clientes',                   reward:10000,  check:()=>totalClientes()>=500 },
 ];
 
-const LEADERBOARD_STATIC = [
-  { name: 'Juan Marte',      avatar: '🤵',    money: 12400000,  negocios: 8, influence: 2 },
-  { name: 'Carmen Familia',  avatar: '👩‍💼', money: 8900000,   negocios: 7, influence: 1 },
-  { name: 'Roberto Díaz',    avatar: '👨‍💼', money: 6700000,   negocios: 6, influence: 1 },
-  { name: 'María Almonte',   avatar: '👩',    money: 3200000,   negocios: 5, influence: 0 },
-  { name: 'Pedro Sánchez',   avatar: '👨',    money: 2100000,   negocios: 4, influence: 0 },
-  { name: 'Ana García',      avatar: '👩‍🦱', money: 980000,    negocios: 3, influence: 0 },
+// Leaderboard dinámico — rivales que escalan con el jugador
+const LB_NAMES = [
+  { name:'Juan Marte',      avatar:'🤵'    },
+  { name:'Carmen Familia',  avatar:'👩‍💼' },
+  { name:'Roberto Díaz',    avatar:'👨‍💼' },
+  { name:'María Almonte',   avatar:'👩'    },
+  { name:'Pedro Sánchez',   avatar:'👨'    },
+  { name:'Ana García',      avatar:'👩‍🦱' },
+  { name:'Luis Familia',    avatar:'🧑'    },
+  { name:'Sofía Torres',    avatar:'👩‍🦰' },
 ];
+
+function getDynamicLeaderboard() {
+  const base = G.totalEarned || 1000;
+  const inf   = G.influence  || 0;
+  const lvl   = (G.level || 0) + 1;
+  // Semilla estable por día (cambia cada 24h para dar sensación de "actividad")
+  const daySeed = Math.floor(Date.now() / 86400000);
+
+  return LB_NAMES.map((p, i) => {
+    // Cada rival gana entre 60%–130% de lo que tú has ganado
+    const rng = (Math.sin(daySeed * 9301 + i * 49297 + 233720923) + 1) / 2;
+    const mult = 0.6 + rng * 0.7;
+    const money = Math.floor(base * mult);
+    const rivalInf = Math.max(0, inf - 1 + Math.floor(rng * 3));
+    const bizCount = Math.max(1, Math.min(BUSINESSES.length,
+      Math.floor(Object.values(G.businesses).filter(b=>b.level>0).length * (0.5 + rng * 0.8))));
+    return { ...p, money, influence: rivalInf, negocios: bizCount,
+             score: rivalInf * 1e9 + money };
+  });
+}
 
 // ═══════════════════════════════════════════════
 // STATE
@@ -3431,7 +3499,6 @@ let G = {
   negotiateCount: 0,
   eventsParticipated: 0,
   soundOn: true,
-  gems: 0,
   // v9 additions
   bizCustom: {},        // { bizId: { name, color, logo } }
   companyName: '',      // "Imperio Sandy Corp"
@@ -3506,7 +3573,7 @@ window.addEventListener('message', function _cloudLoadHandler(e) {
     applyTheme(G.theme || 'gold');
     const elapsed = (Date.now() - G.lastSave) / 1000;
     if (elapsed > 30 && Object.keys(G.businesses).filter(k=>bizLevel(k)>0).length > 0) {
-      const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.0) * getStageOfflineMult();
+      const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.4) * getStageOfflineMult();
       const offlineInc  = totalIPS() * elapsed * offlineMult;
       if (offlineInc > 0) {
         const banner = document.getElementById('offlineBanner');
@@ -3651,7 +3718,7 @@ function buyBiz(id) {
   spawnParticles(cost);
   playSound('buy');
   checkAchievements();
-  renderAll();
+  renderAll({ header:true, businesses:true, upgrades:false, achievements:false, objectives:true, map:false, prestige:true });
   saveGame();
 }
 
@@ -3661,12 +3728,12 @@ function buyUpgrade(id) {
   if (G.money < u.cost) { notify('💸 ¡Necesitas más dinero!'); return; }
   G.money -= u.cost;
   G.upgrades[id] = true;
-  addXP(u.cost * 0.2);
+  G.dailyUpgradesBought = (G.dailyUpgradesBought || 0) + 1;
   notify(`${u.icon} ¡${u.name} activado!`);
   playSound('buy');
   spawnParticles(u.cost);
   checkAchievements();
-  renderAll();
+  renderAll({ header:true, businesses:true, upgrades:true, achievements:false, objectives:true, map:false, prestige:false });
   saveGame();
 }
 
@@ -4138,7 +4205,8 @@ function renderMap() {
   const ql = document.getElementById('zoneQuickList');
   if(ql) ql.innerHTML = ZONES.map(z => {
     const isActive = G.zone===z.id, isLocked = G.level<z.minLevel;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:5px;background:${isActive?'#FFF3CD':isLocked?'#f8f8f8':'#fff'};border:2px solid ${isActive?'#FFE135':isLocked?'#eee':'#ddd'};cursor:${isLocked?'not-allowed':'pointer'};opacity:${isLocked?0.55:1}" onclick="${isLocked?'':isActive?`notify('✅ Ya estás aquí!')`:``}" >
+    const onclickAttr = isLocked ? '' : isActive ? "notify('✅ Ya estás aquí!')" : "moveZone('" + z.id + "')";
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:5px;background:${isActive?'#FFF3CD':isLocked?'#f8f8f8':'#fff'};border:2px solid ${isActive?'#FFE135':isLocked?'#eee':'#ddd'};cursor:${isLocked?'not-allowed':'pointer'};opacity:${isLocked?0.55:1}" onclick="${onclickAttr}" >
       <span style="font-size:1.4rem">${z.icon}</span>
       <div style="flex:1">
         <div style="font-family:'Fredoka One',cursive;font-size:0.8rem;color:#1E1B2E">${z.name}</div>
@@ -5505,14 +5573,9 @@ function trackW(field, amount) {
 }
 
 function renderLeaderboard() {
-  // Score = influence_actual * 1B + totalEarned
-  // La influencia ACTUAL es la moneda mayor — más influencia = más arriba siempre
   const myScore = (G.influence||0) * 1e9 + (G.totalEarned||0);
   const rows = [
-    ...LEADERBOARD_STATIC.map(r => ({
-      ...r,
-      score: (r.influence||0) * 1e9 + (r.money||0),
-    })),
+    ...getDynamicLeaderboard(),
     {
       name: 'TÚ', avatar: G.avatar||'😎',
       money: G.totalEarned, influence: G.influence||0,
@@ -5525,8 +5588,9 @@ function renderLeaderboard() {
   document.getElementById('lbBody').innerHTML = rows.map((r,i) => {
     const rankClass = i===0?'r1':i===1?'r2':i===2?'r3':'rN';
     const inf = r.influence||0;
+    const rankEmoji = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
     return `<div class="lb-row ${r.isYou?'you':''}">
-      <div class="lb-rank ${rankClass}">${i+1}</div>
+      <div class="lb-rank ${rankClass}">${rankEmoji||i+1}</div>
       <div class="lb-avatar">${r.avatar}</div>
       <div class="lb-info">
         <div class="lb-name">${r.isYou ? '👤 '+r.name : r.name}</div>
@@ -5538,45 +5602,69 @@ function renderLeaderboard() {
 }
 
 
-function renderAll() {
-  // Header
+// ═══════════════════════════════════════════════
+// RENDER — optimizado con flags selectivos
+// ═══════════════════════════════════════════════
+let _renderQueued = {};
+function queueRender(flags) {
+  Object.assign(_renderQueued, flags);
+}
+
+function renderAll(opts) {
+  const f = opts || { header:true, businesses:true, upgrades:true, achievements:true, objectives:true, map:true, prestige:true };
+
+  // Header — siempre rápido, siempre actualiza
+  if (f.header !== false) {
+    document.getElementById('hdrMoney').textContent = fmt(G.money);
+    document.getElementById('hdrIPS').textContent = `+${fmt(totalIPS())}/seg`;
+    document.getElementById('hdrGems').textContent = G.gems || 0;
+    document.getElementById('stClientes').textContent = fmtRaw(totalClientes());
+    document.getElementById('stNivel').textContent = G.level + 1;
+    document.getElementById('stNegocios').textContent = BUSINESSES.filter(b=>bizLevel(b.id)>0).length;
+    document.getElementById('stPrestige').textContent = G.influence||0;
+    const req = xpRequired(G.level);
+    document.getElementById('lcBadge').textContent = `Nivel ${G.level+1} – ${LEVELS[G.level].name}`;
+    document.getElementById('lcNext').textContent = `${fmtRaw(G.xp)} / ${fmtRaw(req)} XP`;
+    document.getElementById('lcFill').style.width = Math.min(G.xp/req*100, 100) + '%';
+    updateXPCircle();
+    updateCompanyInHeader();
+    const sb = document.getElementById('soundBtn');
+    if (sb) sb.textContent = G.soundOn !== false ? '🔊' : '🔇';
+    applyTheme(G.theme || 'gold');
+  }
+
+  // Negocios — solo reconstruye si hay cambio de nivel o zona
+  if (f.businesses !== false) {
+    document.getElementById('bizGrid').innerHTML = BUSINESSES.map(renderBusiness).join('');
+    renderWeeklyChallenges();
+    checkSuperEmpresa();
+  }
+
+  // Mejoras — solo si cambia
+  if (f.upgrades !== false) {
+    document.getElementById('upgGrid').innerHTML = UPGRADES.map(renderUpgrade).join('');
+  }
+
+  // Logros
+  if (f.achievements !== false) renderAchievements();
+
+  // Objetivos diarios
+  if (f.objectives !== false) renderDailyObjectives();
+
+  // Mapa
+  if (f.map !== false) {
+    renderMap();
+    if (document.getElementById('tab-mapa')?.classList.contains('active')) renderLeaderboard();
+  }
+
+  // Ascenso
+  if (f.prestige !== false) renderPrestige();
+}
+
+// Versión ligera para el tick — solo header
+function renderTick() {
   document.getElementById('hdrMoney').textContent = fmt(G.money);
   document.getElementById('hdrIPS').textContent = `+${fmt(totalIPS())}/seg`;
-  document.getElementById('hdrGems').textContent = G.gems || 0;
-  // Stats
-  document.getElementById('stClientes').textContent = fmtRaw(totalClientes());
-  document.getElementById('stNivel').textContent = G.level + 1;
-  document.getElementById('stNegocios').textContent = BUSINESSES.filter(b=>bizLevel(b.id)>0).length;
-  document.getElementById('stPrestige').textContent = G.influence||0;
-  // Level
-  const req = xpRequired(G.level);
-  document.getElementById('lcBadge').textContent = `Nivel ${G.level+1} – ${LEVELS[G.level].name}`;
-  document.getElementById('lcNext').textContent = `${fmtRaw(G.xp)} / ${fmtRaw(req)} XP`;
-  document.getElementById('lcFill').style.width = Math.min(G.xp/req*100, 100) + '%';
-  // XP Circle
-  updateXPCircle();
-  // Businesses
-  document.getElementById('bizGrid').innerHTML = BUSINESSES.map(renderBusiness).join('');
-  renderWeeklyChallenges();
-  checkSuperEmpresa();
-  updateCompanyInHeader();
-  // Upgrades
-  document.getElementById('upgGrid').innerHTML = UPGRADES.map(renderUpgrade).join('');
-  // Achievements
-  renderAchievements();
-  // Daily Objectives
-  renderDailyObjectives();
-  // Map
-  renderMap();
-  // Leaderboard — only render when mapa tab is visible (avoid flicker on upgrade)
-  if (document.getElementById('tab-mapa')?.classList.contains('active')) renderLeaderboard();
-  // Prestige
-  renderPrestige();
-  // Theme dots
-  applyTheme(G.theme || 'gold');
-  // Sound btn
-  const sb = document.getElementById('soundBtn');
-  if (sb) sb.textContent = G.soundOn !== false ? '🔊' : '🔇';
 }
 
 // ═══════════════════════════════════════════════
@@ -5604,6 +5692,7 @@ function tick() {
   if (!G.lastDailyReset || now - G.lastDailyReset > 86400000) {
     G.dailyEarned = 0;
     G.dailyNegotiations = 0;
+    G.dailyUpgradesBought = 0;
     G.dailyObjClaimed = {};
     G.dailyObjSeed = now;
     G.lastDailyReset = now;
@@ -5670,8 +5759,9 @@ function tick() {
     }
   });
 
-  // Real-time income notification every 15s
-  if (now - _lastIncomeNotif > 15000 && _accumulatedForNotif > 0) {
+  // Real-time income notification — adaptativo: más seguido en early, más espaciado en late game
+  const notifInterval = G.level > 15 ? 45000 : G.level > 8 ? 30000 : 15000;
+  if (now - _lastIncomeNotif > notifInterval && _accumulatedForNotif > 0) {
     notify(`💰 Tus negocios generaron ${fmt(_accumulatedForNotif)} en los últimos momentos`);
     _accumulatedForNotif = 0;
     _lastIncomeNotif = now;
@@ -5828,11 +5918,7 @@ function closeBizAnim() {
     window.removeEventListener('orientationchange', window._orientChecker);
     window._orientChecker = null;
   }
-  // Release orientation lock (double call intentional)
-  try { screen.orientation?.unlock?.(); } catch(_) {}
 }
-
-// Listen for postMessage from biz animations
 window.addEventListener('message', e => {
   if (!e.data) return;
   const iframe = document.getElementById('bizAnimFrame');
@@ -5978,19 +6064,7 @@ function buyGemItem(id) {
 // DAILY OBJECTIVES
 // ═══════════════════════════════════════════════
 function getDailyObjectives() {
-  // Pick 3 from templates based on seed
-  const seed = G.dailyObjSeed || 0;
-  const indices = [];
-  let s = seed;
-  while (indices.length < Math.min(3, OBJ_TEMPLATES.length)) {
-    const i = Math.abs(s % OBJ_TEMPLATES.length);
-    if (!indices.includes(i)) indices.push(i);
-    s = Math.floor(s / OBJ_TEMPLATES.length) + i + 1;
-    if (indices.length === OBJ_TEMPLATES.length) break;
-  }
-  // fallback: just first 3
-  if (indices.length < 3) return OBJ_TEMPLATES.slice(0, 3);
-  return indices.map(i => OBJ_TEMPLATES[i]);
+  return getScaledObjectives();
 }
 
 function renderDailyObjectives() {
@@ -7838,7 +7912,7 @@ runSplash(() => {
     const elapsed = (Date.now() - G.lastSave) / 1000;
     const hasBiz = Object.keys(G.businesses).filter(k=>bizLevel(k)>0).length > 0;
     if (elapsed > 30 && hasBiz) {
-      const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.0) * getStageOfflineMult();
+      const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.4) * getStageOfflineMult();
       const offlineInc  = totalIPS() * elapsed * offlineMult;
       if (offlineInc > 0) {
         document.getElementById('introScreen').style.display = 'none';
@@ -7863,13 +7937,6 @@ runSplash(() => {
     }
   }
 });
-
-// keep this for old code paths
-if (false && hadSave) {
-} else if (false) {
-  G.money = 500;
-  G.soundOn = true;
-}
 
 // ═══════════════════════════════════════════════
 // PANEL SECUNDARIO ⚙️
