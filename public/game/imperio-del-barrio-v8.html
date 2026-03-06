@@ -2224,7 +2224,7 @@ body.night-mode .night-stars { opacity: 0.35; }
 
 /* Close button — always visible top-right */
 .biz-anim-close {
-  position: fixed; top: 12px; right: 12px;
+  position: absolute; top: 12px; right: 12px;
   background: #FF4757; color: white;
   border: 3px solid white; border-radius: 99px;
   font-family: 'Fredoka One',cursive; font-size: 1rem;
@@ -5757,28 +5757,33 @@ function openBizAnim(id) {
   const checkOrient = () => {
     const portrait = window.innerHeight > window.innerWidth;
     const rp = document.getElementById('rotatePrompt');
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+
     if (!portrait) {
-      // Landscape — show normally, clear any rotation
-      frame.style.cssText = '';
+      // Landscape — iframe normal, sin transform
+      frame.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000;';
+      overlay.style.cssText = 'display:block;position:fixed;inset:0;z-index:700;background:#000;';
       if (rp) rp.style.display = 'none';
     } else if (isMobile) {
-      // Portrait on ANY mobile (iOS Safari, Chrome, Firefox) — rotate via CSS
-      const W = window.innerWidth;
-      const H = window.innerHeight;
-      frame.style.cssText = [
+      // Portrait en móvil — rotar el OVERLAY entero, no el iframe
+      // Así Chrome mantiene hit-testing correcto sobre el iframe
+      overlay.style.cssText = [
+        'display:block',
         'position:fixed',
-        'top:0', 'left:0',
         `width:${H}px`,
         `height:${W}px`,
+        'top:0',
+        `left:${W}px`,
         'transform-origin:top left',
-        `transform:rotate(90deg) translateX(0) translateY(-${W}px)`,
-        'z-index:701',
-        'border:none',
-        'background:#000'
+        'transform:rotate(90deg)',
+        'z-index:700',
+        'background:#000',
+        'overflow:hidden'
       ].join(';');
+      frame.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000;';
       if (rp) rp.style.display = 'none';
     }
-    // Desktop portrait: do nothing
   };
 
   checkOrient();
@@ -5806,23 +5811,24 @@ function openBizAnim(id) {
 function closeBizAnim() {
   const overlay = document.getElementById('bizAnimOverlay');
   overlay.classList.remove('open');
+  // Resetear estilos del overlay y del iframe
+  overlay.style.cssText = '';
   const iframe = document.getElementById('bizAnimFrame');
+  iframe.style.cssText = '';
   iframe.contentWindow?.postMessage({ type: 'bizClose' }, '*');
   setTimeout(() => { iframe.src = ''; }, 100);
   currentBizAnim = null;
   // Release orientation lock
   try { screen.orientation?.unlock?.(); } catch(_) {}
-  // Hide rotate prompt + clear iOS rotation
+  // Hide rotate prompt
   const rp = document.getElementById('rotatePrompt');
   if (rp) rp.style.display = 'none';
-  const frame2 = document.getElementById('bizAnimFrame');
-  if (frame2) { frame2.style.cssText = ''; }
   if (window._orientChecker) {
     window.removeEventListener('resize', window._orientChecker);
     window.removeEventListener('orientationchange', window._orientChecker);
     window._orientChecker = null;
   }
-  // Release orientation lock
+  // Release orientation lock (double call intentional)
   try { screen.orientation?.unlock?.(); } catch(_) {}
 }
 
