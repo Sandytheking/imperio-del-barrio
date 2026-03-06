@@ -8,7 +8,15 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#0a0a0a;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Nunito',sans-serif}
-#wrapper{width:100vw;max-width:1280px;aspect-ratio:16/9;position:relative;overflow:hidden;background:#1a0a1e}
+#wrapper{width:100vw;max-width:1280px;aspect-ratio:16/9;position:relative;background:#1a0a1e;
+  /* Chrome fix: overflow:hidden corta elementos absolutos dentro del aspect-ratio container.
+     clip-path logra el mismo recorte visual sin afectar el layout de hijos posicionados. */
+  clip-path:inset(0);
+  -webkit-clip-path:inset(0);
+  isolation:isolate;
+  -webkit-transform:translateZ(0);
+  transform:translateZ(0);
+}
 canvas{position:absolute;top:0;left:0;width:100%;height:100%}
 
 /* ══ HEADER ══ */
@@ -50,7 +58,12 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%}
 #panel{position:absolute;bottom:0;left:0;right:0;height:26%;
   background:linear-gradient(0deg,#0d0518,#1a0a2e);
   border-top:3px solid #FF69B4;
-  display:grid;grid-template-columns:repeat(6,1fr);z-index:20;pointer-events:all}
+  display:grid;grid-template-columns:repeat(6,1fr);z-index:20;pointer-events:all;
+  /* Chrome fix: forzar nuevo stacking context para que quede sobre el canvas */
+  -webkit-transform:translateZ(0);
+  transform:translateZ(0);
+  will-change:transform;
+}
 .pc{border-right:1px solid rgba(255,105,180,.1);padding:clamp(4px,.7vw,10px) clamp(5px,.9vw,12px);display:flex;flex-direction:column;gap:4px;transition:background .15s}
 .pc:last-child{border-right:none}
 .pc:hover{background:rgba(255,105,180,.04)}
