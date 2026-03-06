@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://imperio-del-barrio.vercel.app'),
   title: 'Imperio del Barrio 🏘️',
   description: 'El tycoon del barrio dominicano. Construye tu imperio negocio por negocio.',
   manifest: '/manifest.json',
