@@ -2873,16 +2873,28 @@ body.night-mode .night-stars { opacity: 0.35; }
      MINI-GAME HUB OVERLAY
 ══════════════════════════════════════════════ -->
 <div id="miniGameOverlay" style="display:none;position:fixed;inset:0;z-index:750;background:rgba(0,0,0,0.95);backdrop-filter:blur(10px);align-items:center;justify-content:center;">
-  <div id="miniGameContainer" style="width:100%;max-width:400px;max-height:96vh;display:flex;flex-direction:column;align-items:center;padding:16px;gap:0;overflow:hidden;">
+  <div id="miniGameContainer" style="width:min(400px,100vw);max-height:96dvh;display:flex;flex-direction:column;align-items:center;padding:12px 16px;gap:0;overflow:hidden;box-sizing:border-box;">
     <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:8px;">
       <div>
         <div id="mgTitle" style="font-family:'Boogaloo',cursive;font-size:1.4rem;color:#FFE135;">Mini-juego</div>
         <div id="mgSubtitle" style="font-size:0.65rem;color:rgba(255,255,255,0.5);font-weight:900;">Gana para obtener dinero bonus</div>
       </div>
       <button onclick="closeMiniGame()" style="background:rgba(255,71,87,0.2);border:2px solid #FF4757;border-radius:99px;color:#FF4757;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:5px 12px;cursor:pointer;">✕ Salir</button>
     </div>
-    <!-- Canvas / Game Area -->
+    <!-- Canvas / Game Area — width fijo 360, escalado con CSS para caber en pantalla -->
+    <div id="mgCanvasWrap" style="width:100%;display:flex;justify-content:center;overflow:hidden;">
+      <canvas id="mgCanvas" width="360" height="320" style="border-radius:16px;border:3px solid rgba(255,255,255,0.1);touch-action:none;display:block;"></canvas>
+    </div>
+    <!-- Controls -->
+    <div id="mgControls" style="width:100%;margin-top:8px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;"></div>
+    <!-- Result -->
+    <div id="mgResult" style="display:none;text-align:center;margin-top:8px;padding:12px 20px;background:rgba(255,255,255,0.06);border-radius:14px;width:100%;">
+      <div id="mgResultText" style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#FFE135;"></div>
+      <button id="mgPlayAgain" onclick="playMiniGameAgain()" style="margin-top:8px;background:#2DC653;border:2px solid #1E1B2E;border-radius:99px;color:white;font-family:'Fredoka One',cursive;font-size:0.85rem;padding:7px 20px;cursor:pointer;">🔄 Otro juego</button>
+    </div>
+  </div>
+</div>
     <canvas id="mgCanvas" width="360" height="320" style="border-radius:16px;border:3px solid rgba(255,255,255,0.1);touch-action:none;display:block;"></canvas>
     <!-- Controls -->
     <div id="mgControls" style="width:100%;margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;"></div>
@@ -6344,6 +6356,19 @@ function _mgFinish(won, score) {
 // ── Canvas helpers ────────────────────────────────────────────────
 function _mgCtx() {
   const c = document.getElementById('mgCanvas');
+  // Ajustar canvas al tamaño real disponible (fix Chrome/móvil)
+  const wrap = document.getElementById('mgCanvasWrap') || c.parentElement;
+  const availW = Math.floor(wrap.clientWidth || 360);
+  const ratio = window.devicePixelRatio || 1;
+  // Mantener proporción 360:320 = 9:8
+  const newW = Math.min(availW, 400);
+  const newH = Math.round(newW * (320 / 360));
+  if (c.width !== newW || c.height !== newH) {
+    c.width  = newW;
+    c.height = newH;
+    c.style.width  = newW + 'px';
+    c.style.height = newH + 'px';
+  }
   return { ctx: c.getContext('2d'), W: c.width, H: c.height, canvas: c };
 }
 
