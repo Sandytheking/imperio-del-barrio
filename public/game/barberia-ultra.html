@@ -191,7 +191,7 @@ window.addEventListener('message', e => {
   // El padre nos confirma una compra (dinero descontado)
   if (e.data.type === 'purchaseOk') {
     G.money = e.data.newMoney;
-    G.upg[e.data.upg].lv++;
+    if(G.upg[e.data.upg].lv<MAX_UPG_LV){G.upg[e.data.upg].lv++;}
     if (e.data.upg === 'sillas') {
       initSlots();
       promoteWait();
@@ -230,6 +230,7 @@ function requestPurchase(upg) {
 
 // Fallback standalone (cuando no está en iframe)
 function buyUpgStandalone(k) {
+  if(G.upg[k].lv>=MAX_UPG_LV){nlog('👑 ¡Mejora al máximo!','special');return;}
   const cost = upgCost(k);
   if (G.money < cost) { nlog('💸 No tienes suficiente','bad'); return; }
   G.money -= cost;
@@ -291,6 +292,7 @@ function resize(){
 window.addEventListener('resize',resize); resize();
 
 const CHAIR_FRACS=[.37,.50,.63,.76];
+const MAX_UPG_LV=10;
 const MAX_CHAIRS=4, MAX_WAIT=4;
 
 // ══════════════════════════════════════════════════════════
@@ -1148,14 +1150,14 @@ function updateHUD(){
   };
   Object.keys(G.upg).forEach(k=>{
     const cost=upgCost(k);
-    const atMax = k==='sillas' && nChairs()>=MAX_CHAIRS;
+    const atMax = (k==='sillas' && nChairs()>=MAX_CHAIRS) || G.upg[k].lv>=MAX_UPG_LV;
     const can = !atMax && G.money>=cost;
     const lv=document.getElementById(`lv-${k}`); if(lv) lv.textContent=`Nv.${G.upg[k].lv}`;
     const st=document.getElementById(`st-${k}`); if(st) st.innerHTML=`<b>${defs[k]?.st||''}</b>`;
-    const nx=document.getElementById(`nx-${k}`); if(nx) nx.innerHTML=`<b>${atMax && k==='sillas' ? '¡Máximo!' : defs[k]?.nx||''}</b>`;
-    const cs=document.getElementById(`cs-${k}`); if(cs) cs.textContent=atMax && k==='sillas' ? 'MAX' : cost.toLocaleString();
+    const nx=document.getElementById(`nx-${k}`); if(nx) nx.innerHTML=`<b>${atMax ? '👑 ¡Máximo!' : defs[k]?.nx||''}</b>`;
+    const cs=document.getElementById(`cs-${k}`); if(cs) cs.textContent=atMax ? 'MAX' : cost.toLocaleString();
     const btn=document.getElementById(`bn-${k}`);
-    if(btn){ btn.disabled = !can || atMax; if(atMax && k==='sillas') btn.textContent='🪑 ¡Completa!'; }
+    if(btn){ btn.disabled = !can || atMax; if(atMax){btn.textContent=k==='sillas'?'🪑 ¡Completa!':'👑 Nv.MAX';btn.style.background='linear-gradient(135deg,#7B2FBE,#9B5DE5)';}else{btn.style.background='';} }
   });
 
   // Combo badge

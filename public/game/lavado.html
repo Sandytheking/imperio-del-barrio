@@ -281,6 +281,7 @@ const BIZ_ICON='🚗';
 const BIZ_NAME='Lavado Shine';
 const ACCENT='#3498DB';
 const MAX_SLOTS=4;
+const MAX_UPG_LV=10;
 
 // ══════════════════════════════════════════════════
 // CANVAS SETUP
@@ -665,9 +666,18 @@ function updateHUD(){
     if(!btn)continue;
     const cost=upgCost(k);
     lv.textContent=`Nv.${u.lv}`;
-    st.innerHTML=`<b>${u.desc}</b> · <span style="color:#FFD200">$${fmtN(cost)}</span>`;
-    btn.disabled=G.money<cost;
-    btn.textContent=`${u.icon} Mejorar $${fmtN(cost)}`;
+    const isMaxed=u.lv>=MAX_UPG_LV;
+    if(isMaxed){
+      st.innerHTML=`<b>${u.desc}</b> · <span style="color:#FFD200">👑 MÁXIMO</span>`;
+      btn.disabled=true;
+      btn.textContent=`👑 Nv.MAX`;
+      btn.style.background='linear-gradient(135deg,#7B2FBE,#9B5DE5)';
+    }else{
+      st.innerHTML=`<b>${u.desc}</b> · <span style="color:#FFD200">$${fmtN(cost)}</span>`;
+      btn.disabled=G.money<cost;
+      btn.textContent=`${u.icon} Mejorar $${fmtN(cost)}`;
+      btn.style.background='';
+    }
   }
 }
 function fmtN(n){if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return Math.floor(n).toString();}
@@ -682,7 +692,7 @@ function activateBoost(){if(G.money<300){nlog('💸 Necesitas $300','bad');retur
 function buyUpg(k){
   const cost=upgCost(k);
   if(window.parent&&window.parent!==window){window.parent.postMessage({type:'bizPurchase',upg:k,cost},'*');nlog('💳 Procesando...');}
-  else{if(G.money<cost){nlog('💸 Sin fondos','bad');return;}G.money-=cost;UPGS[k].lv++;onUpgApplied(k);}
+  else{if(UPGS[k].lv>=MAX_UPG_LV){nlog('👑 ¡Mejora al máximo!','special');return;}if(G.money<cost){nlog('💸 Sin fondos','bad');return;}G.money-=cost;UPGS[k].lv++;onUpgApplied(k);}
 }
 function onUpgApplied(k){
   initSlots();
@@ -694,7 +704,7 @@ window.addEventListener('message',e=>{
   if(!e.data)return;
   if(e.data.type==='bizClose')_paused=true;
   if(e.data.type==='purchaseDenied')nlog('💸 ¡Sin fondos!','bad');
-  if(e.data.type==='purchaseOk'){UPGS[e.data.upg].lv++;G.money=e.data.newMoney;onUpgApplied(e.data.upg);}
+  if(e.data.type==='purchaseOk'){if(UPGS[e.data.upg].lv<MAX_UPG_LV){UPGS[e.data.upg].lv++;}G.money=e.data.newMoney;onUpgApplied(e.data.upg);}
   if(e.data.type==='bizInit'){
     G.money=e.data.money||0;
     for(const k in UPGS){const lv=e.data[k+'Level']||1;UPGS[k].lv=lv;}
