@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  rampas:{lv:0,base:500,icon:'🏗️',name:'Más Rampas',desc:'Capacidad +1'},
-  tecnico:{lv:0,base:900,icon:'👨‍🔧',name:'Técnico Experto',desc:'Ciclo -22%'},
-  herramientas:{lv:0,base:1500,icon:'🔧',name:'Herram. Premium',desc:'Calidad +25%'},
-  diagnostico:{lv:0,base:2500,icon:'💻',name:'Diagnóstico PC',desc:'Precio +30%'},
-  marketing:{lv:0,base:4000,icon:'📢',name:'Contrato Taxis',desc:'Más clientes'}
+  rampas:{lv:0,base:8250,icon:'🏗️',name:'Más Rampas',desc:'Capacidad +1'},
+  tecnico:{lv:0,base:16500,icon:'👨‍🔧',name:'Técnico Experto',desc:'Ciclo -22%'},
+  herramientas:{lv:0,base:30250,icon:'🔧',name:'Herram. Premium',desc:'Calidad +25%'},
+  diagnostico:{lv:0,base:55000,icon:'💻',name:'Diagnóstico PC',desc:'Precio +30%'},
+  marketing:{lv:0,base:99000,icon:'📢',name:'Contrato Taxis',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

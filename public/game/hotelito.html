@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  habitaciones:{lv:0,base:30000,icon:'🛏️',name:'Más Habitaciones',desc:'Capacidad +1'},
-  recepcion:{lv:0,base:60000,icon:'🛎️',name:'Recepción Lujosa',desc:'Precio +30%'},
-  spa:{lv:0,base:100000,icon:'🧖',name:'Spa Completo',desc:'Precio +40%'},
-  restaurante:{lv:0,base:180000,icon:'🍽️',name:'Rest. Gourmet',desc:'Ingresos +40%'},
-  marketing:{lv:0,base:300000,icon:'⭐',name:'TripAdvisor 5⭐',desc:'Más clientes'}
+  habitaciones:{lv:0,base:82500,icon:'🛏️',name:'Más Habitaciones',desc:'Capacidad +1'},
+  recepcion:{lv:0,base:165000,icon:'🛎️',name:'Recepción Lujosa',desc:'Precio +30%'},
+  spa:{lv:0,base:302500,icon:'🧖',name:'Spa Completo',desc:'Precio +40%'},
+  restaurante:{lv:0,base:550000,icon:'🍽️',name:'Rest. Gourmet',desc:'Ingresos +40%'},
+  marketing:{lv:0,base:990000,icon:'⭐',name:'TripAdvisor 5⭐',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  maquinas:{lv:0,base:800,icon:'🏋️',name:'Más Máquinas',desc:'Capacidad +1'},
-  entrenador:{lv:0,base:1500,icon:'👨‍💼',name:'Trainer Élite',desc:'Ciclo -22%'},
-  pesas:{lv:0,base:2500,icon:'🏅',name:'Pesas Olímpicas',desc:'Calidad +25%'},
-  spa:{lv:0,base:4500,icon:'🧖',name:'Zona Spa',desc:'Precio +40%'},
-  marketing:{lv:0,base:7000,icon:'📢',name:'Patrocinio MMA',desc:'Más clientes'}
+  maquinas:{lv:0,base:9000,icon:'🏋️',name:'Más Máquinas',desc:'Capacidad +1'},
+  entrenador:{lv:0,base:18000,icon:'👨‍💼',name:'Trainer Élite',desc:'Ciclo -22%'},
+  pesas:{lv:0,base:33000,icon:'🏅',name:'Pesas Olímpicas',desc:'Calidad +25%'},
+  spa:{lv:0,base:60000,icon:'🧖',name:'Zona Spa',desc:'Precio +40%'},
+  marketing:{lv:0,base:108000,icon:'📢',name:'Patrocinio MMA',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

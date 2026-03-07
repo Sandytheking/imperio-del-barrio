@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  pistas:{lv:0,base:5000,icon:'🕺',name:'Más Pistas',desc:'Capacidad +1'},
-  sonido:{lv:0,base:10000,icon:'🔊',name:'Sistema Pro',desc:'Precio +35%'},
-  dj:{lv:0,base:18000,icon:'🎧',name:'DJ Residente',desc:'Ciclo -20%'},
+  pistas:{lv:0,base:200000,icon:'🕺',name:'Más Pistas',desc:'Capacidad +1'},
+  sonido:{lv:0,base:60000,icon:'🔊',name:'Sistema Pro',desc:'Precio +35%'},
+  dj:{lv:0,base:110000,icon:'🎧',name:'DJ Residente',desc:'Ciclo -20%'},
   vip:{lv:0,base:30000,icon:'🥂',name:'Zona VIP',desc:'Precio +50%'},
-  marketing:{lv:0,base:50000,icon:'📢',name:'Influencers',desc:'Más clientes'}
+  marketing:{lv:0,base:360000,icon:'📢',name:'Influencers',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

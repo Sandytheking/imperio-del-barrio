@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  pisos:{lv:0,base:500000,icon:'🏛️',name:'Más Pisos',desc:'Capacidad +1'},
-  tecnologia:{lv:0,base:1000000,icon:'💻',name:'IA Financiera',desc:'Ciclo -30%'},
-  seguridad:{lv:0,base:1800000,icon:'🛡️',name:'Seguridad Elite',desc:'Precio +35%'},
-  mercados:{lv:0,base:3000000,icon:'📊',name:'Mercados Int.',desc:'Precio +55%'},
-  marketing:{lv:0,base:5000000,icon:'📢',name:'Bolsa de Valores',desc:'Más clientes'}
+  pisos:{lv:0,base:1200000,icon:'🏛️',name:'Más Pisos',desc:'Capacidad +1'},
+  tecnologia:{lv:0,base:2400000,icon:'💻',name:'IA Financiera',desc:'Ciclo -30%'},
+  seguridad:{lv:0,base:4400000,icon:'🛡️',name:'Seguridad Elite',desc:'Precio +35%'},
+  mercados:{lv:0,base:8000000,icon:'📊',name:'Mercados Int.',desc:'Precio +55%'},
+  marketing:{lv:0,base:14400000,icon:'📢',name:'Bolsa de Valores',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

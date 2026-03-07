@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  bahias:{lv:0,base:2000,icon:'🚗',name:'Más Bahías',desc:'Capacidad +1'},
-  velocidad:{lv:0,base:4000,icon:'⚡',name:'Equipo Turbo',desc:'Ciclo -25%'},
-  quimica:{lv:0,base:7000,icon:'🧴',name:'Cera Premium',desc:'Precio +30%'},
-  detailing:{lv:0,base:12000,icon:'✨',name:'Detailing Pro',desc:'Precio +50%'},
-  marketing:{lv:0,base:20000,icon:'📢',name:'Contrato Flota',desc:'Más clientes'}
+  bahias:{lv:0,base:22500,icon:'🚗',name:'Más Bahías',desc:'Capacidad +1'},
+  velocidad:{lv:0,base:45000,icon:'⚡',name:'Equipo Turbo',desc:'Ciclo -25%'},
+  quimica:{lv:0,base:82500,icon:'🧴',name:'Cera Premium',desc:'Precio +30%'},
+  detailing:{lv:0,base:150000,icon:'✨',name:'Detailing Pro',desc:'Precio +50%'},
+  marketing:{lv:0,base:270000,icon:'📢',name:'Contrato Flota',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

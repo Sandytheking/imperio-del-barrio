@@ -251,7 +251,7 @@ function buyUpgStandalone(k) {
   G.money -= cost;
   G.upg[k].lv++;
   addXP(cost * .2);
-  if (k === 'sillas') { initSlots(); promoteWait(); nlog(`🪑 ¡${nChairs()} sillas instaladas!`,'good'); _chairFlash = nChairs()-1; _chairFlashTimer = 2; }
+  if (k === 'sillas') { initSlots(); promoteWait(); if(G.upg.sillas.lv>=5){nlog('🪑 Turbo desbloqueado: ciclo -15%!','special');}else{nlog(`🪑 ¡${nChairs()} sillas instaladas!`,'good');_chairFlash=nChairs()-1;_chairFlashTimer=2;} }
   else if (k === 'velocidad') nlog(`⚡ Ciclo: ${cutDur().toFixed(1)}s`,'good');
   else if (k === 'precio') nlog(`💵 Precio: $${price()}`,'good');
   else if (k === 'marketing') nlog(`📢 Cliente cada ${spawnInt().toFixed(1)}s`,'good');
@@ -309,7 +309,7 @@ window.addEventListener('resize',resize); resize();
 const CHAIR_FRACS=[.37,.50,.63,.76];
 const MAX_UPG_LV=5;
 let BIZ_IS_MAXED=false;
-const MAX_CHAIRS=5, MAX_WAIT=5;
+const MAX_CHAIRS=4, MAX_WAIT=4;
 
 // ══════════════════════════════════════════════════════════
 // GAME STATE
@@ -320,18 +320,18 @@ const G={
   boost:false, boostEnd:0,
   elapsed:0,
   upg:{
-    sillas:   {lv:0,base:100},
-    velocidad:{lv:0,base:80},
-    precio:   {lv:0,base:150},
-    marketing:{lv:0,base:200},
+    sillas:   {lv:0,base:3750,icon:'🪑',name:'Sillas',desc:'Capacidad +1 (Nv.5: +Turbo)'},
+    velocidad:{lv:0,base:7500},
+    precio:   {lv:0,base:13750},
+    marketing:{lv:0,base:4500000},
     fidelidad:{lv:0,base:250},
   },
   achievements:{},
 };
 
 // ── Derived ──
-function nChairs(){return Math.min(G.upg.sillas.lv,MAX_CHAIRS);}
-function cutDur(){return Math.max(1.8,10-G.upg.velocidad.lv+G.upg.velocidad.lv*.05)*(G.boost?.45:1);}
+function nChairs(){return Math.min(Math.min(G.upg.sillas.lv,5),MAX_CHAIRS);}
+function cutDur(){const sillaBonus=G.upg.sillas.lv>=5?.85:1;return Math.max(1.8,10-G.upg.velocidad.lv+G.upg.velocidad.lv*.05)*sillaBonus*(G.boost?.45:1);}
 function price(){return 5+(G.upg.precio.lv-1)*3;}
 function spawnInt(){return Math.max(2.2,12-G.upg.marketing.lv*1.2);}
 function upgCost(k){const u=G.upg[k];return Math.floor(u.base*Math.pow(1.6,u.lv-1));}
@@ -370,7 +370,7 @@ const ACHIEVEMENTS=[
   {id:'rich2',icon:'🤑',title:'$10,000',desc:'Empresario real',check:()=>G.money>=10000},
   {id:'angry',icon:'😤',title:'Oops...',desc:'Un cliente se fue enojado',check:()=>G.angryLeft>=1},
   {id:'vip',icon:'⭐',title:'Cliente VIP',desc:'Atendiste un VIP',check:()=>G.served>=1&&lastWasVIP},
-  {id:'allchairs',icon:'🪑',title:'5 Sillas!',desc:'Barbería completa',check:()=>nChairs()>=5},
+  {id:'allchairs',icon:'🪑',title:'Barbería Full',desc:'4 sillas + turbo activo',check:()=>G.upg.sillas.lv>=5},
   {id:'boost',icon:'⚡',title:'¡Boost!',desc:'Activaste tu primer boost',check:()=>G.boost},
   {id:'rep100',icon:'🌟',title:'Reputación 100%',desc:'Leyenda del barrio',check:()=>G.rep>=100},
 ];
@@ -1159,7 +1159,7 @@ function updateHUD(){
   // Upgrades
   const fidLv = G.upg.fidelidad.lv;
   const defs={
-    sillas:   {st:`${nChairs()} cliente${nChairs()>1?'s':''}`,nx:`${Math.min(nChairs()+1,MAX_CHAIRS)} clientes`},
+    sillas:   {st:`${nChairs()} sillas${G.upg.sillas.lv>=5?' + Turbo':''}`,nx:G.upg.sillas.lv>=4?'Turbo -15% ciclo':`${nChairs()+1} sillas`},
     velocidad:{st:`${cutDur().toFixed(1)}s ciclo`,nx:`${Math.max(1.8,cutDur()-1).toFixed(1)}s`},
     precio:   {st:`$${price()} / corte`,nx:`$${price()+3} / corte`},
     marketing:{st:`cada ${spawnInt().toFixed(1)}s`,nx:`cada ${Math.max(2.2,spawnInt()-1.2).toFixed(1)}s`},

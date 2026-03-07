@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  estantes:{lv:0,base:100,icon:'📦',name:'Más Estantes',desc:'Más capacidad'},
-  velocidad:{lv:0,base:80,icon:'⚡',name:'Despacho Rápido',desc:'Ciclo -18%'},
-  nevera:{lv:0,base:150,icon:'❄️',name:'Nevera Nueva',desc:'Precios +25%'},
-  marketing:{lv:0,base:200,icon:'📢',name:'Anuncio Radio',desc:'Más clientes'},
-  delivery:{lv:0,base:400,icon:'🛵',name:'Delivery Propio',desc:'Ingresos +25%'}
+  estantes:{lv:0,base:1200,icon:'📦',name:'Más Estantes',desc:'Más capacidad'},
+  velocidad:{lv:0,base:2400,icon:'⚡',name:'Despacho Rápido',desc:'Ciclo -18%'},
+  nevera:{lv:0,base:4400,icon:'❄️',name:'Nevera Nueva',desc:'Precios +25%'},
+  marketing:{lv:0,base:8000,icon:'📢',name:'Anuncio Radio',desc:'Más clientes'},
+  delivery:{lv:0,base:14400,icon:'🛵',name:'Delivery Propio',desc:'Ingresos +25%'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

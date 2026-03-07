@@ -171,11 +171,11 @@ const canvas=document.getElementById('c');const ctx=canvas.getContext('2d');
 let CW,CH;function resize(){const wr=document.getElementById('wrapper');CW=canvas.width=wr.clientWidth;CH=canvas.height=wr.clientHeight;}resize();window.addEventListener('resize',resize);
 
 const UPGS={
-  pantallas:{lv:0,base:8000,icon:'🖥️',name:'Más Pantallas',desc:'Capacidad +1'},
-  api:{lv:0,base:15000,icon:'⚡',name:'Velocidad API',desc:'Ciclo -20%'},
-  trading:{lv:0,base:25000,icon:'📊',name:'Trading Pro',desc:'Precio +30%'},
-  seguridad:{lv:0,base:40000,icon:'🔐',name:'Seguridad Web3',desc:'Precio +35%'},
-  viral:{lv:0,base:60000,icon:'📣',name:'Marketing Viral',desc:'Más clientes'},
+  pantallas:{lv:0,base:120000,icon:'🖥️',name:'Más Pantallas',desc:'Capacidad +1'},
+  api:{lv:0,base:240000,icon:'⚡',name:'Velocidad API',desc:'Ciclo -20%'},
+  trading:{lv:0,base:440000,icon:'📊',name:'Trading Pro',desc:'Precio +30%'},
+  seguridad:{lv:0,base:800000,icon:'🔐',name:'Seguridad Web3',desc:'Precio +35%'},
+  viral:{lv:0,base:1440000,icon:'📣',name:'Marketing Viral',desc:'Más clientes'},
 };
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}
 function nSlots(){return Math.min(MAX_SLOTS,1+(UPGS.pantallas?.lv||1)-1);}

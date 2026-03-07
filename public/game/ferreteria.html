@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  almacen:{lv:0,base:3000,icon:'📦',name:'Más Almacén',desc:'Capacidad +1'},
-  servicio:{lv:0,base:6000,icon:'👷',name:'Más Servicio',desc:'Ciclo -20%'},
-  maquinaria:{lv:0,base:10000,icon:'🔨',name:'Maquinaria Pro',desc:'Precio +30%'},
+  almacen:{lv:0,base:120000,icon:'📦',name:'Más Almacén',desc:'Capacidad +1'},
+  servicio:{lv:0,base:36000,icon:'👷',name:'Más Servicio',desc:'Ciclo -20%'},
+  maquinaria:{lv:0,base:66000,icon:'🔨',name:'Maquinaria Pro',desc:'Precio +30%'},
   credito:{lv:0,base:18000,icon:'💳',name:'Crédito a Obra',desc:'Precio +35%'},
-  marketing:{lv:0,base:30000,icon:'📢',name:'Contrato Gov.',desc:'Más clientes'}
+  marketing:{lv:0,base:216000,icon:'📢',name:'Contrato Gov.',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

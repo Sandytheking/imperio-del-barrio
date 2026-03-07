@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  mesas:{lv:0,base:300,icon:'🪑',name:'Más Mesas',desc:'Capacidad +1'},
-  maquina:{lv:0,base:500,icon:'☕',name:'Máq. Espresso',desc:'Precio +30%'},
-  chef:{lv:0,base:800,icon:'👨‍🍳',name:'Chef Pro',desc:'Ciclo -20%'},
-  menu:{lv:0,base:1400,icon:'📋',name:'Menú Ampliado',desc:'Ingresos +30%'},
-  marketing:{lv:0,base:2500,icon:'📢',name:'Delivery',desc:'Más clientes'}
+  mesas:{lv:0,base:4500,icon:'🪑',name:'Más Mesas',desc:'Capacidad +1'},
+  maquina:{lv:0,base:9000,icon:'☕',name:'Máq. Espresso',desc:'Precio +30%'},
+  chef:{lv:0,base:16500,icon:'👨‍🍳',name:'Chef Pro',desc:'Ciclo -20%'},
+  menu:{lv:0,base:30000,icon:'📋',name:'Menú Ampliado',desc:'Ingresos +30%'},
+  marketing:{lv:0,base:54000,icon:'📢',name:'Delivery',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}
