@@ -3247,6 +3247,10 @@ function bizIncome(biz) {
       if (allActive) inc *= syn.mult;
     }
   });
+  // VIP mult (from social stage) — applies to premium businesses
+  const VIP_BIZS = ['bambu','hotelito','discoteca','plaza','banco','banco_central','crypto','aereolinea','isla'];
+  if (VIP_BIZS.includes(biz.id)) inc *= getStageVipMult();
+
   // Event
   if (G.activeEvent) {
     const ev = G.activeEvent;
@@ -3399,7 +3403,7 @@ const SOCIAL_STAGES = [
 const INFLUENCE_UPGRADES = [
   { id:'inf_mindset', icon:'🧠', name:'Mentalidad Ganadora', desc:'+5% ingresos globales', cost:1, incomeMult:1.05 },
   { id:'inf_network', icon:'🤝', name:'Red de Contactos', desc:'+8% velocidad negocios', cost:2, speedMult:1.08 },
-  { id:'inf_brand', icon:'🎨', name:'Marca Personal', desc:'+10% precio premium', cost:3, incomeMult:1.10 },
+  { id:'inf_brand', icon:'🎨', name:'Marca Personal', desc:'+10% ingresos · +10% negocios VIP', cost:3, incomeMult:1.10 },
   { id:'inf_media', icon:'📱', name:'Presencia en Redes', desc:'+15% ingresos totales', cost:5, incomeMult:1.15 },
   { id:'inf_empire', icon:'👑', name:'Visión de Imperio', desc:'+25% todos los ingresos', cost:10, incomeMult:1.25 },
 ];
@@ -3417,7 +3421,10 @@ function getStageOfflineMult() {
 }
 function getStageVipMult() {
   const s = SOCIAL_STAGES[G.socialStage] || SOCIAL_STAGES[0];
-  return s.vipMult || 1;
+  let mult = s.vipMult || 1;
+  // inf_brand adds extra 10% to VIP businesses
+  if (G.influenceUpgrades?.inf_brand) mult *= 1.10;
+  return mult;
 }
 
 function canAscend() {
