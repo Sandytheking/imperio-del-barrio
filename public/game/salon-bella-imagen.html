@@ -210,11 +210,18 @@ let _paused = false;
 window.addEventListener('message', e => {
   if (!e.data) return;
   if (e.data.type === 'bizInit') {
+    // Reset completo del estado interno — para que ascenso lo deje limpio
     G.money = e.data.money || 0;
-    G.upg.sillas.lv = e.data.chairLevel || 1;
-    G.upg.vel.lv = e.data.speedLevel || 1;
-    G.upg.precio.lv = e.data.priceLevel || 1;
-    G.upg.mkt.lv = e.data.marketingLevel || 1;
+    G.totalEarned = 0; G.xp = 0; G.level = 0; G.rep = 20;
+    G.served = 0; G.combo = 0; G.maxCombo = 0; G.streak = 0;
+    G.angryLeft = 0; G.boost = false; G.boostEnd = 0; G.elapsed = 0;
+    G.achievements = {}; G.vipSlots = []; G.prestigeCount = 0; G.prestigeMult = 1;
+    G.upg.sillas.lv = e.data.chairLevel     || e.data.sillasLevel || 1;
+    G.upg.vel.lv    = e.data.speedLevel      || e.data.velLevel    || 1;
+    G.upg.precio.lv = e.data.priceLevel      || e.data.precioLevel || 1;
+    G.upg.mkt.lv    = e.data.marketingLevel  || e.data.mktLevel    || 1;
+    G.upg.tinte.lv  = e.data.tinteLevel  || 0;
+    G.upg.mani.lv   = e.data.maniLevel   || 0;
     initSlots(); updateHUD();
     nlog(`💰 Caja: $${Math.floor(G.money).toLocaleString()}`,'good');
   }
