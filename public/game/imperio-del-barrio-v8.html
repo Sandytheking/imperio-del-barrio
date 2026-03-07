@@ -2849,6 +2849,9 @@ const BIZ_ANIMATIONS = {
   plaza:        'plaza.html',
   banco:        'banco.html',
   banco_central:'banco_central.html',
+  crypto:       'crypto.html',
+  aereolinea:   'aereolinea.html',
+  isla:         'isla.html',
 };
 
 // ═══════════════════════════════════════════════
@@ -5547,8 +5550,8 @@ function startRunner() {
 
   // Touch / click
   const canvas = document.getElementById('mgCanvas');
-  canvas.onclick = jump;
-  canvas.ontouchstart = (e) => { e.preventDefault(); jump(); };
+  canvas.onclick = (e) => { e.stopPropagation(); jump(); };
+  canvas.ontouchstart = (e) => { e.preventDefault(); e.stopPropagation(); jump(); };
 
   // Keyboard
   _mgKeyHandler = (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') jump(); };
@@ -5557,8 +5560,8 @@ function startRunner() {
   // Mobile button
   document.getElementById('mgControls').innerHTML =
     `<button onclick="" id="runnerJumpBtn" style="background:linear-gradient(135deg,#FFE135,#FF9800);border:3px solid #1E1B2E;border-radius:99px;font-family:'Fredoka One',cursive;font-size:1.1rem;padding:12px 32px;cursor:pointer;box-shadow:0 4px 0 #1E1B2E;color:#1E1B2E;">⬆️ SALTAR</button>`;
-  document.getElementById('runnerJumpBtn').addEventListener('click', jump);
-  document.getElementById('runnerJumpBtn').addEventListener('touchstart', (e)=>{ e.preventDefault(); jump(); });
+  document.getElementById('runnerJumpBtn').addEventListener('click', (e)=>{ e.stopPropagation(); jump(); });
+  document.getElementById('runnerJumpBtn').addEventListener('touchstart', (e)=>{ e.preventDefault(); e.stopPropagation(); jump(); });
 
   // Characters / obstacles pool
   const OBSTACLES = ['🚧','🛑','🏗️','📦','🚌'];
@@ -5710,8 +5713,19 @@ function startRunner() {
     // ── Obstacles ────────────────────────────────────────────────────
     st.obstacles.forEach(o => drawE(o.type, o.x + 16, o.y + 38, 38));
 
-    // ── Player ───────────────────────────────────────────────────────
-    drawE('🏃', st.player.x + 16, st.player.y + st.player.h + 6, 40);
+    // ── Player (flipped to face right toward obstacles) ───────────────
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur  = 8;
+    ctx.shadowOffsetX = -3;
+    ctx.shadowOffsetY = 4;
+    ctx.font = '40px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('🏃', -(st.player.x + 16), st.player.y + st.player.h + 6);
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+    ctx.restore();
 
     // ── HUD pill ─────────────────────────────────────────────────────
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
