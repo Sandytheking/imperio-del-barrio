@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  barras:{lv:1,base:8000,icon:'🍻',name:'Más Barras',desc:'Capacidad +1'},
-  licores:{lv:1,base:15000,icon:'🥃',name:'Licores Premium',desc:'Precio +40%'},
-  bartender:{lv:1,base:25000,icon:'🍸',name:'Bartender Pro',desc:'Ciclo -25%'},
-  terraza:{lv:1,base:45000,icon:'🌴',name:'Terraza',desc:'Precio +45%'},
-  marketing:{lv:1,base:80000,icon:'📢',name:'Eventos VIP',desc:'Más clientes'}
+  barras:{lv:0,base:8000,icon:'🍻',name:'Más Barras',desc:'Capacidad +1'},
+  licores:{lv:0,base:15000,icon:'🥃',name:'Licores Premium',desc:'Precio +40%'},
+  bartender:{lv:0,base:25000,icon:'🍸',name:'Bartender Pro',desc:'Ciclo -25%'},
+  terraza:{lv:0,base:45000,icon:'🌴',name:'Terraza',desc:'Precio +45%'},
+  marketing:{lv:0,base:80000,icon:'📢',name:'Eventos VIP',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

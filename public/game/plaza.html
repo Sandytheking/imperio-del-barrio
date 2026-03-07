@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  locales:{lv:1,base:80000,icon:'🏪',name:'Más Locales',desc:'Capacidad +1'},
-  escaleras:{lv:1,base:160000,icon:'🏗️',name:'2do Piso',desc:'Precio +40%'},
-  gerente:{lv:1,base:280000,icon:'👔',name:'Gerente Pro',desc:'Ciclo -25%'},
-  cine:{lv:1,base:500000,icon:'🎬',name:'Cine Interno',desc:'Ingresos +60%'},
-  marketing:{lv:1,base:900000,icon:'📢',name:'Campaña Nacional',desc:'Más clientes'}
+  locales:{lv:0,base:80000,icon:'🏪',name:'Más Locales',desc:'Capacidad +1'},
+  escaleras:{lv:0,base:160000,icon:'🏗️',name:'2do Piso',desc:'Precio +40%'},
+  gerente:{lv:0,base:280000,icon:'👔',name:'Gerente Pro',desc:'Ciclo -25%'},
+  cine:{lv:0,base:500000,icon:'🎬',name:'Cine Interno',desc:'Ingresos +60%'},
+  marketing:{lv:0,base:900000,icon:'📢',name:'Campaña Nacional',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  motos:{lv:1,base:200,icon:'🛵',name:'Más Motos',desc:'Capacidad +1'},
-  velocidad:{lv:1,base:300,icon:'⚡',name:'Motor Turbo',desc:'Ciclo -22%'},
-  casco:{lv:1,base:450,icon:'⛑️',name:'Cascos Premium',desc:'Precio +25%'},
-  ruta:{lv:1,base:800,icon:'🗺️',name:'Rutas VIP',desc:'Ingresos +30%'},
-  marketing:{lv:1,base:1200,icon:'📢',name:'App de Pedidos',desc:'Más clientes'}
+  motos:{lv:0,base:200,icon:'🛵',name:'Más Motos',desc:'Capacidad +1'},
+  velocidad:{lv:0,base:300,icon:'⚡',name:'Motor Turbo',desc:'Ciclo -22%'},
+  casco:{lv:0,base:450,icon:'⛑️',name:'Cascos Premium',desc:'Precio +25%'},
+  ruta:{lv:0,base:800,icon:'🗺️',name:'Rutas VIP',desc:'Ingresos +30%'},
+  marketing:{lv:0,base:1200,icon:'📢',name:'App de Pedidos',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

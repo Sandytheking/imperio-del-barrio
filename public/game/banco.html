@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  ventanillas:{lv:1,base:200000,icon:'🏦',name:'Más Ventanillas',desc:'Capacidad +1'},
-  sistema:{lv:1,base:400000,icon:'💻',name:'Sistema Digital',desc:'Ciclo -30%'},
-  boveda:{lv:1,base:700000,icon:'🔐',name:'Bóveda Blindada',desc:'Precio +35%'},
-  inversion:{lv:1,base:1200000,icon:'📈',name:'Mesa Inversión',desc:'Precio +50%'},
-  marketing:{lv:1,base:2000000,icon:'📢',name:'Campaña TV',desc:'Más clientes'}
+  ventanillas:{lv:0,base:200000,icon:'🏦',name:'Más Ventanillas',desc:'Capacidad +1'},
+  sistema:{lv:0,base:400000,icon:'💻',name:'Sistema Digital',desc:'Ciclo -30%'},
+  boveda:{lv:0,base:700000,icon:'🔐',name:'Bóveda Blindada',desc:'Precio +35%'},
+  inversion:{lv:0,base:1200000,icon:'📈',name:'Mesa Inversión',desc:'Precio +50%'},
+  marketing:{lv:0,base:2000000,icon:'📢',name:'Campaña TV',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}

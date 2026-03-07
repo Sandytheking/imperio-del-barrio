@@ -147,7 +147,7 @@ let BIZ_IS_MAXED=false;
 const canvas=document.getElementById('c');const ctx=canvas.getContext('2d');
 let CW,CH;function resize(){const wr=document.getElementById('wrapper');CW=canvas.width=wr.clientWidth;CH=canvas.height=wr.clientHeight;}resize();window.addEventListener('resize',resize);
 
-const UPGS={flota:{lv:1,base:20000,icon:'🛫',name:'Más Vuelos',desc:'Capacidad +1'},pilotos:{lv:1,base:35000,icon:'👨‍✈️',name:'Pilotos Elite',desc:'Ciclo -20%'},business:{lv:1,base:60000,icon:'🥂',name:'Clase Business',desc:'Precio +30%'},primera:{lv:1,base:100000,icon:'🌟',name:'Primera Clase',desc:'Precio +35%'},rutas:{lv:1,base:150000,icon:'📢',name:'Rutas Nuevas',desc:'Más pasajeros'}};
+const UPGS={flota:{lv:0,base:20000,icon:'🛫',name:'Más Vuelos',desc:'Capacidad +1'},pilotos:{lv:0,base:35000,icon:'👨‍✈️',name:'Pilotos Elite',desc:'Ciclo -20%'},business:{lv:0,base:60000,icon:'🥂',name:'Clase Business',desc:'Precio +30%'},primera:{lv:0,base:100000,icon:'🌟',name:'Primera Clase',desc:'Precio +35%'},rutas:{lv:0,base:150000,icon:'📢',name:'Rutas Nuevas',desc:'Más pasajeros'}};
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}
 function nSlots(){return Math.min(MAX_SLOTS,1+(UPGS.flota?.lv||1)-1);}
 function cycleTime(){const spd=UPGS.pilotos;return Math.max(1.5,BASE_CYCLE*(spd?Math.pow(0.82,spd.lv-1):1));}

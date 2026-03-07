@@ -297,11 +297,11 @@ resize();window.addEventListener('resize',resize);
 // UPGRADES
 // ══════════════════════════════════════════════════
 const UPGS={
-  mesas:{lv:1,base:1000,icon:'🍽️',name:'Más Mesas',desc:'Capacidad +1'},
-  chef:{lv:1,base:2000,icon:'👨‍🍳',name:'Chef Ejecutivo',desc:'Ciclo -25%'},
-  cocina:{lv:1,base:3500,icon:'🍳',name:'Cocina Moderna',desc:'Calidad +30%'},
-  vinos:{lv:1,base:6000,icon:'🍷',name:'Cava de Vinos',desc:'Precio +40%'},
-  marketing:{lv:1,base:10000,icon:'📢',name:'Reseñas Google',desc:'Más clientes'}
+  mesas:{lv:0,base:1000,icon:'🍽️',name:'Más Mesas',desc:'Capacidad +1'},
+  chef:{lv:0,base:2000,icon:'👨‍🍳',name:'Chef Ejecutivo',desc:'Ciclo -25%'},
+  cocina:{lv:0,base:3500,icon:'🍳',name:'Cocina Moderna',desc:'Calidad +30%'},
+  vinos:{lv:0,base:6000,icon:'🍷',name:'Cava de Vinos',desc:'Precio +40%'},
+  marketing:{lv:0,base:10000,icon:'📢',name:'Reseñas Google',desc:'Más clientes'}
 };
 
 function upgCost(k){const u=UPGS[k];return Math.floor(u.base*Math.pow(1.55,u.lv-1));}
