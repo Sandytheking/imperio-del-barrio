@@ -147,11 +147,12 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%}
       <button class="upg-btn" id="bn-marketing" onclick="buyUpg('marketing')">📢 Mejorar — $<span id="cs-marketing">200</span></button>
     </div>
     <div class="upg-col">
-      <div class="upg-top"><span class="upg-emo">🏆</span><span class="upg-title">Stats</span></div>
+      <div class="upg-top"><span class="upg-emo">❤️</span><span class="upg-title">Fidelidad</span><span class="upg-lv" id="lv-fidelidad">Nv.1</span></div>
+      <div class="upg-stat">Paciencia: <b id="st-fidelidad">+8%</b></div>
+      <div class="upg-stat">Siguiente: <b id="nx-fidelidad">+16%</b></div>
       <div class="upg-stat">Atendidos: <b id="st-served">0</b></div>
-      <div class="upg-stat">Mejor combo: <b id="st-maxcombo">0x</b></div>
-      <div class="upg-stat">Reputación: <b id="st-rep">20%</b></div>
-      <div class="upg-stat">Tiempo: <b id="st-time">00:00</b></div>
+      <div class="upg-stat">Combo: <b id="st-maxcombo">0x</b></div>
+      <button class="upg-btn" id="bn-fidelidad" onclick="buyUpg('fidelidad')">❤️ Mejorar — $<span id="cs-fidelidad">250</span></button>
     </div>
   </div>
 
@@ -183,6 +184,7 @@ window.addEventListener('message', e => {
     G.upg.velocidad.lv = e.data.speedLevel || 1;
     G.upg.precio.lv = e.data.priceLevel || 1;
     G.upg.marketing.lv = e.data.marketingLevel || 1;
+    G.upg.fidelidad.lv = e.data.fidelidadLevel || 1;
     initSlots();
     updateHUD();
     nlog(`💰 Caja sincronizada: $${Math.floor(_parentMoney).toLocaleString()}`,'good');
@@ -202,6 +204,7 @@ window.addEventListener('message', e => {
     } else if (e.data.upg === 'velocidad') nlog(`⚡ Ciclo: ${cutDur().toFixed(1)}s`,'good');
     else if (e.data.upg === 'precio') nlog(`💵 Precio: $${price()}`,'good');
     else if (e.data.upg === 'marketing') nlog(`📢 Cliente cada ${spawnInt().toFixed(1)}s`,'good');
+    else if (e.data.upg === 'fidelidad') nlog(`❤️ Paciencia +${G.upg.fidelidad.lv*8}%`,'good');
     checkAchievements();
     updateHUD();
   }
@@ -308,6 +311,7 @@ const G={
     velocidad:{lv:1,base:80},
     precio:   {lv:1,base:150},
     marketing:{lv:1,base:200},
+    fidelidad:{lv:1,base:250},
   },
   achievements:{},
 };
@@ -617,7 +621,7 @@ function update(dt){
       case 'walkToWait':
         if(Math.abs(dx)<4){c.x=c.tx;c.state='waiting';}break;
       case 'waiting':
-        c.patience-=dt/(18+nChairs()*4)*(1-G.rep/200);
+        c.patience-=dt/(18+nChairs()*4)*(1-G.rep/200)*(1/(1+G.upg.fidelidad.lv*0.08));
         if(c.patience<=0)onClientAngry(c);
         break;
       case 'seated':
@@ -1138,15 +1142,15 @@ function updateHUD(){
   // Stats col
   document.getElementById('st-served').textContent=G.served;
   document.getElementById('st-maxcombo').textContent=`${G.maxCombo}x`;
-  document.getElementById('st-rep').textContent=`${~~G.rep}%`;
-  document.getElementById('st-time').textContent=fmtTime(G.elapsed);
 
   // Upgrades
+  const fidLv = G.upg.fidelidad.lv;
   const defs={
     sillas:   {st:`${nChairs()} cliente${nChairs()>1?'s':''}`,nx:`${Math.min(nChairs()+1,MAX_CHAIRS)} clientes`},
     velocidad:{st:`${cutDur().toFixed(1)}s ciclo`,nx:`${Math.max(1.8,cutDur()-1).toFixed(1)}s`},
     precio:   {st:`$${price()} / corte`,nx:`$${price()+3} / corte`},
     marketing:{st:`cada ${spawnInt().toFixed(1)}s`,nx:`cada ${Math.max(2.2,spawnInt()-1.2).toFixed(1)}s`},
+    fidelidad:{st:`+${(fidLv*8)}% paciencia`,nx:`+${((fidLv+1)*8)}% paciencia`},
   };
   Object.keys(G.upg).forEach(k=>{
     const cost=upgCost(k);
