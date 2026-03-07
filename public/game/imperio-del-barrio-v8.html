@@ -3679,8 +3679,12 @@ function doAscend() {
   G.level = 0;
   G.businesses = {};
   G.upgrades = {};
+  G.bizUpgrades = {};       // ← resetear upgrades internos de todas las animaciones
+  G.bizUpgradeCount = {};   // ← resetear contadores
   G.zone = 'centro';
   G.zoneHistory = ['centro'];
+  // Cerrar cualquier animación abierta para que al reabrirse arranque limpia
+  closeBizAnim();
   showAscendCelebration(next);
   playSound('levelup');
   checkAchievements();

@@ -179,12 +179,17 @@ window.addEventListener('message', e => {
   // El padre nos manda el estado inicial
   if (e.data.type === 'bizInit') {
     _parentMoney = e.data.money || 0;
+    // Reset completo del estado interno — para que ascenso lo deje limpio
     G.money = _parentMoney;
-    G.upg.sillas.lv = e.data.chairLevel || 1;
-    G.upg.velocidad.lv = e.data.speedLevel || 1;
-    G.upg.precio.lv = e.data.priceLevel || 1;
-    G.upg.marketing.lv = e.data.marketingLevel || 1;
-    G.upg.fidelidad.lv = e.data.fidelidadLevel || 1;
+    G.totalEarned = 0; G.xp = 0; G.level = 0; G.rep = 20;
+    G.served = 0; G.angryLeft = 0; G.combo = 0; G.maxCombo = 0; G.streak = 0;
+    G.boost = false; G.boostEnd = 0; G.elapsed = 0;
+    G.achievements = {};
+    G.upg.sillas.lv    = e.data.chairLevel     || e.data.sillasLevel    || 1;
+    G.upg.velocidad.lv = e.data.speedLevel      || e.data.velocidadLevel || 1;
+    G.upg.precio.lv    = e.data.priceLevel      || e.data.precioLevel    || 1;
+    G.upg.marketing.lv = e.data.marketingLevel  || 1;
+    G.upg.fidelidad.lv = e.data.fidelidadLevel  || 1;
     initSlots();
     updateHUD();
     nlog(`💰 Caja sincronizada: $${Math.floor(_parentMoney).toLocaleString()}`,'good');
