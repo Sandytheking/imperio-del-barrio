@@ -232,6 +232,7 @@ let _chairFlashTimer = 0;
 
 // Pedir compra al padre
 function requestPurchase(upg) {
+  if(BIZ_IS_MAXED){nlog("\uD83D\uDC51 Negocio al nivel MAX","special");return;}
   const cost = upgCost(upg);
   if (window.parent && window.parent !== window) {
     window.parent.postMessage({ type: 'bizPurchase', upg, cost }, '*');
@@ -308,7 +309,7 @@ window.addEventListener('resize',resize); resize();
 const CHAIR_FRACS=[.37,.50,.63,.76];
 const MAX_UPG_LV=5;
 let BIZ_IS_MAXED=false;
-const MAX_CHAIRS=4, MAX_WAIT=4;
+const MAX_CHAIRS=5, MAX_WAIT=5;
 
 // ══════════════════════════════════════════════════════════
 // GAME STATE
@@ -369,7 +370,7 @@ const ACHIEVEMENTS=[
   {id:'rich2',icon:'🤑',title:'$10,000',desc:'Empresario real',check:()=>G.money>=10000},
   {id:'angry',icon:'😤',title:'Oops...',desc:'Un cliente se fue enojado',check:()=>G.angryLeft>=1},
   {id:'vip',icon:'⭐',title:'Cliente VIP',desc:'Atendiste un VIP',check:()=>G.served>=1&&lastWasVIP},
-  {id:'allchairs',icon:'🪑',title:'4 Sillas!',desc:'Barbería completa',check:()=>nChairs()>=4},
+  {id:'allchairs',icon:'🪑',title:'5 Sillas!',desc:'Barbería completa',check:()=>nChairs()>=5},
   {id:'boost',icon:'⚡',title:'¡Boost!',desc:'Activaste tu primer boost',check:()=>G.boost},
   {id:'rep100',icon:'🌟',title:'Reputación 100%',desc:'Leyenda del barrio',check:()=>G.rep>=100},
 ];
@@ -1209,7 +1210,6 @@ function nlog(msg,type=''){
 // ACTIONS
 // ══════════════════════════════════════════════════════════
 function buyUpg(k){
-  if(BIZ_IS_MAXED){nlog("\uD83D\uDC51 Negocio al nivel MAX","special");return;}
   requestPurchase(k);
 }
 
