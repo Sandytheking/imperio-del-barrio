@@ -3700,8 +3700,12 @@ function addXP(amount) {
 // ═══════════════════════════════════════════════
 // ACTIONS
 // ═══════════════════════════════════════════════
+const BIZ_MAX_LEVEL = 10;
+
 function buyBiz(id) {
   const biz = BUSINESSES.find(b => b.id === id);
+  const currentLevel = G.businesses[id]?.level || 0;
+  if (currentLevel >= BIZ_MAX_LEVEL) { notify('🏆 ¡Este negocio ya alcanzó el nivel máximo (Nv.10)!'); return; }
   const cost = bizCost(biz);
   if (G.money < cost) { notify('💸 ¡No tienes suficiente dinero!'); return; }
   G.money -= cost;
@@ -4001,31 +4005,24 @@ function shareAscend(icon, stageName, stageIdx) {
   let imgData = null;
   try { imgData = generateShareCard(stageIdx); } catch(e) { console.warn('Card gen failed', e); }
 
-  // Mobile Web Share API with image
-  if(imgData && navigator.share && navigator.canShare) {
-    fetch(imgData)
-      .then(r => r.blob())
-      .then(blob => {
-        const file = new File([blob], 'mi-logro.png', {type:'image/png'});
-        if(navigator.canShare({files:[file]})) {
-          return navigator.share({title:'Imperio del Barrio', text:quote, files:[file]});
-        }
-        throw new Error('no file share');
-      })
-      .then(() => {})
-      .catch(() => {
-        // fallback to modal
-        if(imgData) _showShareModal(imgData, quote, url, icon, stageName, stageIdx);
-        else _openFacebook(url, quote);
-      });
-    return;
-  }
-
-  // Desktop or no Web Share — show modal directly
+  // Always show modal first (card preview + download + Facebook)
   if(imgData) {
     _showShareModal(imgData, quote, url, icon, stageName, stageIdx);
   } else {
     _openFacebook(url, quote);
+  }
+
+  // Additionally attempt native Web Share API in parallel (mobile)
+  if(imgData && navigator.share) {
+    fetch(imgData)
+      .then(r => r.blob())
+      .then(blob => {
+        const file = new File([blob], 'mi-logro.png', {type:'image/png'});
+        const canFile = navigator.canShare && navigator.canShare({files:[file]});
+        if(canFile) return navigator.share({title:'Imperio del Barrio', text:quote, files:[file]});
+        return navigator.share({title:'Imperio del Barrio', text:quote});
+      })
+      .catch(() => {}); // Silent fail — modal is already showing
   }
 }
 
@@ -4106,6 +4103,7 @@ function renderBusiness(biz) {
   // Hot/Top badges
   const isHot = isOpen && lvl >= 5;
   const isTop = isOpen && (stats.cycles || 0) >= 200;
+  const isMaxed = lvl >= BIZ_MAX_LEVEL;
 
   if (locked) {
     return `<div class="biz-card locked" style="animation-delay:${delay}s">
@@ -4132,7 +4130,7 @@ function renderBusiness(biz) {
         ${custom.name ? `<div class="biz-custom-sub">${biz.name}</div>` : `<div class="biz-custom-sub">${biz.desc}</div>`}
         <div class="biz-badge-row">
           ${isOpen ? `<div class="biz-lvl-badge" style="background:${accentColor}">Nv.${lvl}</div>` : ''}
-          ${isHot ? `<div class="biz-hot-badge">🔥 HOT</div>` : ''}
+          ${isMaxed ? `<div class="biz-hot-badge" style="background:#FFD700;color:#1E1B2E">👑 MAX</div>` : isHot ? `<div class="biz-hot-badge">🔥 HOT</div>` : ''}
           ${isTop ? `<div class="biz-top-badge">📈 TOP</div>` : ''}
         </div>
       </div>
@@ -4173,11 +4171,16 @@ function renderBusiness(biz) {
 
     <!-- FOOTER ACTIONS -->
     <div class="biz-footer-row">
-      <button class="btn-buy${!isOpen?' open-btn':''}" onclick="${isOpen && BIZ_ANIMATIONS[biz.id] ? `openBizAnim('${biz.id}')` : `buyBiz('${biz.id}')`}" ${!isOpen && !canAfford?'disabled':''} style="${!isOpen?'background:'+accentColor:''}">
-        ${!isOpen ? '🔓 Abrir' : '🎬 Mejorar'}
-      </button>
-      <div class="biz-cost-tag">${isOpen ? '▶ Ver animación' : fmt(cost)}</div>
-      ${isOpen ? `<button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">🎮 Jugar</button>` : ''}
+      ${isMaxed
+        ? `<button class="btn-buy" disabled style="opacity:0.5;cursor:not-allowed;background:#aaa">👑 Nivel Máx.</button>
+           <div class="biz-cost-tag">¡Negocio al máximo!</div>
+           <button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">🎮 Jugar</button>`
+        : `<button class="btn-buy${!isOpen?' open-btn':''}" onclick="${isOpen && BIZ_ANIMATIONS[biz.id] ? `openBizAnim('${biz.id}')` : `buyBiz('${biz.id}')`}" ${!isOpen && !canAfford?'disabled':''} style="${!isOpen?'background:'+accentColor:''}">
+          ${!isOpen ? '🔓 Abrir' : '🎬 Mejorar'}
+        </button>
+        <div class="biz-cost-tag">${isOpen ? '▶ Ver animación' : fmt(cost)}</div>
+        ${isOpen ? `<button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">🎮 Jugar</button>` : ''}`
+      }
     </div>
   </div>`;
 }
@@ -5990,8 +5993,11 @@ window.addEventListener('message', e => {
       let leveledUp = false;
       if (totalUpgs % 3 === 0) {
         if (!G.businesses[id]) G.businesses[id] = { level: 1, progress: 0 };
-        G.businesses[id].level = (G.businesses[id].level || 1) + 1;
-        leveledUp = true;
+        const currentBizLevel = G.businesses[id].level || 1;
+        if (currentBizLevel < BIZ_MAX_LEVEL) {
+          G.businesses[id].level = currentBizLevel + 1;
+          leveledUp = true;
+        }
       }
       const newLvl = G.businesses[id]?.level || 1;
       // Confirm to iframe
@@ -6225,7 +6231,8 @@ function playSound(type) {
 }
 function toggleSound() {
   G.soundOn = !G.soundOn;
-  document.getElementById('soundBtn').textContent = G.soundOn ? '🔊' : '🔇';
+  const sb = document.getElementById('soundBtn');
+  if (sb) sb.textContent = G.soundOn ? '🔊' : '🔇';
   saveGame();
 }
 
