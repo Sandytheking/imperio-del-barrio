@@ -4020,10 +4020,10 @@ function renderBusiness(biz) {
         ? `<button class="btn-buy" onclick="${BIZ_ANIMATIONS[biz.id] ? `openBizAnim('${biz.id}')` : ''}" style="background:linear-gradient(135deg,#7B2FBE,#9B5DE5);border-color:#7B2FBE">👑 Ver Negocio</button>
            <div class="biz-cost-tag">✨ ¡Nivel máximo!</div>
            <button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">🎮 Jugar</button>`
-        : `<button class="btn-buy${!isOpen?' open-btn':''}" onclick="${isOpen && BIZ_ANIMATIONS[biz.id] ? `openBizAnim('${biz.id}')` : `buyBiz('${biz.id}')`}" ${!isOpen && !canAfford?'disabled':''} style="${!isOpen?'background:'+accentColor:''}">
-          ${!isOpen ? '🔓 Abrir' : '🎬 Mejorar'}
+        : `<button class="btn-buy${!isOpen?' open-btn':''}" onclick="${!isOpen ? `buyBiz('${biz.id}')` : BIZ_ANIMATIONS[biz.id] ? `openBizAnim('${biz.id}')` : `buyBiz('${biz.id}')`}" ${!isOpen && !canAfford?'disabled':''} style="${!isOpen?'background:'+accentColor:''}">
+          ${!isOpen ? '🔓 Abrir' : '⬆️ Mejorar'}
         </button>
-        <div class="biz-cost-tag">${isOpen ? '▶ Ver animación' : fmt(cost)}</div>
+        <div class="biz-cost-tag">${isOpen && BIZ_ANIMATIONS[biz.id] ? '▶ Ver animación' : fmt(cost)}</div>
         ${isOpen ? `<button class="btn-negotiate" onclick="openNegotiate('${biz.id}','${displayName}',${income.toFixed(2)})">🎮 Jugar</button>` : ''}`
       }
     </div>
@@ -5259,7 +5259,7 @@ window.addEventListener('message', e => {
 
   // Iframe requests a purchase — validate and confirm/deny
   if (e.data.type === 'bizPurchase' && currentBizAnim) {
-    const { upg, cost } = e.data;
+    const { upg, cost, noLevel } = e.data;
     const id = currentBizAnim;
     // Stage animations: just handle money, no biz level
     if (id && id.startsWith('__stage_')) {
@@ -5287,16 +5287,21 @@ window.addEventListener('message', e => {
       // Count total animation upgrades for this biz (across all upgrade types)
       if (!G.bizUpgradeCount) G.bizUpgradeCount = {};
       G.bizUpgradeCount[id] = (G.bizUpgradeCount[id] || 0) + 1;
-      // Every 2 animation upgrades = +1 main level (5 upgrades × Nv.10 = 50 → 25 niveles)
-      const totalUpgs = G.bizUpgradeCount[id];
+      // Cada compra de upgrade en la animación = +1 nivel del negocio
+      // Con 5 upgrades × Nv.5 MAX cada uno = exactamente 25 niveles
+      // noLevel=true: upgrade cosmético/bonus que no cuenta para el nivel
+      if (!G.bizUpgrades) G.bizUpgrades = {};
+      if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
+      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
+      if (!G.bizUpgradeCount) G.bizUpgradeCount = {};
+      G.bizUpgradeCount[id] = (G.bizUpgradeCount[id] || 0) + 1;
+      // Subir 1 nivel del negocio por cada upgrade comprado (salvo noLevel)
+      if (!G.businesses[id]) G.businesses[id] = { level: 1, progress: 0 };
+      const currentBizLevel = G.businesses[id].level || 1;
       let leveledUp = false;
-      if (totalUpgs % 2 === 0) {
-        if (!G.businesses[id]) G.businesses[id] = { level: 1, progress: 0 };
-        const currentBizLevel = G.businesses[id].level || 1;
-        if (currentBizLevel < BIZ_MAX_LEVEL) {
-          G.businesses[id].level = currentBizLevel + 1;
-          leveledUp = true;
-        }
+      if (!noLevel && currentBizLevel < BIZ_MAX_LEVEL) {
+        G.businesses[id].level = currentBizLevel + 1;
+        leveledUp = true;
       }
       const newLvl = G.businesses[id]?.level || 1;
       // Confirm to iframe
@@ -5305,14 +5310,12 @@ window.addEventListener('message', e => {
         upg,
         newMoney: G.money,
       }, '*');
-      // Update header money
       document.getElementById('hdrMoney').textContent = fmt(G.money);
-      const remaining = 2 - (totalUpgs % 2 || 2);
       if (leveledUp) {
-        notify(`🎉 ¡Negocio subió a Nv.${newLvl}!`);
-        renderAll();
+        notify(`⬆️ ${G.bizCustom?.[id]?.name || id} subió a Nv.${newLvl}!`);
+        renderAll({ header:true, businesses:true, upgrades:false, achievements:false, objectives:true, map:false, prestige:false });
       } else {
-        notify(`✅ ¡${upg} mejorado! (${remaining} mejora${remaining!==1?'s':''} para Nv.${newLvl+1})`);
+        notify(`✅ ¡${upg} mejorado!`);
       }
       saveGame();
     } else {

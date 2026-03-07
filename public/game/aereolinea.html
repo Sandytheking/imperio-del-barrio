@@ -142,7 +142,8 @@ function drawPerson(cfg){
 }
 
 const BIZ_ID='aereolinea';const BIZ_ICON='🛫';const BIZ_NAME='Aerolínea Imperio';const ACCENT='#00B4D8';
-const MAX_SLOTS=4;const MAX_UPG_LV=10;
+const MAX_SLOTS=4;const MAX_UPG_LV=5;
+let BIZ_IS_MAXED=false;
 const canvas=document.getElementById('c');const ctx=canvas.getContext('2d');
 let CW,CH;function resize(){const wr=document.getElementById('wrapper');CW=canvas.width=wr.clientWidth;CH=canvas.height=wr.clientHeight;}resize();window.addEventListener('resize',resize);
 
@@ -296,15 +297,38 @@ const CUST_NAME='pasajero';const EARN_VERB='🛫 Vuelo';
 let lastT=performance.now();
 function loop(now){if(_paused){lastT=now;requestAnimationFrame(loop);return;}const dt=Math.min((now-lastT)/1000,.08);lastT=now;dt_ref=dt;gt+=dt;G.elapsed+=dt;if(G.boost&&Date.now()>G.boostEnd){G.boost=false;nlog('⚡ Boost terminó','bad');}spawnTimer+=dt;if(spawnTimer>=spawnRate()){spawnTimer=0;trySpawn();}for(let i=clients.length-1;i>=0;i--){const c=clients[i];c.bob+=dt*7;const dx=c.tx-c.x;if(Math.abs(dx)>2)c.x+=Math.sign(dx)*c.speed*dt;switch(c.state){case 'entering':if(Math.abs(dx)<6){c.x=c.tx;c.state='walkToSlot';c.tx=slots[c.slotIdx]?.x||CW*.4;c.y=slots[c.slotIdx]?.y||c.y;}break;case 'walkToSlot':if(Math.abs(dx)<6){c.x=c.tx;c.state='serving';c.progress=0;}break;case 'serving':c.progress+=dt/cycleTime();if(c.progress>=1)onServed(c);break;case 'waiting':c.patience-=dt/(12+nSlots()*3);if(c.patience<=0)onAngry(c);break;case 'leaving':if(Math.abs(dx)<8)clients.splice(i,1);break;}}updateFX(dt);ctx.clearRect(0,0,CW,CH);drawScene(gt);drawWorkers(gt);clients.forEach(c=>drawPerson({x:c.x,y:c.y,scale:c.scale,state:c.state==='serving'?'serving':c.state==='waiting'?'waiting':'idle',progress:c.progress,patience:c.patience,isVIP:c.isVIP,skin:c.skin,shirt:c.shirt,pants:c.pants,hair:c.hair,isAngry:c.isAngry,expr:c.expr,bob:c.bob}));drawFX();updateHUD();requestAnimationFrame(loop);}
 function fmt(n){if(n>=1e9)return`$${(n/1e9).toFixed(1)}B`;if(n>=1e6)return`$${(n/1e6).toFixed(2)}M`;if(n>=1e3)return`$${(n/1e3).toFixed(1)}k`;return`$${~~n}`;}
-function updateHUD(){document.getElementById('hMoney').textContent=fmt(G.money);const ips=earnPerServe()*nSlots()/cycleTime();document.getElementById('hIPS').textContent=`+${fmt(ips)}/seg`;document.getElementById('hLevel').textContent=`${BIZ_ICON} ${BIZ_NAME} — Nv.${G.level+1} ${LVL.names[G.level]}`;const req=xpReq(G.level);document.getElementById('xpFill').style.width=`${Math.min(100,(G.xp/req)*100).toFixed(1)}%`;document.getElementById('xpLbl').textContent=`${~~G.xp} / ${req} XP`;for(const k in UPGS){const u=UPGS[k],btn=document.getElementById('btn_'+k),lv=document.getElementById('lv_'+k),st=document.getElementById('st_'+k);if(!btn)continue;const cost=upgCost(k);lv.textContent=`Nv.${u.lv}`;const isMaxed=u.lv>=MAX_UPG_LV;if(isMaxed){st.innerHTML=`<b>${u.desc}</b> · <span style="color:#FFD700">👑 MÁXIMO</span>`;btn.disabled=true;btn.textContent=`👑 Nv.MAX`;btn.style.background='linear-gradient(135deg,#7B2FBE,#9B5DE5)';}else{st.innerHTML=`<b>${u.desc}</b> · <span style="color:#00B4D8">$${fmtN(cost)}</span>`;btn.disabled=G.money<cost;btn.textContent=`${u.icon} Mejorar $${fmtN(cost)}`;btn.style.background='';}}}
+function updateHUD(){document.getElementById('hMoney').textContent=fmt(G.money);const ips=earnPerServe()*nSlots()/cycleTime();document.getElementById('hIPS').textContent=`+${fmt(ips)}/seg`;document.getElementById('hLevel').textContent=`${BIZ_ICON} ${BIZ_NAME} — Nv.${G.level+1} ${LVL.names[G.level]}`;const req=xpReq(G.level);document.getElementById('xpFill').style.width=`${Math.min(100,(G.xp/req)*100).toFixed(1)}%`;document.getElementById('xpLbl').textContent=`${~~G.xp} / ${req} XP`;for(const k in UPGS){const u=UPGS[k],btn=document.getElementById('btn_'+k),lv=document.getElementById('lv_'+k),st=document.getElementById('st_'+k);if(!btn)continue;const cost=upgCost(k);lv.textContent=`Nv.${u.lv}`;const isMaxed=(u.lv>=MAX_UPG_LV) || BIZ_IS_MAXED;if(isMaxed){st.innerHTML=`<b>${u.desc}</b> · <span style="color:#FFD700">👑 MÁXIMO</span>`;btn.disabled=true;btn.textContent=`👑 Nv.MAX`;btn.style.background='linear-gradient(135deg,#7B2FBE,#9B5DE5)';}else{st.innerHTML=`<b>${u.desc}</b> · <span style="color:#00B4D8">$${fmtN(cost)}</span>`;btn.disabled=G.money<cost;btn.textContent=`${u.icon} Mejorar $${fmtN(cost)}`;btn.style.background='';}}}
 function fmtN(n){if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return Math.floor(n).toString();}
 function nlog(msg,cls){const el=document.createElement('div');el.className='nlog'+(cls?' '+cls:'');el.textContent=msg;const l=document.getElementById('notiflog');l.prepend(el);setTimeout(()=>el.remove(),4000);}
 function showAchievement(icon,title,desc){const el=document.createElement('div');el.className='ach-item';el.innerHTML=`<span class="ach-icon">${icon}</span><div><div class="ach-title">${title}</div><div class="ach-desc">${desc}</div></div>`;document.getElementById('achiev').prepend(el);setTimeout(()=>el.remove(),4200);}
 function triggerFlash(c){const f=document.getElementById('flash');f.style.background=c;f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');}
 function activateBoost(){if(G.money<1500){nlog('💸 Necesitas $1500','bad');return;}G.money-=1500;G.boost=true;G.boostEnd=Date.now()+60000;nlog('⚡ ¡BOOST x2 por 60s!','special');}
-function buyUpg(k){const cost=upgCost(k);if(window.parent&&window.parent!==window){window.parent.postMessage({type:'bizPurchase',upg:k,cost},'*');nlog('💳 Procesando...');}else{if(UPGS[k].lv>=MAX_UPG_LV){nlog('👑 ¡Mejora al máximo!','special');return;}if(G.money<cost){nlog('💸 Sin fondos','bad');return;}G.money-=cost;UPGS[k].lv++;onUpgApplied(k);}}
+function buyUpg(k){
+  if(BIZ_IS_MAXED){nlog("\uD83D\uDC51 Negocio al nivel MAX","special");return;}const cost=upgCost(k);if(window.parent&&window.parent!==window){window.parent.postMessage({type:'bizPurchase',upg:k,cost},'*');nlog('💳 Procesando...');}else{if(UPGS[k].lv>=MAX_UPG_LV){nlog('👑 ¡Mejora al máximo!','special');return;}if(G.money<cost){nlog('💸 Sin fondos','bad');return;}G.money-=cost;UPGS[k].lv++;onUpgApplied(k);}}
 function onUpgApplied(k){initSlots();nlog(`${UPGS[k].icon} ${UPGS[k].name} Nv.${UPGS[k].lv}!`,'good');showAchievement(UPGS[k].icon,`¡${UPGS[k].name}!`,`Nivel ${UPGS[k].lv}`);triggerFlash(ACCENT+'33');}
-window.addEventListener('message',e=>{if(!e.data)return;if(e.data.type==='bizClose')_paused=true;if(e.data.type==='purchaseDenied')nlog('💸 ¡Sin fondos!','bad');if(e.data.type==='purchaseOk'){if(UPGS[e.data.upg].lv<MAX_UPG_LV){UPGS[e.data.upg].lv++;}G.money=e.data.newMoney;onUpgApplied(e.data.upg);}if(e.data.type==='bizInit'){G.money=e.data.money||0;for(const k in UPGS){const lv=e.data[k+'Level']||1;UPGS[k].lv=lv;}initSlots();nlog(`${BIZ_ICON} ¡${BIZ_NAME} abierto!`,'good');}});
+window.addEventListener('message',e=>{if(!e.data)return;if(e.data.type==='bizClose')_paused=true;if(e.data.type==='purchaseDenied')nlog('💸 ¡Sin fondos!','bad');if(e.data.type==='purchaseOk'){if(UPGS[e.data.upg].lv<MAX_UPG_LV){UPGS[e.data.upg].lv++;}G.money=e.data.newMoney;onUpgApplied(e.data.upg);}if(e.data.type==='bizInit'){
+    if(e.data.bizCurrentLevel!==undefined&&e.data.bizMaxLevel!==undefined){
+      BIZ_IS_MAXED=e.data.bizCurrentLevel>=e.data.bizMaxLevel;
+      if(BIZ_IS_MAXED)nlog('\uD83D\uDC51 Nivel MAX alcanzado','special');
+    }
+    const _m=e.data.money||0;
+    if(typeof G!=='undefined')G.money=_m;
+    const _upgs=typeof UPGS!=='undefined'?UPGS:(typeof G!=='undefined'&&G.upg?G.upg:null);
+    if(_upgs){for(const k in _upgs){const lv=e.data[k+'Level'];if(lv!==undefined)_upgs[k].lv=lv;}}
+    if(typeof G!=='undefined'){
+      G.totalEarned=0;G.xp=0;G.level=0;
+      if('rep' in G)G.rep=20;
+      if('served' in G)G.served=0;
+      if('combo' in G){G.combo=0;G.maxCombo=0;}
+      if('streak' in G)G.streak=0;
+      if('angryLeft' in G)G.angryLeft=0;
+      if('boost' in G){G.boost=false;G.boostEnd=0;}
+      if('elapsed' in G)G.elapsed=0;
+      if('achievements' in G)G.achievements={};
+    }
+    if(typeof initSlots==='function')initSlots();
+    if(typeof updateHUD==='function')updateHUD();
+  }});
 document.addEventListener('visibilitychange',()=>{_paused=document.hidden;});
 if(window.parent&&window.parent!==window)window.parent.postMessage({type:'bizReady'},'*');
 initSlots();nlog(`${BIZ_ICON} ¡${BIZ_NAME} listo!`,'good');requestAnimationFrame(loop);

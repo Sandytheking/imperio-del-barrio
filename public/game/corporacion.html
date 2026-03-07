@@ -212,7 +212,8 @@ const UPGS={
   expansion:{lv:1,base:35000,icon:'🌍',name:'Expansión',desc:'Ingreso +35%'},
   ipo:{lv:1,base:60000,icon:'🚀',name:'IPO',desc:'Prestige +40%'}
 };
-const MAX_UPG_LV=10;
+const MAX_UPG_LV=5;
+let BIZ_IS_MAXED=false;
 function upgCost(k){return Math.floor(UPGS[k].base*Math.pow(1.65,UPGS[k].lv-1));}
 
 const BASE_EARN=750,BASE_CYCLE=8,BASE_SPAWN=5;
@@ -494,14 +495,15 @@ function updateUI(){
   for(const k in UPGS){
     const u=UPGS[k];const cost=upgCost(k);const can=G.money>=cost;
     const btn=document.getElementById('btn_'+k);if(!btn)continue;
-    const isMaxed=u.lv>=MAX_UPG_LV;
+    const isMaxed=(u.lv>=MAX_UPG_LV) || BIZ_IS_MAXED;
     if(isMaxed){btn.disabled=true;btn.textContent='👑 Nv.MAX';btn.style.background='linear-gradient(135deg,#7B2FBE,#9B5DE5)';}
     else{btn.disabled=!can;btn.textContent=`${u.icon} $${cost>=1e6?(cost/1e6).toFixed(1)+'M':cost>=1000?(cost/1000).toFixed(1)+'k':cost}`;btn.style.background='';}
     document.getElementById('lv_'+k).textContent=`Nv.${u.lv}`;
     document.getElementById('st_'+k).innerHTML=`${u.desc}: <b>Nv.${u.lv}</b>`;
   }
 }
-function buyUpg(k){if(UPGS[k].lv>=MAX_UPG_LV){nlog('👑 ¡Mejora al máximo!','special');return;}const cost=upgCost(k);if(G.money<cost)return;window.parent?.postMessage({type:'bizPurchase',upg:k,cost},'*');}
+function buyUpg(k){
+  if(BIZ_IS_MAXED){nlog("\uD83D\uDC51 Negocio al nivel MAX","special");return;}if(UPGS[k].lv>=MAX_UPG_LV){nlog('👑 ¡Mejora al máximo!','special');return;}const cost=upgCost(k);if(G.money<cost)return;window.parent?.postMessage({type:'bizPurchase',upg:k,cost},'*');}
 
 // ── SHARE SYSTEM ──
 function openShare(){
@@ -562,7 +564,29 @@ function renderShareImage(sc){
 function downloadShare(){const sc=document.getElementById('sc');const a=document.createElement('a');a.href=sc.toDataURL('image/png');a.download='corporacion-imperio.png';a.click();nlog('📸 Imagen guardada','special');}
 async function nativeShare(){const sc=document.getElementById('sc');sc.toBlob(async(blob)=>{try{const file=new File([blob],'corporacion-imperio.png',{type:'image/png'});await navigator.share({title:'¡Corporación Desbloqueada!',text:'¡Fundé la Corporación en Imperio del Barrio! 🌎📈',files:[file]});}catch(e){downloadShare();}});}
 
-window.addEventListener('message',e=>{if(!e.data)return;if(e.data.type==='bizClose')_paused=true;if(e.data.type==='purchaseDenied')nlog('💸 ¡Sin fondos!','bad');if(e.data.type==='purchaseOk'){const k=e.data.upg;if(UPGS[k].lv<MAX_UPG_LV){UPGS[k].lv++;}G.money=e.data.newMoney;nlog(`✅ ${UPGS[k].name} Nv.${UPGS[k].lv}`,'special');triggerFlash('#00ff8844');}if(e.data.type==='bizInit'){G.money=e.data.money||0;for(const k in UPGS){const lv=e.data[k+'Level']||1;UPGS[k].lv=lv;}nlog('🌎 ¡Corporación activa!','special');}});
+window.addEventListener('message',e=>{if(!e.data)return;if(e.data.type==='bizClose')_paused=true;if(e.data.type==='purchaseDenied')nlog('💸 ¡Sin fondos!','bad');if(e.data.type==='purchaseOk'){const k=e.data.upg;if(UPGS[k].lv<MAX_UPG_LV){UPGS[k].lv++;}G.money=e.data.newMoney;nlog(`✅ ${UPGS[k].name} Nv.${UPGS[k].lv}`,'special');triggerFlash('#00ff8844');}if(e.data.type==='bizInit'){
+    if(e.data.bizCurrentLevel!==undefined&&e.data.bizMaxLevel!==undefined){
+      BIZ_IS_MAXED=e.data.bizCurrentLevel>=e.data.bizMaxLevel;
+      if(BIZ_IS_MAXED)nlog('\uD83D\uDC51 Nivel MAX alcanzado','special');
+    }
+    const _m=e.data.money||0;
+    if(typeof G!=='undefined')G.money=_m;
+    const _upgs=typeof UPGS!=='undefined'?UPGS:(typeof G!=='undefined'&&G.upg?G.upg:null);
+    if(_upgs){for(const k in _upgs){const lv=e.data[k+'Level'];if(lv!==undefined)_upgs[k].lv=lv;}}
+    if(typeof G!=='undefined'){
+      G.totalEarned=0;G.xp=0;G.level=0;
+      if('rep' in G)G.rep=20;
+      if('served' in G)G.served=0;
+      if('combo' in G){G.combo=0;G.maxCombo=0;}
+      if('streak' in G)G.streak=0;
+      if('angryLeft' in G)G.angryLeft=0;
+      if('boost' in G){G.boost=false;G.boostEnd=0;}
+      if('elapsed' in G)G.elapsed=0;
+      if('achievements' in G)G.achievements={};
+    }
+    if(typeof initSlots==='function')initSlots();
+    if(typeof updateHUD==='function')updateHUD();
+  }});
 document.addEventListener('visibilitychange',()=>{_paused=document.hidden;});
 if(window.parent&&window.parent!==window)window.parent.postMessage({type:'bizReady'},'*');
 requestAnimationFrame(loop);

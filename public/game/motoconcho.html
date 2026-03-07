@@ -281,7 +281,8 @@ const BIZ_ICON='🛵';
 const BIZ_NAME='Mototaxi Express';
 const ACCENT='#2DC653';
 const MAX_SLOTS=5;
-const MAX_UPG_LV=10;
+const MAX_UPG_LV=5;
+let BIZ_IS_MAXED=false;
 
 // ══════════════════════════════════════════════════
 // CANVAS SETUP
@@ -673,7 +674,7 @@ function updateHUD(){
     if(!btn)continue;
     const cost=upgCost(k);
     lv.textContent=`Nv.${u.lv}`;
-    const isMaxed=u.lv>=MAX_UPG_LV;
+    const isMaxed=(u.lv>=MAX_UPG_LV) || BIZ_IS_MAXED;
     if(isMaxed){
       st.innerHTML=`<b>${u.desc}</b> · <span style="color:#FFD200">👑 MÁXIMO</span>`;
       btn.disabled=true;
@@ -697,6 +698,7 @@ function activateBoost(){if(G.money<300){nlog('💸 Necesitas $300','bad');retur
 // PARENT BRIDGE
 // ══════════════════════════════════════════════════
 function buyUpg(k){
+  if(BIZ_IS_MAXED){nlog("\uD83D\uDC51 Negocio al nivel MAX","special");return;}
   const cost=upgCost(k);
   if(window.parent&&window.parent!==window){window.parent.postMessage({type:'bizPurchase',upg:k,cost},'*');nlog('💳 Procesando...');}
   else{if(UPGS[k].lv>=MAX_UPG_LV){nlog('👑 ¡Mejora al máximo!','special');return;}if(G.money<cost){nlog('💸 Sin fondos','bad');return;}G.money-=cost;UPGS[k].lv++;onUpgApplied(k);}
@@ -713,10 +715,27 @@ window.addEventListener('message',e=>{
   if(e.data.type==='purchaseDenied')nlog('💸 ¡Sin fondos!','bad');
   if(e.data.type==='purchaseOk'){if(UPGS[e.data.upg].lv<MAX_UPG_LV){UPGS[e.data.upg].lv++;}G.money=e.data.newMoney;onUpgApplied(e.data.upg);}
   if(e.data.type==='bizInit'){
-    G.money=e.data.money||0;
-    for(const k in UPGS){const lv=e.data[k+'Level']||1;UPGS[k].lv=lv;}
-    initSlots();
-    nlog(`${BIZ_ICON} ¡${BIZ_NAME} abierto!`,'good');
+    if(e.data.bizCurrentLevel!==undefined&&e.data.bizMaxLevel!==undefined){
+      BIZ_IS_MAXED=e.data.bizCurrentLevel>=e.data.bizMaxLevel;
+      if(BIZ_IS_MAXED)nlog('\uD83D\uDC51 Nivel MAX alcanzado','special');
+    }
+    const _m=e.data.money||0;
+    if(typeof G!=='undefined')G.money=_m;
+    const _upgs=typeof UPGS!=='undefined'?UPGS:(typeof G!=='undefined'&&G.upg?G.upg:null);
+    if(_upgs){for(const k in _upgs){const lv=e.data[k+'Level'];if(lv!==undefined)_upgs[k].lv=lv;}}
+    if(typeof G!=='undefined'){
+      G.totalEarned=0;G.xp=0;G.level=0;
+      if('rep' in G)G.rep=20;
+      if('served' in G)G.served=0;
+      if('combo' in G){G.combo=0;G.maxCombo=0;}
+      if('streak' in G)G.streak=0;
+      if('angryLeft' in G)G.angryLeft=0;
+      if('boost' in G){G.boost=false;G.boostEnd=0;}
+      if('elapsed' in G)G.elapsed=0;
+      if('achievements' in G)G.achievements={};
+    }
+    if(typeof initSlots==='function')initSlots();
+    if(typeof updateHUD==='function')updateHUD();
   }
 });
 document.addEventListener('visibilitychange',()=>{_paused=document.hidden;});
