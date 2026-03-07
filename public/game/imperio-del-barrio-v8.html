@@ -5154,6 +5154,8 @@ function openBizAnim(id) {
     iframe.contentWindow?.postMessage({
       type: 'bizInit',
       money: G.money,
+      bizCurrentLevel: bizLevel(id),
+      bizMaxLevel: 25,
       // Generic: send all stored upgrade levels for this biz
       ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
       // Backwards compat keys
@@ -5194,15 +5196,44 @@ window.addEventListener('message', e => {
   if (e.data.type === 'bizReady' && currentBizAnim) {
     const id = currentBizAnim;
     const upgrades = G.bizUpgrades?.[id] || {};
+    const isMaxed = bizLevel(id) >= 25;
     iframe?.contentWindow?.postMessage({
       type: 'bizInit',
       money: G.money,
+      bizCurrentLevel: bizLevel(id),
+      bizMaxLevel: 25,
       ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
       chairLevel:     upgrades.sillas    || 1,
       speedLevel:     upgrades.velocidad || 1,
       priceLevel:     upgrades.precio    || 1,
       marketingLevel: upgrades.marketing || 1,
     }, '*');
+
+    // Si el negocio está al máximo, inyectar CSS en el iframe para bloquear
+    // todos los botones de mejora — funciona en las 20 animaciones sin tocarlas
+    if (isMaxed) {
+      setTimeout(() => {
+        try {
+          const iDoc = iframe?.contentDocument || iframe?.contentWindow?.document;
+          if (!iDoc) return;
+          const style = iDoc.createElement('style');
+          style.id = 'parent-maxed-override';
+          style.textContent = `
+            button:not(.boost-btn):not(.close-btn):not([class*="nav"]):not([class*="back"]) {
+              background: linear-gradient(135deg,#7B2FBE,#9B5DE5) !important;
+              color: rgba(255,255,255,0.5) !important;
+              cursor: not-allowed !important;
+              pointer-events: none !important;
+              box-shadow: none !important;
+            }
+            button:not(.boost-btn):not(.close-btn):not([class*="nav"]):not([class*="back"])::after {
+              content: " 👑 MAX";
+            }
+          `;
+          iDoc.head.appendChild(style);
+        } catch(_) {} // cross-origin fallback — el bizInit ya maneja esto
+      }, 600);
+    }
   }
 
   // Iframe earned money — sync to main game
