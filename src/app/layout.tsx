@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Imperio' },
   keywords: ['juego idle', 'juego dominicano', 'imperio del barrio', 'clicker game', 'juego gratis', 'negocios', 'barrio', 'dominicana'],
   authors: [{ name: 'Imperio del Barrio' }],
+  icons: {
+    icon: '/favicon.ico',
+  },
   openGraph: {
     title: 'Imperio del Barrio 🏘️ — Juego Idle Dominicano',
     description: 'De barbería a banco central. Construye tu imperio desde el barrio. 100% gratis.',
@@ -59,3 +62,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
