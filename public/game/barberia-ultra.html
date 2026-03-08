@@ -170,13 +170,11 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%}
 // ══════════════════════════════════════════════════════════
 // PARENT GAME BRIDGE — postMessage bidireccional
 // ══════════════════════════════════════════════════════════
-let _parentMoney = 0; // dinero real del juego principal
+let _parentMoney = 0;
 
-// Recibir dinero del padre cuando se abre la ventana
 window.addEventListener('message', e => {
   if (!e.data) return;
 
-  // El padre nos manda el estado inicial
   if(e.data.type==='bizInit'){
     if(e.data.bizCurrentLevel!==undefined&&e.data.bizMaxLevel!==undefined){
       BIZ_IS_MAXED=e.data.bizCurrentLevel>=e.data.bizMaxLevel;
@@ -201,7 +199,6 @@ window.addEventListener('message', e => {
     if(typeof updateHUD==='function')updateHUD();
   }
 
-  // El padre nos confirma una compra (dinero descontado)
   if (e.data.type === 'purchaseOk') {
     G.money = e.data.newMoney;
     if(G.upg[e.data.upg].lv<MAX_UPG_LV){G.upg[e.data.upg].lv++;}
@@ -209,7 +206,6 @@ window.addEventListener('message', e => {
       initSlots();
       promoteWait();
       nlog(`🪑 ¡${nChairs()} sillas instaladas!`,'good');
-      // Flash visual en las sillas nuevas
       _chairFlash = nChairs() - 1;
       _chairFlashTimer = 2;
     } else if (e.data.upg === 'velocidad') nlog(`⚡ Ciclo: ${cutDur().toFixed(1)}s`,'good');
@@ -220,17 +216,14 @@ window.addEventListener('message', e => {
     updateHUD();
   }
 
-  // El padre rechaza la compra (sin fondos)
   if (e.data.type === 'purchaseDenied') {
     nlog('💸 ¡No tienes suficiente dinero!','bad');
   }
 });
 
-// Variables para flash de silla nueva
 let _chairFlash = -1;
 let _chairFlashTimer = 0;
 
-// Pedir compra al padre
 function requestPurchase(upg) {
   if(BIZ_IS_MAXED){nlog("\uD83D\uDC51 Negocio al nivel MAX","special");return;}
   const cost = upgCost(upg);
@@ -238,12 +231,10 @@ function requestPurchase(upg) {
     window.parent.postMessage({ type: 'bizPurchase', upg, cost }, '*');
     nlog(`💳 Procesando compra...`);
   } else {
-    // Modo standalone (sin iframe): funciona solo
     buyUpgStandalone(upg);
   }
 }
 
-// Fallback standalone (cuando no está en iframe)
 function buyUpgStandalone(k) {
   if(G.upg[k].lv>=MAX_UPG_LV){nlog('👑 ¡Mejora al máximo!','special');return;}
   const cost = upgCost(k);
@@ -255,14 +246,14 @@ function buyUpgStandalone(k) {
   else if (k === 'velocidad') nlog(`⚡ Ciclo: ${cutDur().toFixed(1)}s`,'good');
   else if (k === 'precio') nlog(`💵 Precio: $${price()}`,'good');
   else if (k === 'marketing') nlog(`📢 Cliente cada ${spawnInt().toFixed(1)}s`,'good');
+  else if (k === 'fidelidad') nlog(`❤️ Paciencia +${G.upg.fidelidad.lv*8}%`,'good');
   checkAchievements();
 }
 
-// Enviar ganancias al padre periódicamente
 let _earnedSinceSync = 0;
 
 // ══════════════════════════════════════════════════════════
-// AUDIO ENGINE (Web Audio API – no files needed)
+// AUDIO ENGINE
 // ══════════════════════════════════════════════════════════
 const AC = new (window.AudioContext||window.webkitAudioContext)();
 function resume(){if(AC.state==='suspended')AC.resume();}
@@ -320,11 +311,12 @@ const G={
   boost:false, boostEnd:0,
   elapsed:0,
   upg:{
-    sillas:   {lv:0,base:3750,icon:'🪑',name:'Sillas',desc:'Capacidad +1 (Nv.5: +Turbo)'},
-    velocidad:{lv:0,base:7500},
-    precio:   {lv:0,base:13750},
-    marketing:{lv:0,base:4500000},
-    fidelidad:{lv:0,base:250},
+    // ── PRECIOS SÚPER ACCESIBLES — arrancan en ~$200, escalan x2 por nivel ──
+    sillas:   {lv:0,base:200,icon:'🪑',name:'Sillas',desc:'Capacidad +1 (Nv.5: +Turbo)'},
+    velocidad:{lv:0,base:200},
+    precio:   {lv:0,base:200},
+    marketing:{lv:0,base:200},
+    fidelidad:{lv:0,base:200},
   },
   achievements:{},
 };
@@ -334,7 +326,7 @@ function nChairs(){return Math.min(Math.min(G.upg.sillas.lv,5),MAX_CHAIRS);}
 function cutDur(){const sillaBonus=G.upg.sillas.lv>=5?.85:1;return Math.max(1.8,10-G.upg.velocidad.lv+G.upg.velocidad.lv*.05)*sillaBonus*(G.boost?.45:1);}
 function price(){return 5+(G.upg.precio.lv-1)*3;}
 function spawnInt(){return Math.max(2.2,12-G.upg.marketing.lv*1.2);}
-function upgCost(k){const u=G.upg[k];return Math.floor(u.base*Math.pow(1.6,u.lv-1));}
+function upgCost(k){const u=G.upg[k];return Math.floor(u.base*Math.pow(2.0,u.lv-1));}
 function comboMult(){return 1+Math.min(G.combo*.15,3);}
 function repBonus(){return 1+G.rep/200;}
 function effPrice(isVIP){return price()*(isVIP?2.5:1)*comboMult()*repBonus()*(G.boost?2:1);}
@@ -354,7 +346,6 @@ function addXP(a){
   }
 }
 
-// ── Tracking ──
 let ipsAccum=0,ipsTimer=0,displayIPS=0;
 
 // ══════════════════════════════════════════════════════════
@@ -454,7 +445,6 @@ const SHIRTS=['#FF6348','#5BC8F5','#2DC653','#FF4FAD','#9B5DE5','#FF8C42','#00C9
 const PANTS=['#2D2B3D','#3D5A80','#4a4e69','#1b4332','#6d3a3a','#16213e','#2c3e50'];
 const SKINS=['#FDBCB4','#E8975A','#C07A3A','#8B5E3C','#6B3E26','#4A2C0A'];
 const HAIRS=['#1a1a1a','#4a2c0a','#C07A3A','#FFD200','#FF4757','#e8e8e8','#9B5DE5'];
-// Character types for variety
 const CHAR_TYPES=['normal','tall','chubby','small','elder'];
 
 class Client{
@@ -480,7 +470,6 @@ class Client{
     this.scissorPhase=0;
     this.leaveSmoke=false;
     this.smokeT=0;
-    // Happiness affects tip
     this.happiness=.7+Math.random()*.3;
   }
   get income(){return effPrice(this.isVIP)*this.happiness*(1+G.streak*.02);}
@@ -526,15 +515,12 @@ function onServiceDone(c){
   G.combo++; if(G.combo>G.maxCombo)G.maxCombo=G.combo;
   lastWasVIP=c.isVIP;
 
-  // Sync earnings to parent game in real time
   if (window.parent && window.parent !== window) {
     window.parent.postMessage({ type: 'bizEarned', earned: inc, xp: inc * 0.25 }, '*');
   }
 
-  // Reputation
   G.rep=Math.min(100,G.rep+.5+c.happiness*.5);
 
-  // Combo effects
   if(G.combo>=3){
     sndCombo(G.combo);
     spawnFloat(c.x,c.y-80*c.scale,`🔥 COMBO x${G.combo}!`,'#FF6348',true);
@@ -578,22 +564,19 @@ function onClientAngry(c){
 // ══════════════════════════════════════════════════════════
 // DAY / NIGHT CYCLE
 // ══════════════════════════════════════════════════════════
-let dayT=0; // 0=dawn,1=day,2=dusk,3=night
-let dayPhase=0; // 0-1 continuous
-const DAY_DURATION=120; // seconds full cycle
+let dayT=0;
+let dayPhase=0;
+const DAY_DURATION=120;
 const DAY_COLORS=[
-  {bg:'rgba(255,140,0,.12)',sky1:'#fde8c0',sky2:'#f5d080'},// dawn
-  {bg:'rgba(0,0,0,0)',sky1:'#d4eaf5',sky2:'#c8dce8'},     // day
-  {bg:'rgba(255,80,0,.1)',sky1:'#f5c09a',sky2:'#e8a070'}, // dusk
-  {bg:'rgba(0,0,40,.45)',sky1:'#1a2a4a',sky2:'#0d1a30'},  // night
+  {bg:'rgba(255,140,0,.12)',sky1:'#fde8c0',sky2:'#f5d080'},
+  {bg:'rgba(0,0,0,0)',sky1:'#d4eaf5',sky2:'#c8dce8'},
+  {bg:'rgba(255,80,0,.1)',sky1:'#f5c09a',sky2:'#e8a070'},
+  {bg:'rgba(0,0,40,.45)',sky1:'#1a2a4a',sky2:'#0d1a30'},
 ];
 const DAY_LABELS=['🌅 Amanecer','☀️ Día','🌆 Atardecer','🌙 Noche'];
 let dayLabel='☀️ Día';
 let nightStars=Array.from({length:40},()=>({x:Math.random(),y:Math.random()*.7,b:Math.random()}));
 
-// ══════════════════════════════════════════════════════════
-// DOOR & MISC ANIM
-// ══════════════════════════════════════════════════════════
 let doorAnim=0;
 
 // ══════════════════════════════════════════════════════════
@@ -601,23 +584,16 @@ let doorAnim=0;
 // ══════════════════════════════════════════════════════════
 function update(dt){
   G.elapsed+=dt;
-  // Boost
   if(G.boost&&Date.now()>G.boostEnd){G.boost=false;nlog('⚡ Boost terminó');}
-  // Spawn
   spawnTimer+=dt;
   if(spawnTimer>=spawnInt()){spawnTimer=0;trySpawn();}
-  // IPS
   ipsTimer+=dt; if(ipsTimer>=1){displayIPS=ipsAccum/ipsTimer;ipsAccum=0;ipsTimer=0;}
-  // Day cycle
   dayPhase=((dayPhase||0)+dt/DAY_DURATION)%1;
   const di=Math.max(0,Math.min(3,Math.floor(dayPhase*4)));
   if(di!==dayT){dayT=di;dayLabel=DAY_LABELS[di]||'☀️ Día';nlog(dayLabel);}
-  // Door
   doorAnim=Math.max(0,doorAnim-dt*2.5);
-  // Shake
   if(shakeT>0)shakeT=Math.max(0,shakeT-dt);
 
-  // Clients
   for(const c of clients){
     c.bob+=dt*8;
     const dx=c.tx-c.x;
@@ -650,7 +626,6 @@ function update(dt){
   }
   clients=clients.filter(c=>!(c.state==='leaving'&&c.x>CW+40));
 
-  // Particles
   particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=130*dt;p.life-=dt*1.8;});
   particles=particles.filter(p=>p.life>0);
   hairBits.forEach(h=>{h.x+=h.vx*dt;h.y+=h.vy*dt;h.vy+=60*dt;h.life-=dt*1.5;h.angle+=dt*2;});
@@ -668,18 +643,15 @@ let gt=0;
 function draw(now){
   gt=now/1000;
   ctx.save();
-  // Screen shake
   if(shakeT>0){const s=shakeAmt*(shakeT/.25);ctx.translate((Math.random()-.5)*s,(Math.random()-.5)*s);}
 
   const stY=ST(),sbY=SB(),shH=SH(),fy=FY();
 
-  // ── SCENE BG (day/night responsive) ──
   const dc=DAY_COLORS[Math.max(0,Math.min(3,dayT||0))];
   const wallG=ctx.createLinearGradient(0,stY,0,fy);
   wallG.addColorStop(0,dc.sky1); wallG.addColorStop(1,dc.sky2);
   ctx.fillStyle=wallG; ctx.fillRect(0,stY,CW,shH+20);
 
-  // Night stars
   if(dayT===3){
     nightStars.forEach(s=>{
       const tw=Math.sin(gt*1.5+s.b*10)*.5+.5;
@@ -688,29 +660,23 @@ function draw(now){
     });
   }
 
-  // Wall tiles
   ctx.strokeStyle=dayT===3?'rgba(100,120,150,.25)':'rgba(195,180,160,.3)'; ctx.lineWidth=1;
   const tW=CW*.055,tH=shH*.12;
   for(let x=0;x<CW;x+=tW){ctx.beginPath();ctx.moveTo(x,stY);ctx.lineTo(x,fy-8);ctx.stroke();}
   for(let y=stY;y<fy-8;y+=tH){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();}
 
-  // Floor
   const fG=ctx.createLinearGradient(0,fy-8,0,sbY);
   if(dayT===3){fG.addColorStop(0,'#6b4d28');fG.addColorStop(1,'#3d2a0f');}
   else{fG.addColorStop(0,'#c8a882');fG.addColorStop(.4,'#b8956e');fG.addColorStop(1,'#8B6914');}
   ctx.fillStyle=fG; ctx.fillRect(0,fy-8,CW,sbY-fy+8);
-  // Floor tiles
   ctx.strokeStyle='rgba(0,0,0,.12)'; ctx.lineWidth=.8;
   for(let x=0;x<CW;x+=CW*.07){ctx.beginPath();ctx.moveTo(x,fy-8);ctx.lineTo(x,sbY);ctx.stroke();}
-  // Baseboard
   rr(0,fy-12,CW,5,0,dayT===3?'#5D3A1A':'#8B7355',null);
 
-  // Zone dividers
   ctx.strokeStyle='rgba(0,0,0,.12)'; ctx.lineWidth=1.5; ctx.setLineDash([8,10]);
   [.10,.28,.82].forEach(f=>{ctx.beginPath();ctx.moveTo(CW*f,stY+5);ctx.lineTo(CW*f,fy-12);ctx.stroke();});
   ctx.setLineDash([]);
 
-  // Zone labels
   ctx.globalAlpha=.35;
   const zlY=stY+shH*.055,zfs=`${~~(CW*.009)}px "Nunito"`;
   const zlC=dayT===3?'rgba(200,220,255,.7)':'rgba(80,60,40,.9)';
@@ -720,7 +686,6 @@ function draw(now){
   txt('CAJA & SALIDA',CW*.91,zlY,zfs,zlC);
   ctx.globalAlpha=1;
 
-  // ── SCENE ELEMENTS ──
   drawWindow(stY,shH,fy);
   drawClock(stY,shH,gt);
   drawShopSign();
@@ -731,19 +696,16 @@ function draw(now){
   drawCashReg(fy,stY,shH);
   drawPlants(fy,stY,shH);
 
-  // Clients (sorted)
   [...clients].sort((a,b)=>{
     const o={entering:0,walkToWait:1,waiting:2,walkToChair:3,seated:4,walkToCash:5,atCash:6,leaving:7};
     return (o[a.state]||0)-(o[b.state]||0);
   }).forEach(drawClient);
 
-  // FX
   drawHairBits();
   drawParticles();
   drawBills();
   drawFloats();
 
-  // Day overlay
   const dn=document.getElementById('daynight');
   dn.style.background=dc.bg;
 
@@ -764,11 +726,8 @@ function txt(t,x,y,font,color,align='center'){
 
 function drawWindow(stY,shH,fy){
   const wx=CW*.60,wy=stY+shH*.08,ww=CW*.12,wh=shH*.3;
-  // Frame outer
   rr(wx-4,wy-4,ww+8,wh+8,10,'#8B7355','#5D4307',3);
-  // Glass
   rr(wx,wy,ww,wh,6,'rgba(180,220,245,.5)',dayT===3?'#3a5a7a':'#7a9fb3',1.5);
-  // Light ray (animated)
   if(dayT!==3){
     ctx.save();
     const alpha=.04+Math.sin(gt*.3)*.02;
@@ -780,13 +739,10 @@ function drawWindow(stY,shH,fy){
     ctx.closePath();ctx.fill();
     ctx.restore();
   }
-  // Panes
   ctx.strokeStyle=dayT===3?'#3a5a7a':'#7a9fb3';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(wx+ww/2,wy);ctx.lineTo(wx+ww/2,wy+wh);ctx.stroke();
   ctx.beginPath();ctx.moveTo(wx,wy+wh/2);ctx.lineTo(wx+ww,wy+wh/2);ctx.stroke();
-  // Sill
   rr(wx-5,wy+wh,ww+10,8,[0,0,4,4],'#c8a882','#8B7355',1.5);
-  // Reflection twinkle
   if(dayT!==3){
     ctx.save();ctx.globalAlpha=.25+Math.sin(gt*.7)*.15;
     rr(wx+6,wy+6,ww*.3,wh*.4,4,'white',null);ctx.restore();
@@ -808,7 +764,6 @@ function drawClock(stY,shH,gt){
   ctx.strokeStyle='#e74c3c';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(sA)*r*.88,cy+Math.sin(sA)*r*.88);ctx.stroke();
   ctx.beginPath();ctx.arc(cx,cy,2.5,0,Math.PI*2);ctx.fillStyle='#5D4307';ctx.fill();
-  // Day label under clock
   txt(dayLabel,cx,cy+r+14,`700 ${~~(CW*.008)}px Nunito`,dayT===3?'rgba(200,220,255,.8)':'#888');
 }
 
@@ -819,7 +774,6 @@ function drawShopSign(){
   if(dayT===3){ctx.shadowColor='#FFD200';ctx.shadowBlur=20*glowA;}
   rr(sx,sy,sw,sh,10,'#FFD200','#5D4307',2.5);
   ctx.restore();
-  // Neon flicker at night
   if(dayT===3){
     ctx.save();ctx.globalAlpha=.3+Math.random()*.1;
     rr(sx+3,sy+3,sw-6,sh-6,8,null,'#FFD200',1.5);
@@ -841,7 +795,7 @@ function drawDoor(stY,shH,fy){
   ctx.beginPath();ctx.arc(dw-10,dh/2,5,0,Math.PI*2);ctx.fillStyle='#FFD700';ctx.fill();ctx.strokeStyle='#5D4307';ctx.lineWidth=1.5;ctx.stroke();
   ctx.restore();
   rr(dx-4,fy-8,dw+8,10,[0,0,3,3],'#8B6914','#5D4307',1.5);
-  if(dayT===3){// Night light above door
+  if(dayT===3){
     ctx.save();ctx.shadowColor='rgba(255,240,150,.8)';ctx.shadowBlur=20;
     ctx.beginPath();ctx.arc(dx+dw/2,dy-8,6,0,Math.PI*2);ctx.fillStyle='#ffe680';ctx.fill();
     ctx.restore();
@@ -875,7 +829,6 @@ function drawChair(i,fy,stY,shH){
   ctx.globalAlpha=active?1:.18;
   const cx=chairX(i),s=CW/1280;
 
-  // NEW CHAIR FLASH GLOW
   if (i === _chairFlash && _chairFlashTimer > 0 && active) {
     ctx.save();
     ctx.globalAlpha = Math.min(1, _chairFlashTimer) * 0.6;
@@ -889,42 +842,31 @@ function drawChair(i,fy,stY,shH){
     ctx.restore();
     ctx.globalAlpha = active ? 1 : .18;
   }
-  // Mirror
   const mw=CW*.052,mh=shH*.34,mx=cx-mw/2,my=stY+shH*.09;
   rr(mx-3,my-3,mw+6,mh+6,[8,8,4,4],'#8B7355','#5D4307',2);
   rr(mx,my,mw,mh,6,'rgba(190,220,240,.5)',dayT===3?'#2a4a6a':'#7a9fb3',1.5);
   ctx.save();ctx.globalAlpha*=.3;rr(mx+4,my+4,mw*.3,mh*.45,3,'white',null);ctx.restore();
   ctx.globalAlpha=active?1:.18;
-  // Shadow
   ctx.save();ctx.globalAlpha*=.12;ctx.beginPath();ctx.ellipse(cx,fy-2,CW*.026,6*s,0,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();ctx.restore();
   ctx.globalAlpha=active?1:.18;
-  // Pole & base
   rr(cx-3*s,fy-40*s,6*s,40*s,2,'#aaa','#666',1.5);
   ctx.beginPath();ctx.ellipse(cx,fy-2,CW*.022,5*s,0,0,Math.PI*2);ctx.fillStyle='#999';ctx.fill();
-  // Seat
   rr(cx-24*s,fy-46*s,48*s,15*s,6,'#c0392b','#7B1818',2.5);
   ctx.save();ctx.globalAlpha*=.28;rr(cx-20*s,fy-46*s,24*s,6*s,[6,6,0,0],'white',null);ctx.restore();ctx.globalAlpha=active?1:.18;
-  // Backrest
   rr(cx-20*s,fy-84*s,40*s,40*s,[6,6,0,0],'#c0392b','#7B1818',2.5);
   rr(cx-16*s,fy-80*s,32*s,32*s,4,'rgba(255,255,255,.07)',null);
-  // Armrests
   rr(cx-30*s,fy-66*s,8*s,22*s,3,'#e74c3c','#7B1818',2);
   rr(cx+22*s,fy-66*s,8*s,22*s,3,'#e74c3c','#7B1818',2);
-  // Footrest
   rr(cx-22*s,fy-18*s,44*s,7*s,3,'#aaa','#666',1.5);
-  // Number
   txt(`${i+1}`,cx,fy-66*s,`900 ${~~(11*s)}px Nunito`,'rgba(255,255,255,.6)');
 
-  // Scissor animation + sparks
   const oc=clients.find(c=>c.chairIdx===i&&c.state==='seated');
   if(oc&&active){
     const phase=oc.scissorPhase;
     const sx2=cx+30*s,sy2=fy-95*s-Math.sin(phase)*10*s;
     ctx.save();ctx.translate(sx2,sy2);ctx.rotate(Math.sin(phase*.8)*.4);
     ctx.font=`${~~(22*s)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✂️',0,0);ctx.restore();
-    // Hair particle stream
     if(Math.random()<.15)spawnHair(cx+(Math.random()-.5)*20*s,fy-70*s);
-    // Cut sparks
     if(Math.sin(phase*2.5)>.8){
       for(let k=0;k<2;k++){
         const ax=cx+(Math.random()-.5)*36*s,ay=fy-(68+Math.random()*20)*s;
@@ -938,10 +880,8 @@ function drawChair(i,fy,stY,shH){
 
 function drawCashReg(fy,stY,shH){
   const cx=CW*.91,s=CW/1280;
-  // Counter
   rr(cx-CW*.065,fy-38*s,CW*.13,38*s,[6,6,0,0],'#8B7355','#5D4307',2);
   rr(cx-CW*.075,fy-42*s,CW*.15,8*s,[4,4,0,0],'#a0724a','#5D4307',2);
-  // Register
   const rw=CW*.07,rh=shH*.2,rx=cx-rw/2,ry=fy-42*s-rh;
   if(dayT===3){ctx.save();ctx.shadowColor='rgba(100,200,100,.4)';ctx.shadowBlur=15;}
   rr(rx,ry,rw,rh,[8,8,0,0],'#2D2B3D','#1a1a2e',2);
@@ -956,7 +896,6 @@ function drawCashReg(fy,stY,shH){
 }
 
 function drawPlants(fy,stY,shH){
-  // Left plant
   const px=CW*.005+CW*.002,py=fy-2,s=CW/1280;
   rr(px,py-22*s,18*s,22*s,3,'#8B6914','#5D4307',1.5);
   ctx.fillStyle='#2DC653';
@@ -965,7 +904,6 @@ function drawPlants(fy,stY,shH){
     ctx.beginPath();ctx.ellipse(px+9*s+Math.cos(a)*r*.5,py-22*s-Math.sin(Math.abs(a))*r*.8,r*.55,r*.3,a,0,Math.PI*2);
     ctx.fill();ctx.strokeStyle='#1b6b25';ctx.lineWidth=1;ctx.stroke();
   }
-  // Right plant
   const px2=CW*.975,py2=fy-2;
   rr(px2-8*s,py2-22*s,16*s,22*s,3,'#8B6914','#5D4307',1.5);
   for(let i=0;i<4;i++){
@@ -988,7 +926,6 @@ function drawClient(c){
 
   ctx.save();ctx.translate(bx,by);ctx.scale(s,s);
 
-  // Anger steam effect
   if(c.isAngry&&c.leaveSmoke){
     const smokeY=-75-c.smokeT*30;
     ctx.globalAlpha=Math.max(0,1-c.smokeT);
@@ -1004,7 +941,7 @@ function drawClient(c){
     rr(1*ws,2,13*ws,9,3,c.pants,'#1a1a2e',1.5);
     rr(-18*ws,8,11*ws,7,2,'#333','#1a1a2e',1.2);
     rr(7*ws,8,11*ws,7,2,'#333','#1a1a2e',1.2);
-    rr(-20*ws,-24,40*ws,32,5,'rgba(230,230,230,.88)','#bbb',1.5); // cape
+    rr(-20*ws,-24,40*ws,32,5,'rgba(230,230,230,.88)','#bbb',1.5);
   } else {
     const ls=Math.sin(c.bob)*7;
     ctx.save();ctx.translate(-6*ws,bob);ctx.rotate(ls*Math.PI/180);
@@ -1017,7 +954,6 @@ function drawClient(c){
     ctx.restore();
   }
 
-  // Body
   ctx.save();ctx.translate(0,seated?0:bob);
   rr(-16*ws,-26,32*ws,30,7,c.shirt,'#1a1a2e',1.5);
   rr(-7*ws,-26,14*ws,8,2,'rgba(255,255,255,.18)',null);
@@ -1031,28 +967,22 @@ function drawClient(c){
     ctx.save();ctx.translate(16*ws,-20);ctx.rotate(-arm*Math.PI/180);rr(-4*ws,0,8*ws,16,3,c.skin,'#1a1a2e',1.2);ctx.restore();
   }
 
-  // Head
   rr(-17*ws,-60,34*ws,35,[13,13,11,11],c.skin,'#1a1a2e',2);
-
-  // Hair
   ctx.beginPath();ctx.ellipse(0,-60,17*ws,12,0,Math.PI,0);
   ctx.fillStyle=c.hair;ctx.fill();ctx.strokeStyle='#1a1a2e';ctx.lineWidth=1.5;ctx.stroke();
 
-  // Elder extras
   if(c.type==='elder'){
     ctx.fillStyle='#e8e8e8';
-    ctx.beginPath();ctx.ellipse(0,-46,8,3,0,0,Math.PI);ctx.fill(); // mustache
+    ctx.beginPath();ctx.ellipse(0,-46,8,3,0,0,Math.PI);ctx.fill();
   }
 
   if(c.isVIP){ctx.font='15px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👑',0,-76);}
 
-  // Eyes
   [[-7,-49],[7,-49]].forEach(([ex,ey])=>{
     rr(ex-5.5,ey-6,11,12,[5,5,5,5],'white','#1a1a2e',1.5);
     if(c.isAngry){
       ctx.save();ctx.translate(ex,ey);ctx.rotate(.3*(ex<0?1:-1));
       ctx.beginPath();ctx.ellipse(0,0,3.5,4.5,0,0,Math.PI*2);ctx.fillStyle='#1a1a2e';ctx.fill();ctx.restore();
-      // Angry brow
       ctx.strokeStyle='#1a1a2e';ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();
       ctx.moveTo(ex-5,ey-7);ctx.lineTo(ex+5,ey-10);ctx.stroke();
     } else {
@@ -1061,7 +991,6 @@ function drawClient(c){
     }
   });
 
-  // Mouth
   ctx.strokeStyle='#1a1a2e';ctx.lineWidth=1.5;ctx.beginPath();
   if(c.isAngry){ctx.arc(0,-40,5,.2,Math.PI-.2,true);}
   else if(c.expr===0){ctx.arc(0,-40,6,.1,Math.PI-.1);}
@@ -1072,7 +1001,6 @@ function drawClient(c){
   ctx.restore();ctx.restore();
   if(c.isVIP||c.isAngry)ctx.restore();
 
-  // Service bar
   if(c.state==='seated'){
     const bw=52*s,bh=9,px=bx-bw/2,py=by-84*s;
     rr(px,py,bw,bh,3,'rgba(0,0,0,.55)',null);
@@ -1081,7 +1009,6 @@ function drawClient(c){
     rr(px+2,py+2,(bw-4)*c.progress,bh-4,2,col,null);
     txt(`${~~(c.progress*100)}%`,bx,py-9,`700 ${~~(8*s)}px Nunito`,col);
   }
-  // Patience bar
   if(c.state==='waiting'||c.state==='walkToWait'){
     const bw=42*s,bh=7,px=bx-bw/2,py=by-84*s;
     rr(px,py,bw,bh,3,'rgba(0,0,0,.45)',null);
@@ -1091,7 +1018,6 @@ function drawClient(c){
     const em=c.patience>.6?'😊':c.patience>.3?'😐':'😤';
     ctx.font=`${~~(11*s)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(em,bx,py-11*s);
   }
-  // Happiness stars for VIP seated
   if(c.isVIP&&c.state==='seated'&&Math.random()<.008){
     spawnFloat(bx+(Math.random()-.5)*30*s,by-90*s,'⭐','#FFD200');
   }
@@ -1140,7 +1066,6 @@ function drawFloats(){
 // HUD UPDATE
 // ══════════════════════════════════════════════════════════
 function fmtMoney(n){if(n>=1e6)return`$${(n/1e6).toFixed(2)}M`;if(n>=1e3)return`$${(n/1e3).toFixed(1)}k`;return`$${~~n}`;}
-function fmtTime(s){const m=~~(s/60),ss=~~(s%60);return`${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;}
 
 function updateHUD(){
   document.getElementById('hMoney').textContent=fmtMoney(G.money);
@@ -1152,11 +1077,9 @@ function updateHUD(){
   document.getElementById('repFill').style.width=G.rep+'%';
   document.getElementById('repLbl').textContent=`${~~G.rep}%`;
 
-  // Stats col
   document.getElementById('st-served').textContent=G.served;
   document.getElementById('st-maxcombo').textContent=`${G.maxCombo}x`;
 
-  // Upgrades
   const fidLv = G.upg.fidelidad.lv;
   const defs={
     sillas:   {st:`${nChairs()} sillas${G.upg.sillas.lv>=5?' + Turbo':''}`,nx:G.upg.sillas.lv>=4?'Turbo -15% ciclo':`${nChairs()+1} sillas`},
@@ -1177,7 +1100,6 @@ function updateHUD(){
     if(btn){ btn.disabled = !can || atMax; if(atMax){btn.textContent=k==='sillas'?'🪑 ¡Completa!':'👑 Nv.MAX';btn.style.background='linear-gradient(135deg,#7B2FBE,#9B5DE5)';}else{btn.style.background='';} }
   });
 
-  // Combo badge
   if(G.combo>=3){
     const cb=document.getElementById('comboBadge');
     cb.textContent=`🔥 COMBO x${G.combo}`;
@@ -1187,12 +1109,6 @@ function updateHUD(){
     document.getElementById('comboBadge').classList.remove('show');
     document.getElementById('hMoney').classList.remove('combo-active');
   }
-}
-
-function popMoney(){
-  const el=document.getElementById('hMoney');
-  el.style.transform='scale(1.25)';
-  setTimeout(()=>el.style.transform='',300);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1225,10 +1141,8 @@ function activateBoost(){
 function showPrestige(){
   if(G.level<4){nlog('🔒 Necesitas Nivel 5 para el prestigio','bad');return;}
   if(!confirm(`¿Reiniciar el Imperio?\n\n⭐ Ganarás una Estrella de Prestigio (+20% ganancias permanentes)\n\nTodo progreso se reiniciará.`))return;
-  // Save prestige
   const p=(window.__prestige||0)+1;
   window.__prestige=p;
-  // Reset
   Object.assign(G,{money:0,xp:0,level:0,rep:20,served:0,angryLeft:0,combo:0,streak:0,elapsed:0,boost:false});
   Object.keys(G.upg).forEach(k=>G.upg[k].lv=1);
   G.achievements={};
@@ -1249,7 +1163,6 @@ function loop(now){
   if (_paused) { lastT = now; requestAnimationFrame(loop); return; }
   const dt=Math.min((now-lastT)/1000,.1);lastT=now;
   update(dt);
-  // Tick chair flash
   if (_chairFlashTimer > 0) _chairFlashTimer -= dt;
   ctx.clearRect(0,0,CW,CH);
   draw(now);
@@ -1257,15 +1170,12 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 
-// Pause when tab/iframe loses visibility
 document.addEventListener('visibilitychange', () => { _paused = document.hidden; });
 
-// Pause when parent sends close signal
 window.addEventListener('message', e => {
   if (e.data?.type === 'bizClose') _paused = true;
 }, true);
 
-// Tell parent we're ready (so parent can send bizInit)
 if (window.parent && window.parent !== window) {
   window.parent.postMessage({ type: 'bizReady' }, '*');
 }
@@ -1281,7 +1191,6 @@ setTimeout(trySpawn,5000);
 lastT=performance.now();
 requestAnimationFrame(loop);
 
-// Enable audio on first interaction
 document.addEventListener('click',resume,{once:true});
 </script>
 </body>
