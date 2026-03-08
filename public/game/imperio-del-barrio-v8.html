@@ -3326,7 +3326,11 @@ async function _cloudDoSave(silent) {
   }
 }
 
-async function _cloudDoLoad() {
+// Flag para evitar cargar múltiples veces mientras se juega
+let _cloudLoaded = false;
+
+async function _cloudDoLoad(force) {
+  if (_cloudLoaded && !force) return;  // Ya cargamos, no volver a cargar
   const sb = _getCloud();
   if (!sb || !_cloudUser) return;
   try {
@@ -3347,7 +3351,9 @@ async function _cloudDoLoad() {
                         (cloudEarned === localEarned && cloudDate > localDate);
 
     console.log('[Cloud] cloud=$' + cloudEarned + ' local=$' + localEarned + ' → ' + (cloudWins ? 'NUBE' : 'LOCAL'));
+    _cloudLoaded = true;
 
+    _cloudLoaded = true;
     if (cloudWins && cloudEarned > 0) {
       G = { ...G, ...cloud };
       try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e) {}
