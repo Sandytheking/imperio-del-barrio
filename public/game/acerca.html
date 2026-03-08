@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acerca del Juego — Imperio del Barrio</title>
+<meta name="description" content="Imperio del Barrio es un juego idle dominicano donde construyes un imperio económico desde una barbería hasta un banco central. Gratis en el navegador.">
+<link rel="canonical" href="https://imperiodelbarrio.com/acerca.html">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WZTFLYC73Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-WZTFLYC73Q');
+</script>
+
+<style>
+  :root {
+    --bg:      #1E1B2E;
+    --bg2:     #2A2640;
+    --accent:  #FFE135;
+    --accent2: #FF6348;
+    --green:   #2DC653;
+    --blue:    #5BC8F5;
+    --purple:  #9B5DE5;
+    --text:    #F0EEF8;
+    --muted:   #9B96B8;
+    --card:    #25213A;
+    --border:  rgba(255,255,255,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    line-height: 1.7;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--bg2);
+    border-bottom: 3px solid var(--accent);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  header a.logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .logo-emoji { font-size: 2rem; }
+  .logo-text { font-family:'Fredoka One',cursive; font-size:1.3rem; color:var(--accent); line-height:1; }
+  .logo-sub { font-size:0.7rem; color:var(--muted); font-weight:600; letter-spacing:0.05em; }
+  .play-btn {
+    margin-left: auto;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.9rem;
+    padding: 8px 18px;
+    border-radius: 99px;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .play-btn:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(255,225,53,0.3); }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(160deg, #2A1F4E 0%, #1E1B2E 50%, #1A2E1E 100%);
+    padding: 70px 24px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(255,225,53,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 30% 80%, rgba(45,198,83,0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .hero-emoji {
+    font-size: 5rem;
+    display: block;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .hero h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    color: var(--accent);
+    text-shadow: 0 0 60px rgba(255,225,53,0.4);
+    margin-bottom: 8px;
+  }
+  .hero-tagline {
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    color: var(--blue);
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    max-width: 580px;
+    margin: 0 auto 28px;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+  .hero-cta {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent), #FFA500);
+    color: var(--bg);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    padding: 14px 36px;
+    border-radius: 99px;
+    text-decoration: none;
+    box-shadow: 0 6px 24px rgba(255,225,53,0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .hero-cta:hover { transform:translateY(-3px); box-shadow:0 10px 30px rgba(255,225,53,0.45); }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .stat-item {
+    padding: 20px 32px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.8rem;
+    color: var(--accent);
+    display: block;
+  }
+  .stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  /* ── Sections ── */
+  .container { max-width: 900px; margin: 0 auto; padding: 60px 24px 80px; }
+
+  .section-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.8rem;
+    color: var(--accent);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ── Story ── */
+  .story-card {
+    background: linear-gradient(135deg, #2A1F4E, #1E2A1E);
+    border: 2px solid rgba(255,225,53,0.15);
+    border-radius: 24px;
+    padding: 36px;
+    margin-bottom: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .story-card::before {
+    content: '💬';
+    position: absolute;
+    font-size: 12rem;
+    opacity: 0.04;
+    right: -20px;
+    bottom: -30px;
+  }
+  .story-card p {
+    font-size: 1.05rem;
+    color: #D0CCEE;
+    line-height: 1.85;
+    margin-bottom: 14px;
+  }
+  .story-card p:last-child { margin-bottom: 0; }
+  .story-card strong { color: var(--accent); }
+
+  /* ── Business grid ── */
+  .biz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+  .biz-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 12px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .biz-card:hover { transform: translateY(-4px); border-color: rgba(255,225,53,0.3); }
+  .biz-card .biz-icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+  .biz-card .biz-name { font-family: 'Fredoka One', cursive; font-size: 0.82rem; color: var(--text); }
+  .biz-card .biz-type { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+  /* ── Features ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .feature-card:hover { transform: translateY(-3px); border-color: rgba(255,225,53,0.2); }
+  .feature-icon { font-size: 2.2rem; margin-bottom: 12px; display: block; }
+  .feature-title { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--accent); margin-bottom: 6px; }
+  .feature-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── How to play ── */
+  .steps { margin-bottom: 48px; }
+  .step {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    width: 44px;
+    height: 44px;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-content h3 { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--text); margin-bottom: 4px; }
+  .step-content p { font-size: 0.9rem; color: var(--muted); }
+
+  /* ── CTA final ── */
+  .final-cta {
+    background: linear-gradient(135deg, #2A1F4E, #1E2A3A);
+    border: 2px solid rgba(255,225,53,0.3);
+    border-radius: 24px;
+    padding: 48px 32px;
+    text-align: center;
+  }
+  .final-cta h2 { font-family:'Fredoka One',cursive; font-size:2rem; color:var(--accent); margin-bottom:10px; }
+  .final-cta p { color:var(--muted); margin-bottom:24px; font-size:1rem; }
+
+  /* ── Footer ── */
+  footer {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <span class="logo-emoji">🏘️</span>
+    <div>
+      <div class="logo-text">Imperio del Barrio</div>
+      <div class="logo-sub">JUEGO IDLE</div>
+    </div>
+  </a>
+  <a href="/" class="play-btn">🎮 Jugar ahora</a>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <span class="hero-emoji">🏘️</span>
+  <h1>Imperio del Barrio</h1>
+  <div class="hero-tagline">El juego idle dominicano 🇩🇴</div>
+  <p>Empieza con una barbería y $500. Construye negocios, asciende socialmente y conviértete en el dueño del barrio — y más allá.</p>
+  <a href="/" class="hero-cta">🚀 ¡Jugar gratis!</a>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <span class="stat-num">21</span>
+    <span class="stat-label">Negocios</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">7</span>
+    <span class="stat-label">Etapas sociales</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">100%</span>
+    <span class="stat-label">Gratis</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">🌐</span>
+    <span class="stat-label">En el navegador</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Historia -->
+  <h2 class="section-title">📖 La Historia</h2>
+  <div class="story-card">
+    <p>Todo el mundo te dijo que no podías. Que el barrio era un límite, no un punto de partida. Que sin contactos, sin dinero y sin apellido, el éxito era para otros.</p>
+    <p>Pero tú sabías algo que ellos no: <strong>el barrio te enseñó a trabajar cuando nadie miraba, a levantarte cuando nadie aplaudía.</strong></p>
+    <p>Empiezas con una barbería y $500. Sin más. Lo que construyas a partir de ahí depende únicamente de ti. ¿Puedes pasar de esa barbería a un banco central, una aerolínea, y una isla privada?</p>
+    <p><strong>Imperio del Barrio es más que un juego — es la historia de quien sí pudo. 👑</strong></p>
+  </div>
+
+  <!-- Negocios -->
+  <h2 class="section-title">🏪 Los 21 Negocios</h2>
+  <div class="biz-grid">
+    <div class="biz-card"><span class="biz-icon">💈</span><div class="biz-name">Barbería</div><div class="biz-type">Inicio</div></div>
+    <div class="biz-card"><span class="biz-icon">🏪</span><div class="biz-name">Colmado</div><div class="biz-type">Comercio</div></div>
+    <div class="biz-card"><span class="biz-icon">💇</span><div class="biz-name">Salón de Belleza</div><div class="biz-type">Servicios</div></div>
+    <div class="biz-card"><span class="biz-icon">🛵</span><div class="biz-name">Mototaxi</div><div class="biz-type">Transporte</div></div>
+    <div class="biz-card"><span class="biz-icon">☕</span><div class="biz-name">Cafetín</div><div class="biz-type">Gastronomía</div></div>
+    <div class="biz-card"><span class="biz-icon">🔧</span><div class="biz-name">Taller</div><div class="biz-type">Mecánica</div></div>
+    <div class="biz-card"><span class="biz-icon">💊</span><div class="biz-name">Farmacia</div><div class="biz-type">Salud</div></div>
+    <div class="biz-card"><span class="biz-icon">💪</span><div class="biz-name">Gym</div><div class="biz-type">Fitness</div></div>
+    <div class="biz-card"><span class="biz-icon">🍽️</span><div class="biz-name">Restaurante</div><div class="biz-type">Gastronomía</div></div>
+    <div class="biz-card"><span class="biz-icon">🚗</span><div class="biz-name">Lavado</div><div class="biz-type">Autos</div></div>
+    <div class="biz-card"><span class="biz-icon">🏗️</span><div class="biz-name">Ferretería</div><div class="biz-type">Construcción</div></div>
+    <div class="biz-card"><span class="biz-icon">🎵</span><div class="biz-name">Discoteca</div><div class="biz-type">Entretenimiento</div></div>
+    <div class="biz-card"><span class="biz-icon">🍻</span><div class="biz-name">Bar VIP</div><div class="biz-type">Nocturno</div></div>
+    <div class="biz-card"><span class="biz-icon">🛒</span><div class="biz-name">Supermercado</div><div class="biz-type">Retail</div></div>
+    <div class="biz-card"><span class="biz-icon">🏨</span><div class="biz-name">Hotel & Spa</div><div class="biz-type">Turismo</div></div>
+    <div class="biz-card"><span class="biz-icon">🏬</span><div class="biz-name">Plaza Comercial</div><div class="biz-type">Inmobiliaria</div></div>
+    <div class="biz-card"><span class="biz-icon">🏦</span><div class="biz-name">Banco</div><div class="biz-type">Finanzas</div></div>
+    <div class="biz-card"><span class="biz-icon">🏛️</span><div class="biz-name">Banco Central</div><div class="biz-type">Finanzas</div></div>
+    <div class="biz-card"><span class="biz-icon">🪙</span><div class="biz-name">Crypto Exchange</div><div class="biz-type">Digital</div></div>
+    <div class="biz-card"><span class="biz-icon">🛫</span><div class="biz-name">Aerolínea</div><div class="biz-type">Aviación</div></div>
+    <div class="biz-card"><span class="biz-icon">🏝️</span><div class="biz-name">Isla Privada</div><div class="biz-type">Endgame 👑</div></div>
+  </div>
+
+  <!-- Features -->
+  <h2 class="section-title">⚡ Características</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🎮</span>
+      <div class="feature-title">Animaciones únicas</div>
+      <div class="feature-desc">Cada negocio tiene su propia animación interactiva con clientes, mejoras y efectos visuales.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🚀</span>
+      <div class="feature-title">Ascenso Social</div>
+      <div class="feature-desc">Pasa de vivir en el barrio a tener Casa Propia, Villa, Penthouse, Jet Privado y Corporación.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🗺️</span>
+      <div class="feature-title">Zonas del Mapa</div>
+      <div class="feature-desc">Expande tu imperio a 7 zonas distintas, cada una con multiplicadores de ingresos más altos.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⭐</span>
+      <div class="feature-title">Sistema de Influencia</div>
+      <div class="feature-desc">Asciende para ganar Influencia y comprar mejoras permanentes que sobreviven al prestige.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎯</span>
+      <div class="feature-title">Mini Juegos</div>
+      <div class="feature-desc">4 mini juegos integrados — runner, memoria, catcher y snake — para ganar bonos extra.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔗</span>
+      <div class="feature-title">Sinergias</div>
+      <div class="feature-desc">Combina negocios relacionados para activar sinergias con multiplicadores especiales.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📱</span>
+      <div class="feature-title">Mobile Friendly</div>
+      <div class="feature-desc">Diseñado para jugarse desde el celular o computadora, sin instalación ni cuenta requerida.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💰</span>
+      <div class="feature-title">100% Gratis</div>
+      <div class="feature-desc">Sin pagos, sin anuncios invasivos, sin pay-to-win. Solo tú y tu estrategia.</div>
+    </div>
+  </div>
+
+  <!-- Cómo jugar -->
+  <h2 class="section-title">🎯 Cómo Jugar</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Abre tu primera barbería 💈</h3>
+        <p>Empieza con $500 y abre la Barbería Los Manos. Toca para cobrar manualmente mientras acumulas dinero.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Desbloquea más negocios 🏪</h3>
+        <p>Usa tus ganancias para abrir el Colmado, el Salón, el Mototaxi... hasta llegar a los 21 negocios.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Mejora cada negocio ⬆️</h3>
+        <p>Entra a la animación de cada negocio y compra las 5 mejoras disponibles para subir hasta el Nv.25.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>Cambia de zona y asciende 🗺️</h3>
+        <p>Muévete a zonas más rentables y cumple los requisitos para ascender socialmente y desbloquear mejoras permanentes.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h3>Construye tu Imperio 👑</h3>
+        <p>Llega a la Corporación, abre la Isla Privada y demuestra que el barrio siempre fue tu punto de partida.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final CTA -->
+  <div class="final-cta">
+    <h2>¿Listo para dominar el barrio? 👑</h2>
+    <p>Gratis, sin registro, directamente en tu navegador.</p>
+    <a href="/" class="hero-cta">🚀 ¡Jugar ahora!</a>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 Imperio del Barrio · <a href="/">Jugar</a> · <a href="/privacidad.html">Política de Privacidad</a></p>
+</footer>
+
+</body>
+</html>

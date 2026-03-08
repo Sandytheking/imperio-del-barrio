@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidad — Imperio del Barrio</title>
+<meta name="description" content="Política de privacidad de Imperio del Barrio. Conoce cómo manejamos tu información.">
+<link rel="canonical" href="https://imperiodelbarrio.com/privacidad.html">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WZTFLYC73Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-WZTFLYC73Q');
+</script>
+
+<style>
+  :root {
+    --bg:       #1E1B2E;
+    --bg2:      #2A2640;
+    --accent:   #FFE135;
+    --accent2:  #FF6348;
+    --green:    #2DC653;
+    --text:     #F0EEF8;
+    --muted:    #9B96B8;
+    --card:     #25213A;
+    --border:   rgba(255,255,255,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--bg2);
+    border-bottom: 3px solid var(--accent);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  header a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .logo-emoji { font-size: 2rem; }
+  .logo-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .logo-sub {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .back-btn {
+    margin-left: auto;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.9rem;
+    padding: 8px 18px;
+    border-radius: 99px;
+    text-decoration: none;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .back-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,225,53,0.3); }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, #2A1F4E 0%, #1E1B2E 60%, #2E1B1B 100%);
+    padding: 60px 24px 48px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '🔒';
+    position: absolute;
+    font-size: 18rem;
+    opacity: 0.04;
+    top: -40px;
+    right: -40px;
+    line-height: 1;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(45,198,83,0.15);
+    border: 2px solid var(--green);
+    color: var(--green);
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.85rem;
+    padding: 4px 16px;
+    border-radius: 99px;
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  .hero h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    color: var(--accent);
+    margin-bottom: 12px;
+    text-shadow: 0 0 40px rgba(255,225,53,0.3);
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .update-date {
+    display: inline-block;
+    margin-top: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  /* ── Content ── */
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .section:hover { border-color: rgba(255,225,53,0.2); }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-icon {
+    font-size: 1.6rem;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,225,53,0.1);
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+  .section h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.25rem;
+    color: var(--accent);
+  }
+  .section p, .section li {
+    color: #C8C4E0;
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+  .section ul {
+    padding-left: 20px;
+    margin-top: 10px;
+  }
+  .section ul li { margin-bottom: 6px; }
+  .section ul li::marker { color: var(--accent); }
+
+  .highlight-box {
+    background: rgba(45,198,83,0.08);
+    border: 1px solid rgba(45,198,83,0.25);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-top: 14px;
+    font-size: 0.9rem;
+    color: #A8E6B8;
+  }
+  .highlight-box strong { color: var(--green); }
+
+  /* ── Contact ── */
+  .contact-card {
+    background: linear-gradient(135deg, #2A1F4E, #1E2A3A);
+    border: 2px solid rgba(255,225,53,0.25);
+    border-radius: 20px;
+    padding: 32px;
+    text-align: center;
+    margin-top: 32px;
+  }
+  .contact-card h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .contact-card p { color: var(--muted); margin-bottom: 20px; font-size: 0.95rem; }
+  .contact-email {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    padding: 12px 28px;
+    border-radius: 99px;
+    text-decoration: none;
+    transition: transform 0.15s;
+  }
+  .contact-email:hover { transform: translateY(-2px); }
+
+  /* ── Footer ── */
+  footer {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/">
+    <span class="logo-emoji">🏘️</span>
+    <div>
+      <div class="logo-text">Imperio del Barrio</div>
+      <div class="logo-sub">JUEGO IDLE</div>
+    </div>
+  </a>
+  <a href="/" class="back-btn">🎮 Jugar</a>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">🔒 PRIVACIDAD</div>
+  <h1>Política de Privacidad</h1>
+  <p>Tu privacidad es importante para nosotros. Aquí te explicamos claramente cómo manejamos tu información.</p>
+  <div class="update-date">📅 Última actualización: 7 de marzo de 2026</div>
+</div>
+
+<div class="container">
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">ℹ️</div>
+      <h2>¿Quiénes somos?</h2>
+    </div>
+    <p><strong>Imperio del Barrio</strong> es un juego idle gratuito para navegador disponible en <strong>imperiodelbarrio.com</strong>. El juego no requiere registro, cuenta de usuario ni información personal para ser jugado.</p>
+    <div class="highlight-box">
+      <strong>✅ Sin registro requerido</strong> — Puedes jugar completamente gratis y anónimo. La cuenta es opcional y solo necesaria si quieres guardar tu progreso en la nube.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">💾</div>
+      <h2>Datos que almacenamos</h2>
+    </div>
+    <p>Imperio del Barrio ofrece <strong>dos formas de guardar tu progreso</strong>:</p>
+
+    <p style="margin-top:14px"><strong>💾 Guardado Local (por defecto)</strong></p>
+    <p>Sin cuenta, tu progreso se guarda automáticamente en tu dispositivo usando <code>localStorage</code>. Esto incluye:</p>
+    <ul>
+      <li>Nivel del jugador y negocios desbloqueados</li>
+      <li>Dinero acumulado y mejoras compradas</li>
+      <li>Nombre de tu empresa (si lo personalizas)</li>
+      <li>Preferencias de zona y etapa social</li>
+    </ul>
+    <div class="highlight-box">
+      <strong>🔒 Estos datos nunca salen de tu dispositivo.</strong> Si limpias el caché del navegador, el progreso local se borra.
+    </div>
+
+    <p style="margin-top:18px"><strong>☁️ Guardado en la Nube (opcional)</strong></p>
+    <p>Si decides crear una cuenta gratuita, tu progreso se sincroniza en nuestra base de datos en la nube a través de <strong>Supabase</strong>. En este caso recopilamos y almacenamos:</p>
+    <ul>
+      <li>Tu dirección de correo electrónico (para identificar tu cuenta)</li>
+      <li>Los mismos datos de progreso del juego mencionados arriba</li>
+      <li>Fecha de creación de cuenta y último inicio de sesión</li>
+    </ul>
+    <div class="highlight-box">
+      <strong>✅ El guardado en la nube es completamente opcional.</strong> Puedes jugar sin cuenta y sin compartir ningún dato personal. Si creas una cuenta, puedes solicitar la eliminación de tus datos escribiéndonos a <a href="mailto:imperiodelbarrio@outlook.com" style="color:var(--accent)">imperiodelbarrio@outlook.com</a>.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">📊</div>
+      <h2>Google Analytics</h2>
+    </div>
+    <p>Usamos <strong>Google Analytics 4</strong> para entender cómo los jugadores usan el juego. Esta herramienta recopila información anónima como:</p>
+    <ul>
+      <li>Número de visitas al sitio</li>
+      <li>País y dispositivo del visitante (de forma anónima)</li>
+      <li>Páginas visitadas y tiempo en el sitio</li>
+      <li>Fuente de tráfico (cómo llegaste al juego)</li>
+    </ul>
+    <p style="margin-top:12px">Google Analytics usa <strong>cookies</strong> para recopilar esta información. Puedes optar por no ser rastreado instalando el <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" style="color:var(--accent)">complemento de inhabilitación de Google Analytics</a>.</p>
+    <p style="margin-top:10px">Para más información, consulta la <a href="https://policies.google.com/privacy" target="_blank" style="color:var(--accent)">Política de Privacidad de Google</a>.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🍪</div>
+      <h2>Cookies</h2>
+    </div>
+    <p>Este sitio utiliza cookies únicamente para:</p>
+    <ul>
+      <li><strong>Cookies de Analytics:</strong> Google Analytics para estadísticas anónimas de uso</li>
+      <li><strong>localStorage:</strong> Guardar tu progreso del juego localmente (no son cookies técnicamente, pero funcionan similar)</li>
+    </ul>
+    <p style="margin-top:12px">No usamos cookies de publicidad, seguimiento de terceros ni cookies de marketing.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🔗</div>
+      <h2>Compartir en redes sociales</h2>
+    </div>
+    <p>El juego incluye botones opcionales para compartir tu progreso en <strong>Facebook</strong> y <strong>WhatsApp</strong>. Al usar estos botones:</p>
+    <ul>
+      <li>Se abre la plataforma en una ventana nueva</li>
+      <li>Solo se comparte la URL del juego y un mensaje de texto que tú decides compartir</li>
+      <li>No accedemos a tu cuenta de redes sociales</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">👶</div>
+      <h2>Menores de edad</h2>
+    </div>
+    <p>Imperio del Barrio es un juego apto para todas las edades. No recopilamos intencionalmente información personal de menores de 13 años. Si eres padre/madre y crees que tu hijo ha proporcionado información personal, contáctanos y la eliminaremos inmediatamente.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">⚖️</div>
+      <h2>Tus derechos</h2>
+    </div>
+    <p>Como usuario tienes derecho a:</p>
+    <ul>
+      <li><strong>Borrar tu progreso local</strong> — Ve a Configuración del juego → Reiniciar partida, o limpia el localStorage de tu navegador</li>
+      <li><strong>Eliminar tu cuenta y datos de nube</strong> — Escríbenos a <a href="mailto:imperiodelbarrio@outlook.com" style="color:var(--accent)">imperiodelbarrio@outlook.com</a> y eliminamos todo en 48 horas</li>
+      <li><strong>No ser rastreado</strong> — Usa el complemento de inhabilitación de Google Analytics</li>
+      <li><strong>Saber qué datos tenemos</strong> — Solo tu email y progreso del juego si tienes cuenta; nada si juegas sin cuenta</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🔄</div>
+      <h2>Cambios a esta política</h2>
+    </div>
+    <p>Podemos actualizar esta política ocasionalmente. La fecha de "última actualización" al inicio de esta página siempre refleja la versión más reciente. Te recomendamos revisarla periódicamente.</p>
+  </div>
+
+  <div class="contact-card">
+    <h2>📬 ¿Tienes preguntas?</h2>
+    <p>Si tienes dudas sobre esta política de privacidad, escríbenos.</p>
+    <a href="/cdn-
