@@ -2219,15 +2219,6 @@ body.night-mode .night-stars { opacity: 0.35; }
       🏘️ Imperio del Barrio
       <button class="sec-close" onclick="closeSecondaryPanel()">✕</button>
     </div>
-    <button class="sec-btn" id="secCloudBtn" onclick="handleCloudSaveBtn();closeSecondaryPanel()">
-      <span class="sec-btn-icon">☁️</span>
-      <div><div id="secCloudLabel">Guardar en la Nube</div><div class="sec-btn-sub" id="secCloudSub">Inicia sesión para sincronizar</div></div>
-    </button>
-    <button class="sec-btn" onclick="window.parent?.postMessage({type:'OPEN_LEADERBOARD'},'*');closeSecondaryPanel()">
-      <span class="sec-btn-icon">🏆</span>
-      <div><div>Ranking Global</div><div class="sec-btn-sub">Top jugadores del barrio</div></div>
-    </button>
-    <div class="sec-divider"></div>
     <button class="sec-btn" onclick="openMapOverlay();closeSecondaryPanel()">
       <span class="sec-btn-icon">🗺️</span>
       <div><div>Mapa & Zonas</div><div class="sec-btn-sub">Expande tu territorio</div></div>
@@ -7973,46 +7964,6 @@ function copyGuildCode() {
     notify('📋 ¡Código copiado!');
   }
 }
-
-// ── Cloud Save / Auth button en el sidebar ──────────────────────────
-// Escucha mensajes del padre React para saber si hay sesión activa
-let _cloudUserLoggedIn = false;
-let _cloudUserEmail    = '';
-
-window.addEventListener('message', function _authStateHandler(e) {
-  if (e.data?.type === 'AUTH_STATE') {
-    _cloudUserLoggedIn = !!e.data.loggedIn;
-    _cloudUserEmail    = e.data.email || '';
-    _updateCloudBtn();
-  }
-});
-
-function _updateCloudBtn() {
-  const label = document.getElementById('secCloudLabel');
-  const sub   = document.getElementById('secCloudSub');
-  if (!label || !sub) return;
-  if (_cloudUserLoggedIn) {
-    label.textContent = '✅ Nube activa';
-    sub.textContent   = _cloudUserEmail ? `Sesión: ${_cloudUserEmail.split('@')[0]}` : 'Guardado automático activado';
-  } else {
-    label.textContent = '☁️ Guardar en la Nube';
-    sub.textContent   = 'Inicia sesión para sincronizar';
-  }
-}
-
-function handleCloudSaveBtn() {
-  if (_cloudUserLoggedIn) {
-    saveGameNow(); // guardar inmediatamente
-    notify('☁️ Guardado en la nube');
-  } else {
-    window.parent?.postMessage({ type: 'OPEN_AUTH' }, '*');
-  }
-}
-
-// Solicitar estado de auth al padre al cargar
-setTimeout(() => {
-  window.parent?.postMessage({ type: 'REQUEST_AUTH_STATE' }, '*');
-}, 1000);
 
 // Sync guild on every game save (non-blocking)
 const _origSaveForGuild = window.saveGame;

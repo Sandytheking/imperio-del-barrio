@@ -64,15 +64,6 @@ export default function GameClient() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // ── Notificar al iframe cuando cambia el estado de auth ───────
-  useEffect(() => {
-    iframeRef.current?.contentWindow?.postMessage({
-      type: 'AUTH_STATE',
-      loggedIn: !!user,
-      email: user?.email ?? '',
-    }, '*');
-  }, [user]);
-
   // ── Push notification setup ────────────────────────────────
   useEffect(() => {
     getPushStatus().then(s => setPushStatus(s));
@@ -129,16 +120,6 @@ export default function GameClient() {
 
         case 'OPEN_AUTH':
           setShowAuth(true);
-          setAuthMode('login');
-          break;
-
-        case 'REQUEST_AUTH_STATE':
-          // El iframe pregunta si hay sesión activa — responder de inmediato
-          iframeRef.current?.contentWindow?.postMessage({
-            type: 'AUTH_STATE',
-            loggedIn: !!user,
-            email: user?.email ?? '',
-          }, '*');
           break;
 
         case 'GUILD_REQUEST': {
