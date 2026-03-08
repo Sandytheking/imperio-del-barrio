@@ -3265,79 +3265,117 @@ function resetGame() {
 
 // ── Cloud save guard ─────────────────────────────────────────
 // Prevents overwriting cloud save with empty state on startup.
-// Set to true only after GAME_LOAD_RESPONSE received (or 8s timeout).
-let _cloudReady = false;
-let _cloudReadyTimer = setTimeout(() => { _cloudReady = true; }, 8000);
+// ═══════════════════════════════════════════════════════════════
+// CLOUD SAVE — Conexión directa a Supabase (sin postMessage)
+// React pasa el JWT via postMessage AUTH_TOKEN una sola vez.
+// El juego guarda/carga directamente sin depender de React.
+// ═══════════════════════════════════════════════════════════════
+const _SB_URL  = 'https://spubzjcwpehtcctvtbsn.supabase.co';
+// La anon key se inyecta desde React via postMessage (AUTH_TOKEN)
+// o desde la meta tag si está disponible
+let _sbAnonKey = document.querySelector('meta[name="sb-anon"]')?.content || '';
+let _sbJwt     = '';   // token del usuario logueado (viene de React)
+let _sbUserId  = '';   // uuid del usuario
 
-function saveGame() {
-  G.lastSave = Date.now();
-  // 1. Always write localStorage immediately (instant, offline-safe)
-  try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
-  // 2. Debounce cloud save — only after cloud load completes
-  if (!_cloudReady) return;
-  clearTimeout(_cloudSaveTimer);
-  _cloudSaveTimer = setTimeout(() => {
-    window.parent?.postMessage({ type: 'GAME_SAVE', payload: G }, '*');
-  }, 3000);
-}
+let _cloudReady   = false;
+let _cloudReadyTimer = setTimeout(() => { _cloudReady = true; }, 10000);
 
-// Force-flush cloud save immediately (called on critical moments)
-function saveGameNow() {
-  G.lastSave = Date.now();
-  try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
-  if (!_cloudReady) return;
-  window.parent?.postMessage({ type: 'GAME_SAVE', payload: G }, '*');
-}
-
-function loadGame() {
+// ── Helper fetch a Supabase ──────────────────────────────────
+async function _sbFetch(path, opts = {}) {
+  const key = _sbJwt || _sbAnonKey;
+  if (!key) return null;
   try {
-    const raw = localStorage.getItem('idb2_save');
-    if (raw) {
-      const loaded = JSON.parse(raw);
-      G = {...G, ...loaded};
-      return true;
+    const res = await fetch(_SB_URL + path, {
+      ...opts,
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': _sbAnonKey,
+        'Authorization': 'Bearer ' + key,
+        ...(opts.headers || {}),
+      },
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn('[Imperio] Supabase error:', res.status, err);
+      return null;
     }
-  } catch(e){}
-  return false;
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  } catch(e) {
+    console.warn('[Imperio] fetch error:', e);
+    return null;
+  }
 }
 
-// ── Listen for cloud load response from React parent ─────────────
-// GameClient sends GAME_LOAD_RESPONSE after smartLoad() resolves.
-// smartLoad() ya eligió el mejor estado (nube vs local) — siempre aplicarlo.
-window.addEventListener('message', function _cloudLoadHandler(e) {
-  if (!e.data || e.data.type !== 'GAME_LOAD_RESPONSE') return;
-  const cloud = e.data.payload;
-  const src   = e.data.source; // 'cloud' | 'local' | 'new'
+// ── Guardar en la nube directo ───────────────────────────────
+async function _saveToCloud() {
+  if (!_sbJwt || !_sbUserId) return false;
+  const body = JSON.stringify({
+    user_id:       _sbUserId,
+    money:         Math.floor(G.money || 0),
+    total_earned:  Math.floor(G.totalEarned || 0),
+    level:         G.level || 0,
+    prestige_stars:G.prestigeStars || 0,
+    prestige_mult: G.prestigeMult || 1,
+    zone:          G.zone || 'centro',
+    social_stage:  G.socialStage || 0,
+    influence:     Math.floor(G.totalInfluence || 0),
+    guild_code:    G.guildCode || null,
+    game_state:    G,
+    save_version:  1,
+  });
+  // Usar RPC upsert_game_save (SECURITY DEFINER — sin problemas de RLS)
+  const result = await _sbFetch('/rest/v1/rpc/upsert_game_save', {
+    method: 'POST',
+    body: JSON.stringify({
+      p_money:          Math.floor(G.money || 0),
+      p_total_earned:   Math.floor(G.totalEarned || 0),
+      p_level:          G.level || 0,
+      p_prestige_stars: G.prestigeStars || 0,
+      p_prestige_mult:  G.prestigeMult || 1,
+      p_zone:           G.zone || 'centro',
+      p_game_state:     G,
+      p_save_version:   1,
+      p_social_stage:   G.socialStage || 0,
+      p_influence:      Math.floor(G.totalInfluence || 0),
+      p_guild_code:     G.guildCode || null,
+    }),
+  });
+  // Notificar a React que se guardó
+  window.parent?.postMessage({ type: 'CLOUD_SAVE_OK' }, '*');
+  return result !== null;
+}
 
-  // ✅ Cloud load received — now safe to send saves
-  _cloudReady = true;
-  clearTimeout(_cloudReadyTimer);
+// ── Cargar desde la nube directo ─────────────────────────────
+async function _loadFromCloud() {
+  if (!_sbJwt || !_sbUserId) return null;
+  const data = await _sbFetch(
+    `/rest/v1/game_saves?user_id=eq.${_sbUserId}&select=game_state,updated_at&limit=1`
+  );
+  if (!data || !data[0]?.game_state) return null;
+  return data[0].game_state;
+}
 
-  // Sin payload → usar lo que ya está en memoria (localStorage cargado al inicio)
-  if (!cloud || src === 'new') return;
+// ── Aplicar estado de la nube al juego ───────────────────────
+async function _applyCloudSave() {
+  const cloud = await _loadFromCloud();
+  if (!cloud) return;
 
-  // FIX: Aplicar SIEMPRE el payload que manda React.
-  // smartLoad() ya comparó nube vs local y eligió el mejor.
-  // Antes solo se aplicaba si src === 'cloud', ignorando saves locales
-  // más nuevos que la nube — eso causaba el reinicio al hacer refresh.
-  const incomingEarned = cloud.totalEarned || 0;
-  const currentEarned  = G.totalEarned    || 0;
+  const cloudEarned = cloud.totalEarned || 0;
+  const localEarned = G.totalEarned    || 0;
 
-  // Solo aplicar si el estado entrante tiene más progreso que el actual
-  // (evita sobreescribir con un estado más viejo)
-  if (incomingEarned >= currentEarned) {
+  if (cloudEarned >= localEarned) {
     G = { ...G, ...cloud };
     try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
-    // Re-aplicar migraciones por si el save es antiguo
     if (!G.businesses) G.businesses = {};
     if (!G.upgrades)   G.upgrades   = {};
     renderAll();
     applyTheme(G.theme || 'gold');
 
     // Calcular ganancias offline
-    const elapsed = (Date.now() - G.lastSave) / 1000;
-    if (elapsed > 30 && Object.keys(G.businesses).filter(k=>bizLevel(k)>0).length > 0) {
-      const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.4) * getStageOfflineMult();
+    const elapsed = (Date.now() - (G.lastSave || Date.now())) / 1000;
+    if (elapsed > 30 && Object.keys(G.businesses || {}).filter(k=>bizLevel(k)>0).length > 0) {
+      const offlineMult = (G.upgrades?.offlineBoost ? 1.0 : 0.4) * getStageOfflineMult();
       const offlineInc  = totalIPS() * elapsed * offlineMult;
       if (offlineInc > 0) {
         const banner = document.getElementById('offlineBanner');
@@ -3353,14 +3391,111 @@ window.addEventListener('message', function _cloudLoadHandler(e) {
         };
       }
     }
-    if (src === 'cloud') notify('☁️ Partida sincronizada desde la nube');
+    notify('☁️ Partida sincronizada desde la nube');
+  }
+}
+
+// ── Recibir JWT desde React (postMessage) ────────────────────
+window.addEventListener('message', function(e) {
+  if (!e.data?.type) return;
+
+  if (e.data.type === 'AUTH_TOKEN') {
+    // React nos pasa el JWT y userId cuando el usuario hace login/logout
+    _sbJwt    = e.data.jwt    || '';
+    _sbUserId = e.data.userId || '';
+    _sbAnonKey = e.data.anonKey || _sbAnonKey;
+
+    if (_sbJwt && _sbUserId) {
+      // Usuario logueado → cargar desde la nube
+      _cloudReady = true;
+      clearTimeout(_cloudReadyTimer);
+      _applyCloudSave();
+    } else {
+      // Usuario deslogueado
+      _cloudReady = true;
+      clearTimeout(_cloudReadyTimer);
+    }
+    return;
+  }
+
+  // Compatibilidad con el sistema anterior (por si React manda GAME_LOAD_RESPONSE)
+  if (e.data.type === 'GAME_LOAD_RESPONSE') {
+    const cloud = e.data.payload;
+    const src   = e.data.source;
+    _cloudReady = true;
+    clearTimeout(_cloudReadyTimer);
+    if (!cloud || src === 'new') return;
+    const incomingEarned = cloud.totalEarned || 0;
+    const currentEarned  = G.totalEarned    || 0;
+    if (incomingEarned >= currentEarned) {
+      G = { ...G, ...cloud };
+      try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
+      if (!G.businesses) G.businesses = {};
+      if (!G.upgrades)   G.upgrades   = {};
+      renderAll();
+      applyTheme(G.theme || 'gold');
+      const elapsed = (Date.now() - (G.lastSave || Date.now())) / 1000;
+      if (elapsed > 30 && Object.keys(G.businesses||{}).filter(k=>bizLevel(k)>0).length > 0) {
+        const offlineMult = (G.upgrades?.offlineBoost ? 1.0 : 0.4) * getStageOfflineMult();
+        const offlineInc  = totalIPS() * elapsed * offlineMult;
+        if (offlineInc > 0) {
+          const banner = document.getElementById('offlineBanner');
+          const h = Math.floor(elapsed/3600), m = Math.floor((elapsed%3600)/60);
+          document.getElementById('obText').textContent =
+            `${h>0?h+'h ':''} ${m>0?m+'min ':''} → +${fmt(offlineInc)} generados ✅`;
+          banner?.classList.remove('hidden');
+          document.getElementById('obBtn').onclick = () => {
+            G.money += offlineInc; G.totalEarned += offlineInc;
+            banner.classList.add('hidden');
+            notify('💤 +' + fmt(offlineInc) + ' mientras dormías!');
+            spawnParticles(offlineInc); checkAchievements(); renderAll(); saveGameNow();
+          };
+        }
+      }
+      if (src === 'cloud') notify('☁️ Partida sincronizada desde la nube');
+    }
   }
 });
 
-// Request cloud load on page init (after local load, so local is the fallback)
+// ── Pedir estado de auth a React al arrancar ─────────────────
 setTimeout(() => {
-  window.parent?.postMessage({ type: 'GAME_LOAD_REQUEST' }, '*');
-}, 500);
+  window.parent?.postMessage({ type: 'GET_AUTH_TOKEN' }, '*');
+}, 300);
+
+// ── Funciones de save/load ───────────────────────────────────
+function saveGame() {
+  G.lastSave = Date.now();
+  // 1. Siempre escribir localStorage (instantáneo, funciona offline)
+  try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
+  // 2. Nube: debounce 3s, solo si hay usuario logueado
+  if (!_cloudReady || !_sbJwt) return;
+  clearTimeout(_cloudSaveTimer);
+  _cloudSaveTimer = setTimeout(() => {
+    _saveToCloud();
+    // También notificar a React para que muestre el indicador
+    window.parent?.postMessage({ type: 'GAME_SAVE', payload: G }, '*');
+  }, 3000);
+}
+
+function saveGameNow() {
+  G.lastSave = Date.now();
+  try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
+  if (!_cloudReady || !_sbJwt) return;
+  _saveToCloud();
+  window.parent?.postMessage({ type: 'GAME_SAVE', payload: G }, '*');
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem('idb2_save');
+    if (raw) {
+      const loaded = JSON.parse(raw);
+      G = {...G, ...loaded};
+      return true;
+    }
+  } catch(e){}
+  return false;
+}
 
 // ═══════════════════════════════════════════════
 // FORMULAS
