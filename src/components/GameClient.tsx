@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
-import { smartSave, smartLoad, getLeaderboard, getMyRank, signIn, signUp, signOut, subscribePush, unsubscribePush, getPushStatus, createGuild, findGuildByCode, joinGuild, getGuildMembers, leaveGuild, syncGuildMember } from '@/lib/gameService';
+import { smartSave, smartLoad, saveToCloud, syncGuildMember, getLeaderboard, getMyRank, signIn, signUp, signOut, subscribePush, unsubscribePush, getPushStatus, createGuild, findGuildByCode, joinGuild, getGuildMembers, leaveGuild } from '@/lib/gameService';
 
 // ── Types ───────────────────────────────────────────────────
 interface LeaderboardEntry {
@@ -98,9 +98,16 @@ export default function GameClient() {
       switch (e.data.type) {
         case 'GAME_SAVE':
           setCloudStatus('saving');
-          smartSave(e.data.payload);
-          setTimeout(() => setCloudStatus('saved'), 800);
-          setTimeout(() => setCloudStatus('idle'), 3000);
+          // Only save to cloud — localStorage is handled by the game iframe directly
+          // Calling smartSave here would overwrite the game's localStorage with React's copy
+          saveToCloud(e.data.payload)
+            .then(() => {
+              setCloudStatus('saved');
+              setTimeout(() => setCloudStatus('idle'), 3000);
+            })
+            .catch(() => setCloudStatus('error'));
+          // Sync guild stats
+          syncGuildMember(e.data.payload).catch(() => {});
           break;
 
         case 'GAME_LOAD_REQUEST':
@@ -244,17 +251,16 @@ export default function GameClient() {
       {/* ── BARRA SUPERIOR (React HUD) ── */}
       <div style={{
         flexShrink: 0,
-        height: '48px',
+        height: '38px',
         background: '#16132a',
-        borderBottom: '3px solid rgba(255,225,53,0.5)',
+        borderBottom: '2px solid rgba(255,225,53,0.25)',
         display: 'flex', alignItems: 'center',
-        padding: '0 16px', gap: '10px',
+        padding: '0 12px', gap: '8px',
         zIndex: 200,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
       }}>
         {/* Izquierda: logo + estado nube */}
-        <span style={{ fontFamily: 'Fredoka One, cursive', color: '#FFE135', fontSize: '15px', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-          🏘️ Imperio del Barrio
+        <span style={{ fontFamily: 'Fredoka One, cursive', color: '#FFE135', fontSize: '13px', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+          🏘️ Imperio
         </span>
         <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
         {cloudStatus !== 'idle' && (
@@ -279,7 +285,7 @@ export default function GameClient() {
             </span>
             <button
               onClick={handleOpenLeaderboard}
-              style={{ background: 'rgba(45,198,83,0.2)', border: '2px solid #2DC653', borderRadius: '20px', padding: '5px 12px', cursor: 'pointer', color: '#2DC653', fontFamily: 'Fredoka One, cursive', fontSize: '12px', whiteSpace: 'nowrap' }}
+              style={{ background: 'rgba(45,198,83,0.2)', border: '1px solid #2DC653', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer', color: '#2DC653', fontFamily: 'Fredoka One, cursive', fontSize: '11px', whiteSpace: 'nowrap' }}
             >🏆 Ranking</button>
 
             {/* Push notification bell */}
@@ -324,7 +330,7 @@ export default function GameClient() {
         ) : (
           <button
             onClick={() => { setShowAuth(true); setAuthMode('login'); }}
-            style={{ background: 'rgba(255,225,53,0.18)', border: '2px solid rgba(255,225,53,0.6)', borderRadius: '20px', padding: '6px 14px', cursor: 'pointer', color: '#FFE135', fontFamily: 'Fredoka One, cursive', fontSize: '12px', whiteSpace: 'nowrap', boxShadow: '0 0 12px rgba(255,225,53,0.2)' }}
+            style={{ background: 'rgba(255,225,53,0.12)', border: '1px solid rgba(255,225,53,0.4)', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', color: '#FFE135', fontFamily: 'Fredoka One, cursive', fontSize: '11px', whiteSpace: 'nowrap' }}
           >☁️ Guardar en la nube</button>
         )}
       </div>

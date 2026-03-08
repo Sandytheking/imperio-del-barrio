@@ -3263,11 +3263,18 @@ function resetGame() {
   });
 }
 
+// ── Cloud save guard ─────────────────────────────────────────
+// Prevents overwriting cloud save with empty state on startup.
+// Set to true only after GAME_LOAD_RESPONSE received (or 8s timeout).
+let _cloudReady = false;
+let _cloudReadyTimer = setTimeout(() => { _cloudReady = true; }, 8000);
+
 function saveGame() {
   G.lastSave = Date.now();
   // 1. Always write localStorage immediately (instant, offline-safe)
   try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
-  // 2. Debounce cloud save — batch rapid calls, send every 10s at most
+  // 2. Debounce cloud save — only after cloud load completes
+  if (!_cloudReady) return;
   clearTimeout(_cloudSaveTimer);
   _cloudSaveTimer = setTimeout(() => {
     window.parent?.postMessage({ type: 'GAME_SAVE', payload: G }, '*');
@@ -3278,6 +3285,7 @@ function saveGame() {
 function saveGameNow() {
   G.lastSave = Date.now();
   try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
+  if (!_cloudReady) return;
   window.parent?.postMessage({ type: 'GAME_SAVE', payload: G }, '*');
 }
 
@@ -3300,6 +3308,9 @@ window.addEventListener('message', function _cloudLoadHandler(e) {
   if (!e.data || e.data.type !== 'GAME_LOAD_RESPONSE') return;
   const cloud = e.data.payload;
   const src   = e.data.source; // 'cloud' | 'local' | 'new'
+  // ✅ Cloud load received — now safe to send saves
+  _cloudReady = true;
+  clearTimeout(_cloudReadyTimer);
   if (!cloud) return;
 
   const cloudEarned = cloud.totalEarned || 0;
