@@ -3303,28 +3303,38 @@ function loadGame() {
 
 // ── Listen for cloud load response from React parent ─────────────
 // GameClient sends GAME_LOAD_RESPONSE after smartLoad() resolves.
-// If cloud save is newer → replace local state and re-render.
+// smartLoad() ya eligió el mejor estado (nube vs local) — siempre aplicarlo.
 window.addEventListener('message', function _cloudLoadHandler(e) {
   if (!e.data || e.data.type !== 'GAME_LOAD_RESPONSE') return;
   const cloud = e.data.payload;
   const src   = e.data.source; // 'cloud' | 'local' | 'new'
+
   // ✅ Cloud load received — now safe to send saves
   _cloudReady = true;
   clearTimeout(_cloudReadyTimer);
-  if (!cloud) return;
 
-  const cloudEarned = cloud.totalEarned || 0;
-  const localEarned = G.totalEarned    || 0;
+  // Sin payload → usar lo que ya está en memoria (localStorage cargado al inicio)
+  if (!cloud || src === 'new') return;
 
-  if (src === 'cloud' && cloudEarned >= localEarned) {
-    // Cloud is authoritative — overwrite local state
+  // FIX: Aplicar SIEMPRE el payload que manda React.
+  // smartLoad() ya comparó nube vs local y eligió el mejor.
+  // Antes solo se aplicaba si src === 'cloud', ignorando saves locales
+  // más nuevos que la nube — eso causaba el reinicio al hacer refresh.
+  const incomingEarned = cloud.totalEarned || 0;
+  const currentEarned  = G.totalEarned    || 0;
+
+  // Solo aplicar si el estado entrante tiene más progreso que el actual
+  // (evita sobreescribir con un estado más viejo)
+  if (incomingEarned >= currentEarned) {
     G = { ...G, ...cloud };
     try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
-    // Re-apply migrations
+    // Re-aplicar migraciones por si el save es antiguo
     if (!G.businesses) G.businesses = {};
     if (!G.upgrades)   G.upgrades   = {};
     renderAll();
     applyTheme(G.theme || 'gold');
+
+    // Calcular ganancias offline
     const elapsed = (Date.now() - G.lastSave) / 1000;
     if (elapsed > 30 && Object.keys(G.businesses).filter(k=>bizLevel(k)>0).length > 0) {
       const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.4) * getStageOfflineMult();
