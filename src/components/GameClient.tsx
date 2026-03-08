@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
-import { smartSave, smartLoad, saveToCloud, syncGuildMember, getLeaderboard, getMyRank, signIn, signUp, signOut, subscribePush, unsubscribePush, getPushStatus, createGuild, findGuildByCode, joinGuild, getGuildMembers, leaveGuild } from '@/lib/gameService';
+import {
+  smartLoad, saveToCloud, syncGuildMember,
+  getLeaderboard, getMyRank,
+  signIn, signUp, signOut,
+  subscribePush, unsubscribePush, getPushStatus,
+  createGuild, findGuildByCode, joinGuild,
+  getGuildMembers, leaveGuild,
+} from '@/lib/gameService';
 
 // ── Types ───────────────────────────────────────────────────
 interface LeaderboardEntry {
@@ -39,27 +46,41 @@ const LEVEL_NAMES = ['Principiante','Emprendedor','Comerciante','Empresario','Ma
 // ════════════════════════════════════════════════════════════
 export default function GameClient() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
+  // FIX #1: Usar useRef para user en el message handler
+  // Así el handler siempre tiene el valor más reciente sin re-registrarse
+  const [user, setUser]           = useState<User | null>(null);
+  const userRef                   = useRef<User | null>(null);
+
+  const [showAuth, setShowAuth]   = useState(false);
+  const [authMode, setAuthMode]   = useState<'login' | 'register'>('login');
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [myRank, setMyRank] = useState<number | null>(null);
+  const [leaderboard, setLeaderboard]         = useState<LeaderboardEntry[]>([]);
+  const [myRank, setMyRank]       = useState<number | null>(null);
   const [cloudStatus, setCloudStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [loadSource, setLoadSource] = useState<string>('');
-  const [pushStatus, setPushStatus] = useState<'granted' | 'denied' | 'default' | 'unsupported' | 'loading'>('default');
-  const [form, setForm] = useState({ email: '', password: '', username: '', avatar: '😎' });
+  const [loadSource, setLoadSource]   = useState<string>('');
+  const [pushStatus, setPushStatus]   = useState<'granted' | 'denied' | 'default' | 'unsupported' | 'loading'>('default');
+  const [form, setForm]           = useState({ email: '', password: '', username: '', avatar: '😎' });
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+
+  // FIX #2: Track si el iframe ya pidió su save (para reintento tras login)
+  const iframeReadyRef = useRef(false);
 
   const AVATARS = ['😎','🤑','💪','🏆','👑','🔥','⭐','🎯','💎','🦁'];
 
   // ── Auth state ─────────────────────────────────────────────
   useEffect(() => {
     const sb = getSupabase();
-    sb.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+    sb.auth.getUser().then(({ data }) => {
+      const u = data.user ?? null;
+      userRef.current = u;
+      setUser(u);
+    });
     const { data: listener } = sb.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      userRef.current = u;   // FIX: mantener ref actualizada
+      setUser(u);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -69,15 +90,12 @@ export default function GameClient() {
     getPushStatus().then(s => setPushStatus(s));
   }, []);
 
-  // ── Schedule push reminders via SW (fires when user leaves) ─
+  // ── Schedule push reminders via SW ────────────────────────
   useEffect(() => {
     if (!user || pushStatus !== 'granted') return;
-
-    // Schedule "come back" messages at 4h, 8h, 24h after last visit
     const scheduleReminders = async () => {
       if (!('serviceWorker' in navigator)) return;
       const reg = await navigator.serviceWorker.ready;
-      // Use SW message channel to schedule
       reg.active?.postMessage({
         type: 'SCHEDULE_REMINDERS',
         userId: user.id,
@@ -85,41 +103,95 @@ export default function GameClient() {
           { delayMs: 4  * 3600 * 1000, title: '💰 Tu barrio está generando dinero', body: '¡Vuelve a cobrar antes de que se llene el límite!', url: '/' },
           { delayMs: 8  * 3600 * 1000, title: '🏘️ ¡Tu Imperio te espera!',          body: 'Llevas 8 horas sin jugar. ¡Hay dinero acumulado!',  url: '/' },
           { delayMs: 24 * 3600 * 1000, title: '👑 Alguien te superó en el ranking',  body: 'Tu clan necesita tu ayuda. ¡Entra ahora!',          url: '/' },
-        ]
+        ],
       });
     };
     scheduleReminders();
   }, [user, pushStatus]);
 
-  // ── Listen for messages from the game iframe ───────────────
+  // ── Función helper para enviar el save al iframe ───────────
+  const sendLoadToIframe = useCallback(async () => {
+    try {
+      const { state, source } = await smartLoad();
+      setLoadSource(source);
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: 'GAME_LOAD_RESPONSE', payload: state, source },
+        '*'
+      );
+    } catch (err) {
+      console.error('[GameClient] smartLoad error:', err);
+      // Enviar payload vacío para que el juego use su propio localStorage
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: 'GAME_LOAD_RESPONSE', payload: null, source: 'local' },
+        '*'
+      );
+    }
+  }, []);
+
+  // ── FIX #3: Usar RPC para el guardado en la nube ──────────
+  // Esta función llama directamente al RPC upsert_game_save que
+  // creamos en Supabase con SECURITY DEFINER — evita todos los
+  // problemas de RLS que causaban el fallo silencioso.
+  const saveViaRpc = useCallback(async (payload: Record<string, unknown>) => {
+    const sb = getSupabase();
+    const { error } = await sb.rpc('upsert_game_save', {
+      p_money:          payload.money          ?? 0,
+      p_total_earned:   payload.totalEarned    ?? payload.total_earned ?? 0,
+      p_level:          payload.level          ?? 0,
+      p_prestige_stars: payload.prestigeStars  ?? payload.prestige_stars ?? 0,
+      p_prestige_mult:  payload.prestigeMult   ?? payload.prestige_mult  ?? 1,
+      p_zone:           payload.zone           ?? 'centro',
+      p_game_state:     payload,               // guarda todo el estado como JSONB
+      p_save_version:   payload.saveVersion    ?? payload.save_version   ?? 1,
+      p_social_stage:   payload.socialStage    ?? payload.social_stage   ?? 0,
+      p_influence:      payload.influence      ?? 0,
+      p_guild_code:     payload.guildCode      ?? payload.guild_code     ?? null,
+    });
+    if (error) throw error;
+  }, []);
+
+  // ── FIX #4: Message handler con dependencia estable ───────
+  // El handler usa userRef en lugar de user para no tener que
+  // re-registrarse cada vez que cambia el usuario.
   useEffect(() => {
     const handle = async (e: MessageEvent) => {
       if (!e.data?.type) return;
+
       switch (e.data.type) {
-        case 'GAME_SAVE':
+
+        case 'GAME_SAVE': {
+          // FIX: Solo guardar en la nube si hay usuario logueado
+          if (!userRef.current) break;
+
           setCloudStatus('saving');
-          // Only save to cloud — localStorage is handled by the game iframe directly
-          // Calling smartSave here would overwrite the game's localStorage with React's copy
-          saveToCloud(e.data.payload)
-            .then(() => {
-              setCloudStatus('saved');
-              setTimeout(() => setCloudStatus('idle'), 3000);
-            })
-            .catch(() => setCloudStatus('error'));
-          // Sync guild stats
+          try {
+            // Intentar con RPC primero (más robusto), fallback a saveToCloud
+            await saveViaRpc(e.data.payload).catch(() => saveToCloud(e.data.payload));
+            setCloudStatus('saved');
+            setTimeout(() => setCloudStatus('idle'), 3000);
+          } catch {
+            setCloudStatus('error');
+          }
+          // Sync guild en paralelo, sin bloquear
           syncGuildMember(e.data.payload).catch(() => {});
           break;
+        }
 
-        case 'GAME_LOAD_REQUEST':
-          if (user) {
-            const { state, source } = await smartLoad();
-            setLoadSource(source);
+        case 'GAME_LOAD_REQUEST': {
+          iframeReadyRef.current = true;
+          if (userRef.current) {
+            // Usuario ya autenticado → cargar desde la nube
+            await sendLoadToIframe();
+          } else {
+            // FIX: Sin usuario, responder inmediatamente con null
+            // para que el juego use su localStorage local
             iframeRef.current?.contentWindow?.postMessage(
-              { type: 'GAME_LOAD_RESPONSE', payload: state, source },
+              { type: 'GAME_LOAD_RESPONSE', payload: null, source: 'local' },
               '*'
             );
           }
           break;
+        }
 
         case 'OPEN_LEADERBOARD':
           handleOpenLeaderboard();
@@ -144,7 +216,6 @@ export default function GameClient() {
                 result = { guild };
               }
             } else if (action === 'getMembers') {
-              // payload.code is the guild code string
               const guild = await findGuildByCode(payload.code);
               if (guild) {
                 const members = await getGuildMembers(guild.id);
@@ -172,9 +243,10 @@ export default function GameClient() {
       }
     };
 
+    // FIX: Registrar el handler UNA sola vez (sin dependencias que cambien)
     window.addEventListener('message', handle);
     return () => window.removeEventListener('message', handle);
-  }, [user]);
+  }, [sendLoadToIframe, saveViaRpc]); // sendLoadToIframe y saveViaRpc son estables (useCallback sin deps)
 
   // ── Leaderboard ────────────────────────────────────────────
   const handleOpenLeaderboard = useCallback(async () => {
@@ -194,13 +266,8 @@ export default function GameClient() {
         await signIn(form.email, form.password);
         setShowAuth(false);
         setCloudStatus('saving');
-        // After login, load cloud save
-        const { state, source } = await smartLoad();
-        setLoadSource(source);
-        iframeRef.current?.contentWindow?.postMessage(
-          { type: 'GAME_LOAD_RESPONSE', payload: state, source },
-          '*'
-        );
+        // Después del login, cargar el save de la nube
+        await sendLoadToIframe();
         setCloudStatus('saved');
         setTimeout(() => setCloudStatus('idle'), 2000);
       } else {
@@ -217,6 +284,7 @@ export default function GameClient() {
 
   const handleSignOut = async () => {
     await signOut();
+    userRef.current = null;
     setUser(null);
   };
 
@@ -250,22 +318,19 @@ export default function GameClient() {
 
       {/* ── BARRA SUPERIOR (React HUD) ── */}
       <div style={{
-        flexShrink: 0,
-        height: '38px',
-        background: '#16132a',
-        borderBottom: '2px solid rgba(255,225,53,0.25)',
+        flexShrink: 0, height: '38px',
+        background: '#16132a', borderBottom: '2px solid rgba(255,225,53,0.25)',
         display: 'flex', alignItems: 'center',
-        padding: '0 12px', gap: '8px',
-        zIndex: 200,
+        padding: '0 12px', gap: '8px', zIndex: 200,
       }}>
-        {/* Izquierda: logo + estado nube */}
         <span style={{ fontFamily: 'Fredoka One, cursive', color: '#FFE135', fontSize: '13px', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
           🏘️ Imperio
         </span>
         <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+
         {cloudStatus !== 'idle' && (
           <span style={{ fontSize: '10px', fontWeight: 900, color: cloudStatus === 'saved' ? '#2DC653' : cloudStatus === 'error' ? '#FF4757' : '#FFE135', whiteSpace: 'nowrap' }}>
-            {cloudStatus === 'saving' ? '☁️ Guardando...' : cloudStatus === 'saved' ? '✅ Guardado' : '❌ Error'}
+            {cloudStatus === 'saving' ? '☁️ Guardando...' : cloudStatus === 'saved' ? '✅ Guardado' : '❌ Error al guardar'}
           </span>
         )}
         {loadSource && cloudStatus === 'idle' && (
@@ -274,10 +339,8 @@ export default function GameClient() {
           </span>
         )}
 
-        {/* Espacio flexible */}
         <div style={{ flex: 1 }} />
 
-        {/* Derecha: auth */}
         {user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 900, fontFamily: 'Nunito, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: '120px', textOverflow: 'ellipsis' }}>
@@ -288,7 +351,6 @@ export default function GameClient() {
               style={{ background: 'rgba(45,198,83,0.2)', border: '1px solid #2DC653', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer', color: '#2DC653', fontFamily: 'Fredoka One, cursive', fontSize: '11px', whiteSpace: 'nowrap' }}
             >🏆 Ranking</button>
 
-            {/* Push notification bell */}
             {pushStatus !== 'unsupported' && pushStatus !== 'denied' && (
               <button
                 onClick={async () => {
@@ -300,7 +362,6 @@ export default function GameClient() {
                     const result = await subscribePush();
                     setPushStatus(result);
                     if (result === 'granted') {
-                      // Show test notification
                       new Notification('🏘️ Imperio del Barrio', {
                         body: '¡Notificaciones activadas! Te avisaremos cuando tu barrio necesite atención.',
                         icon: '/icon-192.png',
@@ -335,7 +396,7 @@ export default function GameClient() {
         )}
       </div>
 
-      {/* ── IFRAME DEL JUEGO (ocupa el resto de la pantalla) ── */}
+      {/* ── IFRAME DEL JUEGO ── */}
       <iframe
         ref={iframeRef}
         src="/game/imperio-del-barrio-v8.html"
@@ -368,7 +429,6 @@ export default function GameClient() {
                     onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
                     required
                   />
-                  {/* Avatar picker */}
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px', justifyContent: 'center' }}>
                     {AVATARS.map(av => (
                       <button
@@ -387,23 +447,10 @@ export default function GameClient() {
                 </>
               )}
 
-              <input
-                style={input}
-                type="email"
-                placeholder="Correo electrónico"
-                value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                required
-              />
-              <input
-                style={input}
-                type="password"
-                placeholder="Contraseña (mín. 6 caracteres)"
-                value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                required
-                minLength={6}
-              />
+              <input style={input} type="email" placeholder="Correo electrónico"
+                value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
+              <input style={input} type="password" placeholder="Contraseña (mín. 6 caracteres)"
+                value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required minLength={6} />
 
               {formError && (
                 <div style={{ background: 'rgba(255,71,87,.15)', border: '1px solid #FF4757', borderRadius: '8px', padding: '8px 12px', marginBottom: '12px', color: '#FF4757', fontSize: '13px' }}>
@@ -440,7 +487,6 @@ export default function GameClient() {
               <button onClick={() => setShowLeaderboard(false)} style={{ background: 'none', border: 'none', color: '#aaa', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
             </div>
 
-            {/* My rank highlight */}
             {myRank && myRank > 3 && (
               <div style={{ background: 'rgba(255,225,53,.1)', border: '2px solid #FFE135', borderRadius: '12px', padding: '10px 14px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontFamily: 'Fredoka One', color: '#FFE135', fontSize: '1.1rem' }}>#{myRank}</span>
@@ -449,17 +495,13 @@ export default function GameClient() {
               </div>
             )}
 
-            {/* Table header */}
             <div style={{ display: 'grid', gridTemplateColumns: '40px 32px 1fr 90px 60px 50px', gap: '8px', padding: '6px 12px', color: '#888', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.5px' }}>
               <span>#</span><span></span><span>Jugador</span><span style={{ textAlign: 'right' }}>Ganado</span><span style={{ textAlign: 'right' }}>Nivel</span><span style={{ textAlign: 'right' }}>⭐</span>
             </div>
 
-            {/* Rows */}
             <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {leaderboard.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#555', padding: '40px', fontSize: '14px' }}>
-                  Cargando ranking... 🏘️
-                </div>
+                <div style={{ textAlign: 'center', color: '#555', padding: '40px', fontSize: '14px' }}>Cargando ranking... 🏘️</div>
               ) : [...leaderboard]
                   .sort((a, b) =>
                     (b.influence * 1_000_000_000 + b.total_earned) -
@@ -472,15 +514,12 @@ export default function GameClient() {
                 const stageIcon = p.social_stage > 0 ? STAGE_ICONS[Math.min(p.social_stage - 1, 5)] : '';
                 const inf = p.influence || 0;
                 return (
-                  <div
-                    key={p.username}
-                    style={{
-                      display: 'grid', gridTemplateColumns: '40px 32px 1fr 90px 60px 50px', gap: '8px',
-                      padding: '8px 12px', borderRadius: '10px', alignItems: 'center',
-                      background: isMe ? 'rgba(255,225,53,.12)' : i < 3 ? 'rgba(255,255,255,.04)' : 'transparent',
-                      border: isMe ? '1px solid rgba(255,225,53,.3)' : '1px solid transparent',
-                    }}
-                  >
+                  <div key={p.username} style={{
+                    display: 'grid', gridTemplateColumns: '40px 32px 1fr 90px 60px 50px', gap: '8px',
+                    padding: '8px 12px', borderRadius: '10px', alignItems: 'center',
+                    background: isMe ? 'rgba(255,225,53,.12)' : i < 3 ? 'rgba(255,255,255,.04)' : 'transparent',
+                    border: isMe ? '1px solid rgba(255,225,53,.3)' : '1px solid transparent',
+                  }}>
                     <span style={{ fontFamily: 'Fredoka One', color: i < 3 ? '#FFE135' : '#666', fontSize: '14px' }}>
                       {medal || `#${i + 1}`}
                     </span>

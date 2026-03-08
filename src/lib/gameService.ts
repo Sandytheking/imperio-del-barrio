@@ -1,6 +1,8 @@
 /**
- * gameService.ts - FIXED
- * smartSave no longer writes to localStorage (handled by the game iframe)
+ * gameService.ts - FIXED v2
+ * - saveToCloud usa RPC upsert_game_save (SECURITY DEFINER) como método primario
+ * - Fallback a upsert directo si el RPC falla
+ * - getLeaderboard / getMyRank apuntan a leaderboard_ranked (vista corregida)
  */
 
 import { getSupabase, GameSave, LeaderboardEntry, Guild, GuildMember, GuildLeaderboardEntry } from './supabase';
@@ -16,9 +18,7 @@ export async function signUp(email: string, password: string, username: string, 
   const { data, error } = await sb.auth.signUp({
     email,
     password,
-    options: {
-      data: { username, avatar },
-    },
+    options: { data: { username, avatar } },
   });
   if (error) throw error;
   return data;
@@ -59,43 +59,47 @@ export async function saveToCloud(G: Record<string, unknown>): Promise<boolean> 
     if (!user) return false;
 
     const sb = getSupabase();
+
+    // FIX: Usar RPC con SECURITY DEFINER como método primario
+    // Esto evita todos los problemas de RLS que causaban fallos silenciosos
+    const { error: rpcError } = await sb.rpc('upsert_game_save', {
+      p_money:          Math.floor((G.money          as number) || 0),
+      p_total_earned:   Math.floor((G.totalEarned    as number) || 0),
+      p_level:          (G.level                     as number) || 0,
+      p_prestige_stars: (G.prestigeStars             as number) || 0,
+      p_prestige_mult:  (G.prestigeMult              as number) || 1,
+      p_zone:           (G.zone                      as string) || 'centro',
+      p_game_state:     G,
+      p_save_version:   (G.saveVersion               as number) || SAVE_VERSION,
+      p_social_stage:   (G.socialStage               as number) || 0,
+      p_influence:      Math.floor((G.totalInfluence as number) || 0),
+      p_guild_code:     (G.guildCode                 as string) || null,
+    });
+
+    if (!rpcError) return true;
+
+    // Fallback: upsert directo si el RPC falla por alguna razón
+    console.warn('[Imperio] RPC save failed, trying direct upsert:', rpcError.message);
     const { error } = await sb
       .from('game_saves')
       .upsert({
         user_id:       user.id,
-        money:         Math.floor((G.money as number) || 0),
-        total_earned:  Math.floor((G.totalEarned as number) || 0),
-        level:         (G.level as number) || 0,
-        prestige_stars:(G.prestigeStars as number) || 0,
-        prestige_mult: (G.prestigeMult as number) || 1,
-        zone:          (G.zone as string) || 'centro',
-        social_stage:  (G.socialStage as number) || 0,
+        money:         Math.floor((G.money          as number) || 0),
+        total_earned:  Math.floor((G.totalEarned    as number) || 0),
+        level:         (G.level                     as number) || 0,
+        prestige_stars:(G.prestigeStars             as number) || 0,
+        prestige_mult: (G.prestigeMult              as number) || 1,
+        zone:          (G.zone                      as string) || 'centro',
+        social_stage:  (G.socialStage               as number) || 0,
         influence:     Math.floor((G.totalInfluence as number) || 0),
-        guild_code:    (G.guildCode as string) || null,
+        guild_code:    (G.guildCode                 as string) || null,
         game_state:    G,
         save_version:  SAVE_VERSION,
       }, { onConflict: 'user_id' });
 
     if (error) {
-      if (error.message?.includes('social_stage') || error.message?.includes('influence')) {
-        const { error: error2 } = await sb
-          .from('game_saves')
-          .upsert({
-            user_id:       user.id,
-            money:         Math.floor((G.money as number) || 0),
-            total_earned:  Math.floor((G.totalEarned as number) || 0),
-            level:         (G.level as number) || 0,
-            prestige_stars:(G.prestigeStars as number) || 0,
-            prestige_mult: (G.prestigeMult as number) || 1,
-            zone:          (G.zone as string) || 'centro',
-            game_state:    G,
-            save_version:  SAVE_VERSION,
-          }, { onConflict: 'user_id' });
-        if (error2) { console.warn('[Imperio] Cloud save failed:', error2.message); return false; }
-      } else {
-        console.warn('[Imperio] Cloud save failed:', error.message);
-        return false;
-      }
+      console.warn('[Imperio] Cloud save failed:', error.message);
+      return false;
     }
     return true;
   } catch (e) {
@@ -135,12 +139,16 @@ export async function loadFromCloud(): Promise<Record<string, unknown> | null> {
 export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   try {
     const sb = getSupabase();
+    // FIX: leaderboard_ranked ahora existe como vista en Supabase
     const { data, error } = await sb
       .from('leaderboard_ranked')
       .select('*')
       .limit(100);
 
-    if (error || !data) return [];
+    if (error || !data) {
+      console.warn('[Imperio] Leaderboard error:', error?.message);
+      return [];
+    }
     return data as LeaderboardEntry[];
   } catch (e) {
     console.warn('[Imperio] Leaderboard error:', e);
@@ -154,6 +162,7 @@ export async function getMyRank(): Promise<number | null> {
     if (!user) return null;
 
     const sb = getSupabase();
+    // FIX: leaderboard_ranked ahora existe como vista en Supabase
     const { data } = await sb
       .from('leaderboard_ranked')
       .select('rank')
@@ -196,13 +205,13 @@ export async function smartLoad(): Promise<{ state: Record<string, unknown>; sou
       source = 'local';
     }
 
-    // Preservar mayor influencia
-    const cloudInfluence      = (cloudState.influence as number) || 0;
-    const localInfluence      = (localState.influence as number) || 0;
+    // Preservar mayor influencia entre ambas fuentes
+    const cloudInfluence      = (cloudState.influence      as number) || 0;
+    const localInfluence      = (localState.influence      as number) || 0;
     const cloudTotalInfluence = (cloudState.totalInfluence as number) || 0;
     const localTotalInfluence = (localState.totalInfluence as number) || 0;
-    const cloudStage          = (cloudState.socialStage as number) || 0;
-    const localStage          = (localState.socialStage as number) || 0;
+    const cloudStage          = (cloudState.socialStage    as number) || 0;
+    const localStage          = (localState.socialStage    as number) || 0;
 
     if (localInfluence > cloudInfluence || localStage > cloudStage) {
       base = {
@@ -217,14 +226,12 @@ export async function smartLoad(): Promise<{ state: Record<string, unknown>; sou
       };
     }
 
-    // ✅ CRÍTICO: Actualizar localStorage con el mejor estado
-    // Esto SÍ es correcto porque React y el iframe comparten origen
+    // Actualizar localStorage con el mejor estado
     localStorage.setItem('idb2_save', JSON.stringify(base));
     return { state: base, source };
   }
 
   if (cloudState) {
-    // Guardar en localStorage para que el iframe lo encuentre
     localStorage.setItem('idb2_save', JSON.stringify(cloudState));
     return { state: cloudState, source: 'cloud' };
   }
@@ -234,15 +241,10 @@ export async function smartLoad(): Promise<{ state: Record<string, unknown>; sou
 
 /**
  * smartSave: SOLO guarda en la nube.
- * El localStorage lo maneja el juego directamente — no tocar desde React.
+ * El localStorage lo maneja el juego directamente.
  */
 export function smartSave(G: Record<string, unknown>) {
-  // ❌ NO escribir localStorage aquí — el juego iframe ya lo hace
-  // Si React escribe aquí, puede sobreescribir con estado viejo
-
-  // Cloud save async (fire & forget)
   saveToCloud(G).catch(() => { /* silent fail */ });
-  // Sync guild stats async
   syncGuildMember(G).catch(() => { /* silent fail */ });
 }
 
@@ -257,7 +259,7 @@ export async function createGuild(name: string, emoji: string, code: string): Pr
   const sb = getSupabase();
   const { data, error } = await sb
     .from('guilds')
-    .insert({ name, emoji, code, owner_id: user.id })
+    .insert({ name, emoji, code: code.toUpperCase(), owner_id: user.id })
     .select()
     .single();
 
@@ -291,17 +293,17 @@ export async function joinGuild(guildId: string, guildCode: string, G: Record<st
       guild_id:     guildId,
       user_id:      user.id,
       username:     (G.companyName as string) || 'Jugador',
-      avatar:       (G.avatar as string) || '😎',
-      total_earned: Math.floor((G.totalEarned as number) || 0),
-      level:        (G.level as number) || 0,
-      social_stage: (G.socialStage as number) || 0,
+      avatar:       (G.avatar      as string) || '😎',
+      total_earned: Math.floor((G.totalEarned    as number) || 0),
+      level:        (G.level                     as number) || 0,
+      social_stage: (G.socialStage               as number) || 0,
       influence:    Math.floor((G.totalInfluence as number) || 0),
       last_seen:    new Date().toISOString(),
     }, { onConflict: 'guild_id,user_id' });
 
   if (memberError) throw memberError;
 
-  await sb.from('game_saves').update({ guild_code: guildCode }).eq('user_id', user.id);
+  await sb.from('game_saves').update({ guild_code: guildCode.toUpperCase() }).eq('user_id', user.id);
 }
 
 export async function syncGuildMember(G: Record<string, unknown>): Promise<void> {
@@ -320,10 +322,10 @@ export async function syncGuildMember(G: Record<string, unknown>): Promise<void>
       guild_id:     guild.id,
       user_id:      user.id,
       username:     (G.companyName as string) || 'Jugador',
-      avatar:       (G.avatar as string) || '😎',
-      total_earned: Math.floor((G.totalEarned as number) || 0),
-      level:        (G.level as number) || 0,
-      social_stage: (G.socialStage as number) || 0,
+      avatar:       (G.avatar      as string) || '😎',
+      total_earned: Math.floor((G.totalEarned    as number) || 0),
+      level:        (G.level                     as number) || 0,
+      social_stage: (G.socialStage               as number) || 0,
       influence:    Math.floor((G.totalInfluence as number) || 0),
       last_seen:    new Date().toISOString(),
     }, { onConflict: 'guild_id,user_id' });
