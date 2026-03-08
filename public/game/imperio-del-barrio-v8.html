@@ -7143,10 +7143,15 @@ function showOfflineModal(amount, elapsed) {
 
 // ── SPLASH → then decide new/returning player ──────────────
 runSplash(() => {
-  if (hadSave) {
-    // Returning player — check offline earnings then go straight to game
+  // ── Detectar si es save real o estado inicial vacío ──────────
+  // Un save válido tiene: negocios abiertos O totalEarned > dinero inicial
+  const hasBiz = Object.keys(G.businesses || {}).filter(k=>bizLevel(k)>0).length > 0;
+  const hasRealProgress = hasBiz || (G.totalEarned > 500) || (G.level > 0) || (G.gems > 1);
+  const isRealSave = hadSave && hasRealProgress;
+
+  if (isRealSave) {
+    // Jugador con progreso real — ir directo al juego
     const elapsed = (Date.now() - G.lastSave) / 1000;
-    const hasBiz = Object.keys(G.businesses).filter(k=>bizLevel(k)>0).length > 0;
     if (elapsed > 30 && hasBiz) {
       const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.4) * getStageOfflineMult();
       const offlineInc  = totalIPS() * elapsed * offlineMult;
@@ -7162,10 +7167,12 @@ runSplash(() => {
     startGame();
     setTimeout(() => checkDaily(), 1200);
   } else {
-    // New player — show onboarding
-    G.money = 500;
+    // Jugador nuevo o save vacío/corrupto — NO tocar si ya tiene algo
+    if (!hadSave) {
+      G.money = 500; // solo para jugadores completamente nuevos
+    }
     const obSeen = (() => { try { return !!localStorage.getItem('idb_ob_seen'); } catch(e){return false;} })();
-    if (!obSeen) {
+    if (!obSeen && !hadSave) {
       showOnboarding();
     } else {
       document.getElementById('introScreen').style.display = 'none';
