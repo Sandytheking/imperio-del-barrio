@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <!-- ═══ SEO BÁSICO ═══════════════════════════════════════════════ -->
 <title>Imperio del Barrio 🏘️ — Juego Idle Dominicano</title>
@@ -2197,6 +2198,7 @@ body.night-mode .night-stars { opacity: 0.35; }
       <div class="hdr-chip gems" onclick="openGemShop()" title="Gemas">💎 <span id="hdrGems">0</span></div>
       <button class="hdr-earn-btn" onclick="openGemSources()">✨ Ganar</button>
       <div class="hdr-chip level" id="hdrLevelChip">⭐ Nv.1</div>
+      <button id="cloudBtn" onclick="openCloudAuth()" style="background:rgba(255,225,53,0.12);border:1px solid rgba(255,225,53,0.4);border-radius:8px;padding:3px 9px;cursor:pointer;color:#FFE135;font-family:Fredoka One,cursive;font-size:11px;white-space:nowrap">☁️</button>
       <button class="hdr-settings-btn" onclick="openSecondaryPanel()" title="Más opciones">⚙️</button>
     </div>
   </div>
@@ -3263,71 +3265,47 @@ function resetGame() {
   });
 }
 
-// ── Cloud save guard ─────────────────────────────────────────
-// Prevents overwriting cloud save with empty state on startup.
-// ═══════════════════════════════════════════════════════════════
-// CLOUD SAVE — Conexión directa a Supabase (sin postMessage)
-// React pasa el JWT via postMessage AUTH_TOKEN una sola vez.
-// El juego guarda/carga directamente sin depender de React.
-// ═══════════════════════════════════════════════════════════════
-const _SB_URL  = 'https://spubzjcwpehtcctvtbsn.supabase.co';
-// La anon key se inyecta desde React via postMessage (AUTH_TOKEN)
-// o desde la meta tag si está disponible
-let _sbAnonKey = document.querySelector('meta[name="sb-anon"]')?.content || '';
-let _sbJwt     = '';   // token del usuario logueado (viene de React)
-let _sbUserId  = '';   // uuid del usuario
+// ══════════════════════════════════════════════════════════════
+// CLOUD SAVE — Supabase directo (sin React/GameClient)
+// ══════════════════════════════════════════════════════════════
+// El SDK de Supabase se carga en el <head>.
+// _cloud es el cliente. _cloudUser es el usuario activo.
+// ══════════════════════════════════════════════════════════════
+const _SB_URL = 'https://spubzjcwpehtcctvtbsn.supabase.co';
+const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwdWJ6amN3cGVodGNjdHZ0YnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTE0NDgsImV4cCI6MjA4Nzk2NzQ0OH0.gCqOWZxIiXBZvt8JQ4ihhKs36YALmrjupInKhwIUv_g';
+let _cloud = null;
+let _cloudUser = null;
+let _cloudAutoSave = null;
+let _cloudDebounce = null;
 
-let _cloudReady   = false;
-let _cloudReadyTimer = setTimeout(() => { _cloudReady = true; }, 10000);
-
-// ── Helper fetch a Supabase ──────────────────────────────────
-async function _sbFetch(path, opts = {}) {
-  const key = _sbJwt || _sbAnonKey;
-  if (!key) return null;
-  try {
-    const res = await fetch(_SB_URL + path, {
-      ...opts,
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': _sbAnonKey,
-        'Authorization': 'Bearer ' + key,
-        ...(opts.headers || {}),
-      },
+function _getCloud() {
+  if (!_cloud && window.supabase) {
+    _cloud = window.supabase.createClient(_SB_URL, _SB_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true }
     });
-    if (!res.ok) {
-      const err = await res.text();
-      console.warn('[Imperio] Supabase error:', res.status, err);
-      return null;
-    }
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
-  } catch(e) {
-    console.warn('[Imperio] fetch error:', e);
-    return null;
+  }
+  return _cloud;
+}
+
+function _updateCloudBtn() {
+  const btn = document.getElementById('cloudBtn');
+  if (!btn) return;
+  if (_cloudUser) {
+    btn.textContent = '☁️ ' + (_cloudUser.email?.split('@')[0]?.slice(0,8) || 'cuenta');
+    btn.style.color = '#2DC653';
+    btn.style.borderColor = 'rgba(45,198,83,0.5)';
+  } else {
+    btn.textContent = '☁️';
+    btn.style.color = '#FFE135';
+    btn.style.borderColor = 'rgba(255,225,53,0.4)';
   }
 }
 
-// ── Guardar en la nube directo ───────────────────────────────
-async function _saveToCloud() {
-  if (!_sbJwt || !_sbUserId) return false;
-  const body = JSON.stringify({
-    user_id:       _sbUserId,
-    money:         Math.floor(G.money || 0),
-    total_earned:  Math.floor(G.totalEarned || 0),
-    level:         G.level || 0,
-    prestige_stars:G.prestigeStars || 0,
-    prestige_mult: G.prestigeMult || 1,
-    zone:          G.zone || 'centro',
-    social_stage:  G.socialStage || 0,
-    influence:     Math.floor(G.totalInfluence || 0),
-    guild_code:    G.guildCode || null,
-    game_state:    G,
-    save_version:  1,
-  });
-  // Usar RPC upsert_game_save (SECURITY DEFINER — sin problemas de RLS)
-  const result = await _sbFetch('/rest/v1/rpc/upsert_game_save', {
-    method: 'POST',
-    body: JSON.stringify({
+async function _cloudDoSave(silent) {
+  const sb = _getCloud();
+  if (!sb || !_cloudUser) return;
+  try {
+    const { error } = await sb.rpc('upsert_game_save', {
       p_money:          Math.floor(G.money || 0),
       p_total_earned:   Math.floor(G.totalEarned || 0),
       p_level:          G.level || 0,
@@ -3339,145 +3317,88 @@ async function _saveToCloud() {
       p_social_stage:   G.socialStage || 0,
       p_influence:      Math.floor(G.totalInfluence || 0),
       p_guild_code:     G.guildCode || null,
-    }),
-  });
-  // Notificar a React que se guardó
-  window.parent?.postMessage({ type: 'CLOUD_SAVE_OK' }, '*');
-  return result !== null;
-}
-
-// ── Cargar desde la nube directo ─────────────────────────────
-async function _loadFromCloud() {
-  if (!_sbJwt || !_sbUserId) return null;
-  const data = await _sbFetch(
-    `/rest/v1/game_saves?user_id=eq.${_sbUserId}&select=game_state,updated_at&limit=1`
-  );
-  if (!data || !data[0]?.game_state) return null;
-  return data[0].game_state;
-}
-
-// ── Aplicar estado de la nube al juego ───────────────────────
-async function _applyCloudSave() {
-  const cloud = await _loadFromCloud();
-  if (!cloud) return;
-
-  const cloudEarned = cloud.totalEarned || 0;
-  const localEarned = G.totalEarned    || 0;
-
-  if (cloudEarned >= localEarned) {
-    G = { ...G, ...cloud };
-    try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
-    if (!G.businesses) G.businesses = {};
-    if (!G.upgrades)   G.upgrades   = {};
-
-    // Si el juego ya arrancó (login posterior al arranque), re-renderizar
-    if (_gameStarted) {
-      renderAll();
-      applyTheme(G.theme || 'gold');
-
-      // Calcular ganancias offline
-      const elapsed = (Date.now() - (G.lastSave || Date.now())) / 1000;
-      if (elapsed > 30 && Object.keys(G.businesses || {}).filter(k=>bizLevel(k)>0).length > 0) {
-        const offlineMult = (G.upgrades?.offlineBoost ? 1.0 : 0.4) * getStageOfflineMult();
-        const offlineInc  = totalIPS() * elapsed * offlineMult;
-        if (offlineInc > 0) setTimeout(() => showOfflineModal(offlineInc, elapsed), 400);
-      }
-      notify('☁️ Partida sincronizada desde la nube');
-    }
-    // Marcar que ahora sí hay un save real (para _maybeStartAfterLoad)
-    // eslint-disable-next-line no-global-assign
-    hadSave = true;
+    });
+    if (error) throw error;
+    if (!silent) notify('☁️ ✅ Guardado en la nube');
+  } catch(e) {
+    if (!silent) notify('❌ Error al guardar: ' + e.message);
+    console.warn('[Cloud] Save error:', e);
   }
 }
 
-// ── Recibir JWT desde React (postMessage) ────────────────────
-window.addEventListener('message', function(e) {
-  if (!e.data?.type) return;
+async function _cloudDoLoad() {
+  const sb = _getCloud();
+  if (!sb || !_cloudUser) return;
+  try {
+    const { data, error } = await sb
+      .from('game_saves')
+      .select('game_state, total_earned, updated_at')
+      .eq('user_id', _cloudUser.id)
+      .single();
 
-  if (e.data.type === 'AUTH_TOKEN') {
-    // React nos pasa el JWT y userId cuando el usuario hace login/logout
-    _sbJwt    = e.data.jwt    || '';
-    _sbUserId = e.data.userId || '';
-    _sbAnonKey = e.data.anonKey || _sbAnonKey;
+    if (error || !data?.game_state) return;
 
-    if (_sbJwt && _sbUserId) {
-      // Usuario logueado → cargar desde la nube, luego notificar al arranque
-      _cloudReady = true;
-      clearTimeout(_cloudReadyTimer);
-      _applyCloudSave().finally(() => _onAuthTokenReceived());
-    } else {
-      // Sin usuario — arrancar con localStorage
-      _cloudReady = true;
-      clearTimeout(_cloudReadyTimer);
-      _onAuthTokenReceived();
-    }
-    return;
-  }
+    const cloud = data.game_state;
+    const cloudEarned = Number(cloud.totalEarned) || 0;
+    const localEarned = Number(G.totalEarned) || 0;
+    const cloudDate   = new Date(data.updated_at).getTime();
+    const localDate   = Number(G.lastSave) || 0;
+    const cloudWins   = cloudEarned > localEarned ||
+                        (cloudEarned === localEarned && cloudDate > localDate);
 
-  // Compatibilidad con el sistema anterior (por si React manda GAME_LOAD_RESPONSE)
-  if (e.data.type === 'GAME_LOAD_RESPONSE') {
-    const cloud = e.data.payload;
-    const src   = e.data.source;
-    _cloudReady = true;
-    clearTimeout(_cloudReadyTimer);
-    if (!cloud || src === 'new') return;
-    const incomingEarned = cloud.totalEarned || 0;
-    const currentEarned  = G.totalEarned    || 0;
-    if (incomingEarned >= currentEarned) {
+    console.log('[Cloud] cloud=$' + cloudEarned + ' local=$' + localEarned + ' → ' + (cloudWins ? 'NUBE' : 'LOCAL'));
+
+    if (cloudWins && cloudEarned > 0) {
       G = { ...G, ...cloud };
-      try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
+      try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e) {}
       if (!G.businesses) G.businesses = {};
       if (!G.upgrades)   G.upgrades   = {};
-      renderAll();
-      applyTheme(G.theme || 'gold');
-      const elapsed = (Date.now() - (G.lastSave || Date.now())) / 1000;
-      if (elapsed > 30 && Object.keys(G.businesses||{}).filter(k=>bizLevel(k)>0).length > 0) {
-        const offlineMult = (G.upgrades?.offlineBoost ? 1.0 : 0.4) * getStageOfflineMult();
-        const offlineInc  = totalIPS() * elapsed * offlineMult;
-        if (offlineInc > 0) {
-          const banner = document.getElementById('offlineBanner');
-          const h = Math.floor(elapsed/3600), m = Math.floor((elapsed%3600)/60);
-          document.getElementById('obText').textContent =
-            `${h>0?h+'h ':''} ${m>0?m+'min ':''} → +${fmt(offlineInc)} generados ✅`;
-          banner?.classList.remove('hidden');
-          document.getElementById('obBtn').onclick = () => {
-            G.money += offlineInc; G.totalEarned += offlineInc;
-            banner.classList.add('hidden');
-            notify('💤 +' + fmt(offlineInc) + ' mientras dormías!');
-            spawnParticles(offlineInc); checkAchievements(); renderAll(); saveGameNow();
-          };
+      // Si el juego ya está corriendo, re-renderizar
+      if (typeof renderAll === 'function') {
+        renderAll();
+        if (typeof applyTheme === 'function') applyTheme(G.theme || 'gold');
+        notify('☁️ Progreso cargado desde la nube');
+        // Offline earnings
+        const elapsed = (Date.now() - (Number(G.lastSave) || Date.now())) / 1000;
+        if (elapsed > 60 && typeof showOfflineModal === 'function') {
+          const hasBiz = Object.keys(G.businesses || {}).filter(k => bizLevel(k) > 0).length > 0;
+          if (hasBiz) {
+            const offlineMult = (G.upgrades?.offlineBoost ? 1.0 : 0.4) * getStageOfflineMult();
+            const offlineInc  = totalIPS() * elapsed * offlineMult;
+            if (offlineInc > 0) setTimeout(() => showOfflineModal(offlineInc, elapsed), 600);
+          }
         }
       }
-      if (src === 'cloud') notify('☁️ Partida sincronizada desde la nube');
+      // Actualizar hadSave para el arranque
+      if (typeof hadSave !== 'undefined') window._hadCloudSave = true;
     }
+  } catch(e) {
+    console.warn('[Cloud] Load error:', e);
   }
-});
+}
 
-// ── Pedir estado de auth a React al arrancar ─────────────────
-// Se llama inmediatamente; React responde con AUTH_TOKEN
-window.parent?.postMessage({ type: 'GET_AUTH_TOKEN' }, '*');
+function _cloudStartAutoSave() {
+  clearInterval(_cloudAutoSave);
+  _cloudAutoSave = setInterval(() => _cloudDoSave(true), 45000);
+}
 
 // ── Funciones de save/load ───────────────────────────────────
 function saveGame() {
   G.lastSave = Date.now();
-  // 1. Siempre escribir localStorage (instantáneo, funciona offline)
+  // 1. localStorage inmediato (offline-safe)
   try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
-  // 2. Nube: debounce 3s, solo si hay usuario logueado
-  if (!_cloudReady || !_sbJwt) return;
-  clearTimeout(_cloudSaveTimer);
-  _cloudSaveTimer = setTimeout(() => {
-    _saveToCloud();
-    // También notificar a React para que muestre el indicador
-    window.parent?.postMessage({ type: 'GAME_SAVE', payload: G }, '*');
-  }, 3000);
+  // 2. Nube: debounce 3s si hay sesión activa
+  if (!_cloudUser) return;
+  clearTimeout(_cloudDebounce);
+  _cloudDebounce = setTimeout(() => _cloudDoSave(true), 3000);
 }
 
 function saveGameNow() {
   G.lastSave = Date.now();
   try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
-  if (!_cloudReady || !_sbJwt) return;
-  _saveToCloud();
-  window.parent?.postMessage({ type: 'GAME_SAVE', payload: G }, '*');
+  if (!_cloudUser) return;
+  clearTimeout(_cloudDebounce);
+  _cloudDebounce = setTimeout(() => _cloudDoSave(true), 1000);
 }
 
 function loadGame() {
@@ -7282,23 +7203,12 @@ function showOfflineModal(amount, elapsed) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// ARRANQUE: Splash → esperar AUTH_TOKEN → decidir new/returning
+// ARRANQUE — Supabase directo, sin React
 // ══════════════════════════════════════════════════════════════
-var _splashDone    = false;  // splash terminó
-var _authReceived  = false;  // AUTH_TOKEN recibido de React
-var _gameStarted   = false;  // startGame() ya se llamó (evitar doble)
-
-// Función central que decide qué mostrar.
-// Solo corre cuando AMBAS condiciones se cumplen: splash + auth.
-function _maybeStartAfterLoad() {
-  if (!_splashDone || !_authReceived || _gameStarted) return;
-  _gameStarted = true;
-
-  // Si hay usuario logueado, _applyCloudSave() ya actualizó G.
-  // Ahora decidimos con el estado más reciente (local o nube).
+runSplash(() => {
   const hasBiz = Object.keys(G.businesses || {}).filter(k=>bizLevel(k)>0).length > 0;
   const hasRealProgress = hasBiz || (G.totalEarned > 500) || (G.level > 0) || (G.gems > 1);
-  const isRealSave = hadSave && hasRealProgress;
+  const isRealSave = (hadSave || window._hadCloudSave) && hasRealProgress;
 
   if (isRealSave) {
     const elapsed = (Date.now() - (G.lastSave || Date.now())) / 1000;
@@ -7307,9 +7217,7 @@ function _maybeStartAfterLoad() {
     if (elapsed > 30 && hasBiz) {
       const offlineMult = (G.upgrades?.offlineBoost ? 1.0 : 0.4) * getStageOfflineMult();
       const offlineInc  = totalIPS() * elapsed * offlineMult;
-      if (offlineInc > 0) {
-        setTimeout(() => showOfflineModal(offlineInc, elapsed), 600);
-      }
+      if (offlineInc > 0) setTimeout(() => showOfflineModal(offlineInc, elapsed), 600);
     }
     setTimeout(() => checkDaily(), 1200);
   } else {
@@ -7322,27 +7230,6 @@ function _maybeStartAfterLoad() {
       startGame();
     }
   }
-}
-
-// Fallback: si React no responde en 2.5s, arrancamos igual con el save local
-var _authTimeout = setTimeout(function() {
-  if (!_authReceived) {
-    _authReceived = true;
-    _maybeStartAfterLoad();
-  }
-}, 2500);
-
-// Notificar cuando AUTH_TOKEN llega para poder disparar _maybeStartAfterLoad
-// (se integra con el listener existente de AUTH_TOKEN arriba)
-function _onAuthTokenReceived() {
-  clearTimeout(_authTimeout);
-  _authReceived = true;
-  _maybeStartAfterLoad();
-}
-
-runSplash(() => {
-  _splashDone = true;
-  _maybeStartAfterLoad();
 });
 
 // ═══════════════════════════════════════════════
@@ -8275,4 +8162,169 @@ setInterval(() => { if (G.guildCode) _guildRequest('sync', { code: G.guildCode, 
 
 
 
+</script>
+<!-- ═══════════════════════════════════════════════════════════
+     CLOUD AUTH MODAL + INIT — Supabase directo
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+
+  // ── Modal de login/cuenta ─────────────────────────────────
+  window.openCloudAuth = function() {
+    const existing = document.getElementById('_cloudModal');
+    if (existing) { existing.remove(); return; }
+    const modal = document.createElement('div');
+    modal.id = '_cloudModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);padding:16px;font-family:Nunito,sans-serif';
+
+    if (_cloudUser) {
+      modal.innerHTML = `
+        <div style="background:#1E1B2E;border:3px solid #FFE135;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center">
+          <div style="font-size:2rem;margin-bottom:6px">☁️</div>
+          <h2 style="font-family:'Fredoka One',cursive;color:#FFE135;font-size:1.4rem;margin:0 0 4px">Sesión activa</h2>
+          <p style="color:#aaa;font-size:12px;margin:0 0 20px">${_cloudUser.email}</p>
+          <button onclick="window._cloudManualSave()" style="width:100%;padding:11px;border-radius:12px;border:none;background:#2DC653;color:#fff;font-family:'Fredoka One',cursive;font-size:15px;cursor:pointer;margin-bottom:8px">💾 Guardar ahora</button>
+          <button onclick="window._cloudManualLoad()" style="width:100%;padding:11px;border-radius:12px;border:2px solid #FFE135;background:rgba(255,225,53,0.1);color:#FFE135;font-family:'Fredoka One',cursive;font-size:15px;cursor:pointer;margin-bottom:8px">☁️ Cargar desde nube</button>
+          <button onclick="window._cloudSignOut()" style="width:100%;padding:9px;border-radius:12px;border:1px solid rgba(255,71,87,0.4);background:transparent;color:#FF4757;font-family:'Fredoka One',cursive;font-size:14px;cursor:pointer;margin-bottom:12px">Cerrar sesión</button>
+          <button onclick="document.getElementById('_cloudModal').remove()" style="background:none;border:none;color:#555;cursor:pointer;font-size:13px">Cerrar</button>
+        </div>`;
+    } else {
+      modal.innerHTML = `
+        <div style="background:#1E1B2E;border:3px solid #FFE135;border-radius:20px;padding:28px;width:100%;max-width:380px">
+          <div style="text-align:center;margin-bottom:18px">
+            <div style="font-size:2.5rem">🏘️</div>
+            <h2 style="font-family:'Fredoka One',cursive;color:#FFE135;font-size:1.6rem;margin:4px 0">¡Guarda tu Imperio!</h2>
+            <p style="color:#aaa;font-size:13px;margin:0">Sincroniza en la nube. Nunca pierdas tu progreso.</p>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button onclick="window._setCloudTab('login')" id="_ctabL" style="flex:1;padding:8px;border-radius:10px;border:2px solid #FFE135;background:rgba(255,225,53,0.15);color:#FFE135;font-family:'Fredoka One',cursive;cursor:pointer;font-size:13px">Entrar</button>
+            <button onclick="window._setCloudTab('reg')" id="_ctabR" style="flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#888;font-family:'Fredoka One',cursive;cursor:pointer;font-size:13px">Registrarse</button>
+          </div>
+          <input id="_cemail" type="email" placeholder="Correo electrónico" style="width:100%;padding:10px 14px;border-radius:10px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:white;font-size:14px;outline:none;margin-bottom:8px;box-sizing:border-box">
+          <input id="_cpass" type="password" placeholder="Contraseña (mín. 6 caracteres)" style="width:100%;padding:10px 14px;border-radius:10px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:white;font-size:14px;outline:none;margin-bottom:8px;box-sizing:border-box">
+          <div id="_cerr" style="display:none;background:rgba(255,71,87,.15);border:1px solid #FF4757;border-radius:8px;padding:7px 12px;margin-bottom:8px;color:#FF4757;font-size:12px"></div>
+          <button id="_csubmit" onclick="window._cloudSubmit()" style="width:100%;padding:12px;border-radius:12px;border:none;background:#FFE135;color:#1E1B2E;font-family:'Fredoka One',cursive;font-size:16px;cursor:pointer;margin-bottom:8px">🚀 Entrar al Barrio</button>
+          <button onclick="document.getElementById('_cloudModal').remove()" style="display:block;width:100%;background:none;border:none;color:#555;cursor:pointer;font-size:13px">Cancelar</button>
+        </div>`;
+    }
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+  };
+
+  let _ctab = 'login';
+  window._setCloudTab = function(t) {
+    _ctab = t;
+    const l = document.getElementById('_ctabL');
+    const r = document.getElementById('_ctabR');
+    const s = document.getElementById('_csubmit');
+    if (!l||!r||!s) return;
+    const on  = 'flex:1;padding:8px;border-radius:10px;border:2px solid #FFE135;background:rgba(255,225,53,0.15);color:#FFE135;font-family:Fredoka One,cursive;cursor:pointer;font-size:13px';
+    const off = 'flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#888;font-family:Fredoka One,cursive;cursor:pointer;font-size:13px';
+    l.style.cssText = t==='login' ? on : off;
+    r.style.cssText = t==='reg'   ? on : off;
+    s.textContent = t==='login' ? '🚀 Entrar al Barrio' : '🏘️ Crear cuenta';
+  };
+
+  window._cloudSubmit = async function() {
+    const sb    = _getCloud();
+    const email = document.getElementById('_cemail')?.value?.trim();
+    const pass  = document.getElementById('_cpass')?.value;
+    const btn   = document.getElementById('_csubmit');
+    const err   = document.getElementById('_cerr');
+    if (!email||!pass) { if(err){err.textContent='⚠️ Completa todos los campos';err.style.display='block';} return; }
+    if (btn) { btn.textContent='⏳ Cargando...'; btn.disabled=true; }
+    try {
+      const res = _ctab==='login'
+        ? await sb.auth.signInWithPassword({ email, password: pass })
+        : await sb.auth.signUp({ email, password: pass });
+      if (res.error) throw res.error;
+      _cloudUser = res.data.user;
+      _updateCloudBtn();
+      document.getElementById('_cloudModal')?.remove();
+      if (_ctab==='login') {
+        await _cloudDoLoad();
+        _cloudStartAutoSave();
+        notify('☁️ ¡Sesión iniciada!');
+      } else {
+        await _cloudDoSave(false);
+        _cloudStartAutoSave();
+        notify('☁️ ¡Cuenta creada! Progreso guardado.');
+      }
+    } catch(e) {
+      if(err){err.textContent='⚠️ '+(e.message||'Error');err.style.display='block';}
+      if(btn){btn.textContent=_ctab==='login'?'🚀 Entrar al Barrio':'🏘️ Crear cuenta';btn.disabled=false;}
+    }
+  };
+
+  window._cloudManualSave = async function() {
+    document.getElementById('_cloudModal')?.remove();
+    await _cloudDoSave(false);
+  };
+
+  window._cloudManualLoad = async function() {
+    document.getElementById('_cloudModal')?.remove();
+    await _cloudDoLoad();
+  };
+
+  window._cloudSignOut = async function() {
+    const sb = _getCloud();
+    await sb?.auth.signOut();
+    _cloudUser = null;
+    clearInterval(_cloudAutoSave);
+    _updateCloudBtn();
+    document.getElementById('_cloudModal')?.remove();
+    notify('👋 Sesión cerrada');
+  };
+
+  // ── Interceptar resetGame para limpiar Supabase también ──
+  const _origReset = window.resetGame;
+  window.resetGame = function() {
+    if (typeof _origReset === 'function') _origReset();
+    // Parchear el botón de confirmación cuando aparezca
+    const obs = new MutationObserver(() => {
+      const btn = document.getElementById('resetConfirmBtn');
+      if (btn && !btn._cloudPatched) {
+        btn._cloudPatched = true;
+        btn.addEventListener('click', async () => {
+          obs.disconnect();
+          if (!_cloudUser) return;
+          const sb = _getCloud();
+          await sb?.rpc('upsert_game_save', {
+            p_money:500, p_total_earned:500, p_level:0,
+            p_prestige_stars:0, p_prestige_mult:1, p_zone:'centro',
+            p_game_state:{ money:500, totalEarned:500, xp:0, level:0,
+              prestigeStars:0, prestigeMult:1, socialStage:0, influence:0,
+              totalInfluence:0, influenceUpgrades:{}, businesses:{},
+              upgrades:{}, achievements:{}, zone:'centro',
+              zoneHistory:['centro'], gems:0, lastSave:Date.now() },
+            p_save_version:1, p_social_stage:0, p_influence:0, p_guild_code:null,
+          }).catch(()=>{});
+        }, { once: true });
+      }
+    });
+    obs.observe(document.body, { childList: true });
+  };
+
+  // ── Init: verificar sesión guardada al arrancar ───────────
+  (async function() {
+    const sb = _getCloud();
+    if (!sb) return;
+    const { data } = await sb.auth.getSession();
+    _cloudUser = data.session?.user ?? null;
+    _updateCloudBtn();
+    if (_cloudUser) {
+      _cloudStartAutoSave();
+      // Cargar nube en paralelo al splash — si termina antes, actualiza G
+      _cloudDoLoad();
+    }
+    // Escuchar cambios de sesión
+    sb.auth.onAuthStateChange((_event, session) => {
+      _cloudUser = session?.user ?? null;
+      _updateCloudBtn();
+      if (_event === 'SIGNED_IN') { _cloudDoLoad(); _cloudStartAutoSave(); }
+      if (_event === 'SIGNED_OUT') clearInterval(_cloudAutoSave);
+    });
+  })();
+
+})();
 </script>
