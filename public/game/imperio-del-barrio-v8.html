@@ -7793,15 +7793,9 @@ window.buyGemItem = function(id) {
 (function hookTabChange() {
   const origShow = window.showTab;
   window.showTab = function(name) {
-    if (typeof origShow === 'function') origShow(name);
+    if (origShow) origShow(name);
     if (name === 'logros') {
       setTimeout(renderStoryMissions, 50);
-    }
-    // Siempre re-renderizar el leaderboard al abrir el tab mapa
-    if (name === 'mapa') {
-      setTimeout(function() {
-        if (typeof renderLeaderboard === 'function') renderLeaderboard();
-      }, 50);
     }
   };
 })();
@@ -8340,5 +8334,3 @@ setInterval(() => { if (G.guildCode) _guildRequest('sync', { code: G.guildCode, 
 
 })();
 </script>
-</body>
-</html>
