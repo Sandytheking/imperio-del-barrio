@@ -235,10 +235,19 @@ export default function GameClient() {
       display: 'flex', flexDirection: 'column', background: '#1E1B2E',
     }}>
 
-      {/* ── BARRA SUPERIOR ── */}
+      {/* ── IFRAME DEL JUEGO (va primero, ocupa todo menos la barra) ── */}
+      <iframe
+        ref={iframeRef}
+        src="/game/imperio-del-barrio-v8.html"
+        style={{ flex: 1, width: '100%', border: 'none', display: 'block', minHeight: 0 }}
+        title="Imperio del Barrio"
+        allow="autoplay"
+      />
+
+      {/* ── BARRA INFERIOR ── */}
       <div style={{
-        flexShrink: 0, height: '38px', background: '#16132a',
-        borderBottom: '2px solid rgba(255,225,53,0.25)',
+        flexShrink: 0, height: '42px', background: '#16132a',
+        borderTop: '2px solid rgba(255,225,53,0.25)',
         display: 'flex', alignItems: 'center',
         padding: '0 12px', gap: '8px', zIndex: 200,
       }}>
@@ -269,9 +278,9 @@ export default function GameClient() {
               onClick={handleOpenLeaderboard}
               style={{
                 background: 'rgba(45,198,83,0.2)', border: '1px solid #2DC653',
-                borderRadius: '6px', padding: '3px 8px', cursor: 'pointer',
+                borderRadius: '8px', padding: '5px 12px', cursor: 'pointer',
                 color: '#2DC653', fontFamily: 'Fredoka One, cursive',
-                fontSize: '11px', whiteSpace: 'nowrap',
+                fontSize: '13px', whiteSpace: 'nowrap',
               }}
             >🏆 Ranking</button>
 
@@ -329,15 +338,6 @@ export default function GameClient() {
           >☁️ Guardar en la nube</button>
         )}
       </div>
-
-      {/* ── IFRAME DEL JUEGO ── */}
-      <iframe
-        ref={iframeRef}
-        src="/game/imperio-del-barrio-v8.html"
-        style={{ flex: 1, width: '100%', border: 'none', display: 'block', minHeight: 0 }}
-        title="Imperio del Barrio"
-        allow="autoplay"
-      />
 
       {/* ══ AUTH MODAL ══ */}
       {showAuth && (
