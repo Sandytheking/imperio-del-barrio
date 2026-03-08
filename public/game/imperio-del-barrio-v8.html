@@ -8002,10 +8002,9 @@ function _updateCloudBtn() {
 
 function handleCloudSaveBtn() {
   if (_cloudUserLoggedIn) {
-    // Si ya tiene sesión, abrir el ranking directamente
-    window.parent?.postMessage({ type: 'OPEN_LEADERBOARD' }, '*');
+    saveGameNow(); // guardar inmediatamente
+    notify('☁️ Guardado en la nube');
   } else {
-    // Si no tiene sesión, abrir el modal de auth
     window.parent?.postMessage({ type: 'OPEN_AUTH' }, '*');
   }
 }
