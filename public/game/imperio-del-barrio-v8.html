@@ -3369,29 +3369,24 @@ async function _applyCloudSave() {
     try { localStorage.setItem('idb2_save', JSON.stringify(G)); } catch(e){}
     if (!G.businesses) G.businesses = {};
     if (!G.upgrades)   G.upgrades   = {};
-    renderAll();
-    applyTheme(G.theme || 'gold');
 
-    // Calcular ganancias offline
-    const elapsed = (Date.now() - (G.lastSave || Date.now())) / 1000;
-    if (elapsed > 30 && Object.keys(G.businesses || {}).filter(k=>bizLevel(k)>0).length > 0) {
-      const offlineMult = (G.upgrades?.offlineBoost ? 1.0 : 0.4) * getStageOfflineMult();
-      const offlineInc  = totalIPS() * elapsed * offlineMult;
-      if (offlineInc > 0) {
-        const banner = document.getElementById('offlineBanner');
-        const h = Math.floor(elapsed/3600), m = Math.floor((elapsed%3600)/60);
-        document.getElementById('obText').textContent =
-          `${h>0?h+'h ':''} ${m>0?m+'min ':''} → +${fmt(offlineInc)} generados ✅`;
-        banner?.classList.remove('hidden');
-        document.getElementById('obBtn').onclick = () => {
-          G.money += offlineInc; G.totalEarned += offlineInc;
-          banner.classList.add('hidden');
-          notify('💤 +' + fmt(offlineInc) + ' mientras dormías!');
-          spawnParticles(offlineInc); checkAchievements(); renderAll(); saveGameNow();
-        };
+    // Si el juego ya arrancó (login posterior al arranque), re-renderizar
+    if (_gameStarted) {
+      renderAll();
+      applyTheme(G.theme || 'gold');
+
+      // Calcular ganancias offline
+      const elapsed = (Date.now() - (G.lastSave || Date.now())) / 1000;
+      if (elapsed > 30 && Object.keys(G.businesses || {}).filter(k=>bizLevel(k)>0).length > 0) {
+        const offlineMult = (G.upgrades?.offlineBoost ? 1.0 : 0.4) * getStageOfflineMult();
+        const offlineInc  = totalIPS() * elapsed * offlineMult;
+        if (offlineInc > 0) setTimeout(() => showOfflineModal(offlineInc, elapsed), 400);
       }
+      notify('☁️ Partida sincronizada desde la nube');
     }
-    notify('☁️ Partida sincronizada desde la nube');
+    // Marcar que ahora sí hay un save real (para _maybeStartAfterLoad)
+    // eslint-disable-next-line no-global-assign
+    hadSave = true;
   }
 }
 
@@ -3406,14 +3401,15 @@ window.addEventListener('message', function(e) {
     _sbAnonKey = e.data.anonKey || _sbAnonKey;
 
     if (_sbJwt && _sbUserId) {
-      // Usuario logueado → cargar desde la nube
+      // Usuario logueado → cargar desde la nube, luego notificar al arranque
       _cloudReady = true;
       clearTimeout(_cloudReadyTimer);
-      _applyCloudSave();
+      _applyCloudSave().finally(() => _onAuthTokenReceived());
     } else {
-      // Usuario deslogueado
+      // Sin usuario — arrancar con localStorage
       _cloudReady = true;
       clearTimeout(_cloudReadyTimer);
+      _onAuthTokenReceived();
     }
     return;
   }
@@ -3458,9 +3454,8 @@ window.addEventListener('message', function(e) {
 });
 
 // ── Pedir estado de auth a React al arrancar ─────────────────
-setTimeout(() => {
-  window.parent?.postMessage({ type: 'GET_AUTH_TOKEN' }, '*');
-}, 300);
+// Se llama inmediatamente; React responde con AUTH_TOKEN
+window.parent?.postMessage({ type: 'GET_AUTH_TOKEN' }, '*');
 
 // ── Funciones de save/load ───────────────────────────────────
 function saveGame() {
@@ -7286,36 +7281,39 @@ function showOfflineModal(amount, elapsed) {
   };
 }
 
-// ── SPLASH → then decide new/returning player ──────────────
-runSplash(() => {
-  // ── Detectar si es save real o estado inicial vacío ──────────
-  // Un save válido tiene: negocios abiertos O totalEarned > dinero inicial
+// ══════════════════════════════════════════════════════════════
+// ARRANQUE: Splash → esperar AUTH_TOKEN → decidir new/returning
+// ══════════════════════════════════════════════════════════════
+var _splashDone    = false;  // splash terminó
+var _authReceived  = false;  // AUTH_TOKEN recibido de React
+var _gameStarted   = false;  // startGame() ya se llamó (evitar doble)
+
+// Función central que decide qué mostrar.
+// Solo corre cuando AMBAS condiciones se cumplen: splash + auth.
+function _maybeStartAfterLoad() {
+  if (!_splashDone || !_authReceived || _gameStarted) return;
+  _gameStarted = true;
+
+  // Si hay usuario logueado, _applyCloudSave() ya actualizó G.
+  // Ahora decidimos con el estado más reciente (local o nube).
   const hasBiz = Object.keys(G.businesses || {}).filter(k=>bizLevel(k)>0).length > 0;
   const hasRealProgress = hasBiz || (G.totalEarned > 500) || (G.level > 0) || (G.gems > 1);
   const isRealSave = hadSave && hasRealProgress;
 
   if (isRealSave) {
-    // Jugador con progreso real — ir directo al juego
-    const elapsed = (Date.now() - G.lastSave) / 1000;
-    if (elapsed > 30 && hasBiz) {
-      const offlineMult = (G.upgrades['offlineBoost'] ? 1.0 : 0.4) * getStageOfflineMult();
-      const offlineInc  = totalIPS() * elapsed * offlineMult;
-      if (offlineInc > 0) {
-        document.getElementById('introScreen').style.display = 'none';
-        startGame();
-        setTimeout(() => showOfflineModal(offlineInc, elapsed), 600);
-        setTimeout(() => checkDaily(), 2000);
-        return;
-      }
-    }
+    const elapsed = (Date.now() - (G.lastSave || Date.now())) / 1000;
     document.getElementById('introScreen').style.display = 'none';
     startGame();
+    if (elapsed > 30 && hasBiz) {
+      const offlineMult = (G.upgrades?.offlineBoost ? 1.0 : 0.4) * getStageOfflineMult();
+      const offlineInc  = totalIPS() * elapsed * offlineMult;
+      if (offlineInc > 0) {
+        setTimeout(() => showOfflineModal(offlineInc, elapsed), 600);
+      }
+    }
     setTimeout(() => checkDaily(), 1200);
   } else {
-    // Jugador nuevo o save vacío/corrupto — NO tocar si ya tiene algo
-    if (!hadSave) {
-      G.money = 500; // solo para jugadores completamente nuevos
-    }
+    if (!hadSave) G.money = 500;
     const obSeen = (() => { try { return !!localStorage.getItem('idb_ob_seen'); } catch(e){return false;} })();
     if (!obSeen && !hadSave) {
       showOnboarding();
@@ -7324,6 +7322,27 @@ runSplash(() => {
       startGame();
     }
   }
+}
+
+// Fallback: si React no responde en 2.5s, arrancamos igual con el save local
+var _authTimeout = setTimeout(function() {
+  if (!_authReceived) {
+    _authReceived = true;
+    _maybeStartAfterLoad();
+  }
+}, 2500);
+
+// Notificar cuando AUTH_TOKEN llega para poder disparar _maybeStartAfterLoad
+// (se integra con el listener existente de AUTH_TOKEN arriba)
+function _onAuthTokenReceived() {
+  clearTimeout(_authTimeout);
+  _authReceived = true;
+  _maybeStartAfterLoad();
+}
+
+runSplash(() => {
+  _splashDone = true;
+  _maybeStartAfterLoad();
 });
 
 // ═══════════════════════════════════════════════
