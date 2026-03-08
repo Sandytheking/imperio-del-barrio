@@ -2253,6 +2253,15 @@ body.night-mode .night-stars { opacity: 0.35; }
       <span class="sec-btn-icon">🗑️</span>
       <div><div>Reiniciar partida</div><div class="sec-btn-sub">Borra todo el progreso</div></div>
     </button>
+    <div class="sec-divider"></div>
+    <button class="sec-btn" onclick="window.open('/game/acerca.html','_blank')">
+      <span class="sec-btn-icon">ℹ️</span>
+      <div><div>Acerca del juego</div><div class="sec-btn-sub">Historia y características</div></div>
+    </button>
+    <button class="sec-btn" onclick="window.open('/game/privacidad.html','_blank')">
+      <span class="sec-btn-icon">🔒</span>
+      <div><div>Política de Privacidad</div><div class="sec-btn-sub">Cómo manejamos tus datos</div></div>
+    </button>
     <div class="sec-game-info" id="secGameInfo">Imperio del Barrio v9 • Santiago, DO</div>
   </div>
 </div>
@@ -2313,19 +2322,84 @@ body.night-mode .night-stars { opacity: 0.35; }
 </div>
 
 <div id="introScreen" class="screen active">
-  <h1 class="intro-title">
-    <span class="line1">🏘️ Imperio</span>
-    <span class="line2">del</span>
-    <span class="line3">Barrio!</span>
-  </h1>
-  <div class="intro-scene">💈🏪🛵💇🔧🍻</div>
-  <div class="intro-subtitle">
-    Tienes <strong>$500</strong> y un local vacío.<br>
-    Construye el negocio más grande del barrio.
+  <style>
+    .intro-story { max-width: 360px; margin: 0 auto; text-align: center; padding: 0 16px; }
+    .intro-phrase {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #C8C4E0;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .intro-phrase.visible { opacity: 1; transform: translateY(0); }
+    .intro-phrase.highlight {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.25rem;
+      color: #FFE135;
+      text-shadow: 0 0 24px rgba(255,225,53,0.3);
+    }
+    .intro-phrase.big {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.5rem;
+      color: #FF6B35;
+    }
+    .intro-divider {
+      width: 40px; height: 2px;
+      background: rgba(255,225,53,0.3);
+      margin: 14px auto;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    .intro-divider.visible { opacity: 1; }
+    .btn-start-wrap { opacity: 0; transform: translateY(12px); transition: opacity 0.6s ease, transform 0.6s ease; margin-top: 24px; }
+    .btn-start-wrap.visible { opacity: 1; transform: translateY(0); }
+  </style>
+
+  <div class="intro-story">
+    <div class="intro-phrase" id="ip0">Todo el mundo tenía algo que decir.</div>
+    <div class="intro-phrase" id="ip1">Que el barrio era un callejón sin salida.<br>Que la gente como tú no llega lejos.</div>
+    <div class="intro-phrase" id="ip2">Pero el barrio te enseñó cosas que ellos nunca entenderían.</div>
+    <div class="intro-phrase highlight" id="ip3">A trabajar cuando nadie miraba.<br>A levantarte cuando todo parecía perdido.</div>
+    <div class="intro-divider" id="id1"></div>
+    <div class="intro-phrase" id="ip4">Hoy empiezas con lo único que tienes:</div>
+    <div class="intro-phrase big" id="ip5">💈 Una barbería. $500. Y una ambición que nadie pudo apagar.</div>
+    <div class="intro-divider" id="id2"></div>
+    <div class="intro-phrase" id="ip6">La pregunta no es si el camino será fácil.</div>
+    <div class="intro-phrase highlight" id="ip7">¿Hasta dónde puedes llegar cuando nadie te detiene? 🔥</div>
+    <div class="btn-start-wrap" id="ipBtn">
+      <button class="btn-start" onclick="startGame()">
+        ¡Construir mi Imperio! <span>→</span>
+      </button>
+    </div>
   </div>
-  <button class="btn-start" onclick="startGame()">
-    ¡Empezar mi Imperio! <span>→</span>
-  </button>
+
+  <script>
+    (function(){
+      var seq = [
+        {id:'ip0', delay:300},
+        {id:'ip1', delay:1200},
+        {id:'ip2', delay:2400},
+        {id:'ip3', delay:3400},
+        {id:'id1', delay:4200},
+        {id:'ip4', delay:4600},
+        {id:'ip5', delay:5400},
+        {id:'id2', delay:6400},
+        {id:'ip6', delay:6800},
+        {id:'ip7', delay:7600},
+        {id:'ipBtn', delay:8600},
+      ];
+      seq.forEach(function(s){
+        setTimeout(function(){
+          var el = document.getElementById(s.id);
+          if(el) el.classList.add('visible');
+        }, s.delay);
+      });
+    })();
+  </script>
 </div>
 
 <!-- ══════════════════════════════ GAME ══════════════════════════════ -->

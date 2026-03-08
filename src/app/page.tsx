@@ -157,7 +157,7 @@ export default function Home() {
             <span className="h1-line2">del Barrio</span>
           </h1>
           <div className="hero-tagline">De barbería a banco central 💰</div>
-          <p className="hero-desc">Empieza con $500 y una barbería. Construye 21 negocios, asciende socialmente y demuestra que el barrio siempre fue tu punto de partida — no tu límite.</p>
+          <p className="hero-desc">El barrio te enseñó a levantarte cuando nadie creía en ti. Hoy empiezas con $500 y una barbería. El Imperio lo construyes tú. 🔥</p>
           <div className="hero-btns">
             <a href="/game/imperio-del-barrio-v8.html" className="btn-primary">🚀 Jugar gratis ahora</a>
             <a href="#negocios" className="btn-secondary">Ver negocios ↓</a>
