@@ -1887,13 +1887,9 @@ const _VIDEO_COOLDOWN_MS  = 60 * 60 * 1000;  // 1 hora
 const _VIDEO_STREAK_WINDOW = 10 * 60 * 1000; // 10 min para continuar la racha
 
 // Videos hardcodeados + carga dinámica desde Supabase
-const _FALLBACK_VIDEOS = [
-  { youtube_id: 'dQw4w9WgXcQ', title: '¡Imperio del Barrio!',         description: 'El juego del barrio dominicano', min_watch_sec: 15, sponsor_name: 'Imperio del Barrio' },
-  { youtube_id: 'jNQXAC9IVRw', title: 'Emprendimiento en RD',          description: 'Historias de éxito',             min_watch_sec: 15, sponsor_name: null },
-  { youtube_id: 'M7lc1UVf-VE', title: 'El Barrio siempre gana',        description: 'Apoya tu comunidad',            min_watch_sec: 15, sponsor_name: null },
-];
+const _FALLBACK_VIDEOS = [];  // sin videos por defecto — se cargan desde Supabase
 
-let _videoPool = [..._FALLBACK_VIDEOS];
+let _videoPool = [];
 
 // Cargar videos desde Supabase al iniciar
 async function _loadVideoPool() {
@@ -1959,6 +1955,17 @@ function watchAd() {
 
   _videoActive = true;
   _videoSecsWatched = 0;
+
+  if (_videoPool.length === 0) {
+    // Pool vacío — intentar cargar de Supabase primero
+    _videoActive = false;
+    notify('⏳ Cargando videos... intenta de nuevo en un momento');
+    _loadVideoPool().then(() => {
+      if (_videoPool.length === 0) notify('📺 No hay videos disponibles por ahora');
+    });
+    return;
+  }
+
   _videoCurrentData = _pickRandomVideo();
 
   _loadYouTubeAPI(() => _showVideoOverlay(_videoCurrentData));
