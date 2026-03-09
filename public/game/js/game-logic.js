@@ -686,6 +686,7 @@ function _cloudStartAutoSave() {
 let _localSaveDebounce = null;
 
 function saveGame() {
+  _persistVideoStreak(); // guardar racha de videos
   G.lastSave = Date.now();
   // 1. localStorage debounced (offline-safe)
   clearTimeout(_localSaveDebounce);
@@ -875,7 +876,6 @@ function buyUpgrade(id) {
   G.money -= u.cost;
   G.upgrades[id] = true;
   G.dailyUpgradesBought = (G.dailyUpgradesBought || 0) + 1;
-  _trackQuickUpgrade(); // logro oculto: 5 mejoras en 1 min
   notify(`${u.icon} ¡${u.name} activado!`);
   playSound('buy');
   spawnParticles(u.cost);
@@ -1860,50 +1860,386 @@ function shareToNetwork(platform) {
   }, 2000);
 }
 
-// ── Watch a "video ad" (simulated with a timer) ───────────────────────
-let _watchAdActive = false;
-function watchAd() {
-  if (_watchAdActive) return;
-  const now = Date.now();
-  const cooldown = 30 * 60 * 1000; // 30 min
-  if ((now - (G.lastAdTs || 0)) < cooldown) {
-    const remaining = Math.ceil((cooldown - (now - G.lastAdTs)) / 60000);
-    notify(`⏳ Próximo video disponible en ${remaining} min`);
+// ═══════════════════════════════════════════════════════════════════
+// SISTEMA DE VIDEOS YOUTUBE CON RACHA DE GEMAS
+// ═══════════════════════════════════════════════════════════════════
+
+// Estado del sistema de videos
+let _videoActive    = false;
+let _videoStreak    = 0;        // racha actual (0-based, resetea con cooldown)
+let _videoStreakTs  = 0;        // timestamp del último video de la racha
+let _videoYTReady   = false;    // YouTube IFrame API cargada
+let _videoYTPlayer  = null;     // instancia del player
+let _videoWatchIv   = null;     // interval de verificación de tiempo visto
+let _videoSecsWatched = 0;      // segundos reales viendo el video
+let _videoCurrentData = null;   // metadata del video actual
+
+// Racha: gemas según posición
+function _videoStreakGems(streak) {
+  // streak 0=primer video, 1=segundo, 2=tercer en adelante
+  if (streak === 0) return 3;
+  if (streak === 1) return 5;
+  return 8;
+}
+
+// Cooldown: 1 hora entre sesiones de video (no entre videos de la misma racha)
+const _VIDEO_COOLDOWN_MS  = 60 * 60 * 1000;  // 1 hora
+const _VIDEO_STREAK_WINDOW = 10 * 60 * 1000; // 10 min para continuar la racha
+
+// Videos hardcodeados + carga dinámica desde Supabase
+const _FALLBACK_VIDEOS = [
+  { youtube_id: 'dQw4w9WgXcQ', title: '¡Imperio del Barrio!',         description: 'El juego del barrio dominicano', min_watch_sec: 15, sponsor_name: 'Imperio del Barrio' },
+  { youtube_id: 'jNQXAC9IVRw', title: 'Emprendimiento en RD',          description: 'Historias de éxito',             min_watch_sec: 15, sponsor_name: null },
+  { youtube_id: 'M7lc1UVf-VE', title: 'El Barrio siempre gana',        description: 'Apoya tu comunidad',            min_watch_sec: 15, sponsor_name: null },
+];
+
+let _videoPool = [..._FALLBACK_VIDEOS];
+
+// Cargar videos desde Supabase al iniciar
+async function _loadVideoPool() {
+  if (!_cloudClient) return;
+  try {
+    const { data, error } = await _cloudClient
+      .from('promo_videos')
+      .select('youtube_id, title, description, min_watch_sec, sponsor_name, weight')
+      .eq('active', true)
+      .order('weight', { ascending: false });
+    if (!error && data && data.length > 0) {
+      // Expandir por peso para rotación ponderada
+      _videoPool = [];
+      data.forEach(v => {
+        const w = v.weight || 10;
+        for (let i = 0; i < Math.ceil(w / 5); i++) _videoPool.push(v);
+      });
+    }
+  } catch(e) {}
+}
+
+// Seleccionar video aleatorio (ponderado si viene de Supabase)
+function _pickRandomVideo() {
+  return _videoPool[Math.floor(Math.random() * _videoPool.length)];
+}
+
+// Cargar YouTube IFrame API una sola vez
+function _loadYouTubeAPI(cb) {
+  if (_videoYTReady) { cb(); return; }
+  if (document.getElementById('yt-api-script')) {
+    // Ya está cargando — esperar
+    const wait = setInterval(() => { if (_videoYTReady) { clearInterval(wait); cb(); } }, 200);
     return;
   }
-  _watchAdActive = true;
-  let secs = 5;
+  window.onYouTubeIframeAPIReady = () => { _videoYTReady = true; cb(); };
+  const s = document.createElement('script');
+  s.id  = 'yt-api-script';
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+}
+
+// Entrada principal — llamada desde botón "Ver video"
+function watchAd() {
+  if (_videoActive) return;
+
+  const now = Date.now();
+  const cooldown = _VIDEO_COOLDOWN_MS;
+
+  // Calcular racha: se mantiene si el último video fue hace menos de 10 min
+  if ((now - _videoStreakTs) > _VIDEO_STREAK_WINDOW && _videoStreakTs > 0) {
+    _videoStreak = 0; // racha expiró
+  }
+
+  // Cooldown de 1 hora desde el último video (solo si racha ya completó 3 o más)
+  if (_videoStreak === 0 && (now - (G.lastAdTs || 0)) < cooldown) {
+    const remaining = Math.ceil((cooldown - (now - G.lastAdTs)) / 60000);
+    const mins = remaining >= 60
+      ? `${Math.floor(remaining/60)}h ${remaining%60}min`
+      : `${remaining} min`;
+    notify(`⏳ Próximo video en ${mins}`);
+    return;
+  }
+
+  _videoActive = true;
+  _videoSecsWatched = 0;
+  _videoCurrentData = _pickRandomVideo();
+
+  _loadYouTubeAPI(() => _showVideoOverlay(_videoCurrentData));
+}
+
+function _showVideoOverlay(video) {
+  // Quitar overlay previo si existe
+  document.getElementById('videoAdOverlay')?.remove();
+
+  const gemsNext = _videoStreakGems(_videoStreak);
+  const streakLabel = _videoStreak === 0 ? '' :
+    _videoStreak === 1 ? '🔥 Racha x2 — ' : '🔥🔥 Racha x3 — ';
+
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;';
+  overlay.id = 'videoAdOverlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:9500;background:#000;
+    display:flex;flex-direction:column;align-items:center;
+    font-family:'Nunito',sans-serif;
+  `;
   overlay.innerHTML = `
-    <div style="font-size:0.7rem;color:#aaa;font-weight:900;text-transform:uppercase;letter-spacing:2px">Anuncio del barrio</div>
-    <div style="font-size:5rem" id="adEmoji">📺</div>
-    <div style="font-family:'Fredoka One',cursive;font-size:1.3rem;color:white">¡Apoya al Imperio!</div>
-    <div style="font-size:0.8rem;color:#aaa;font-weight:700">Completando en <span id="adCount">${secs}</span>s...</div>
-    <div style="width:200px;height:6px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden">
-      <div id="adBar" style="height:100%;width:0%;background:linear-gradient(90deg,#9B5DE5,#D4A8FF);border-radius:99px;transition:width 1s linear"></div>
+    <!-- Header -->
+    <div style="width:100%;max-width:560px;display:flex;align-items:center;justify-content:space-between;
+      padding:10px 14px;background:#111;border-bottom:2px solid #222;flex-shrink:0">
+      <div>
+        <div style="font-size:0.6rem;color:#888;font-weight:900;text-transform:uppercase;letter-spacing:1.5px">
+          ${video.sponsor_name ? `✨ Patrocinado por ${video.sponsor_name}` : '🎬 Video del Barrio'}
+        </div>
+        <div style="font-family:'Fredoka One',cursive;font-size:0.95rem;color:white;margin-top:1px;
+          max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          ${video.title}
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:0.58rem;color:#888;font-weight:900">${streakLabel}Ganas</div>
+        <div style="font-family:'Fredoka One',cursive;font-size:1.3rem;color:#D4A8FF">+${gemsNext} 💎</div>
+      </div>
+    </div>
+
+    <!-- Player container -->
+    <div id="ytPlayerContainer" style="width:100%;max-width:560px;flex:1;background:#000;position:relative;min-height:200px">
+      <div id="ytPlayer"></div>
+    </div>
+
+    <!-- Footer: barra de progreso + racha + botón -->
+    <div style="width:100%;max-width:560px;background:#111;border-top:2px solid #222;
+      padding:12px 14px 16px;flex-shrink:0">
+
+      <!-- Racha dots -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <div style="font-size:0.6rem;color:#888;font-weight:900;text-transform:uppercase;letter-spacing:1px">Racha</div>
+        ${[0,1,2].map(i => `
+          <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${i <= _videoStreak ? '#9B5DE5' : '#333'};
+            background:${i < _videoStreak ? '#9B5DE5' : i === _videoStreak ? 'rgba(155,93,229,0.2)' : 'transparent'};
+            display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;
+            color:${i < _videoStreak ? 'white' : i === _videoStreak ? '#D4A8FF' : '#555'}">
+            ${i < _videoStreak ? '✓' : [3,5,8][i] + '💎'}
+          </div>`).join('')}
+        <div style="margin-left:4px;font-size:0.58rem;color:#666;font-weight:700">
+          ${_videoStreak < 2 ? `+${_videoStreakGems(_videoStreak+1)} 💎 en el siguiente` : '¡Máximo alcanzado!'}
+        </div>
+      </div>
+
+      <!-- Barra de progreso -->
+      <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:7px;overflow:hidden;margin-bottom:10px;position:relative">
+        <div id="videoProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#7B2FBE,#D4A8FF);
+          border-radius:99px;transition:width 1s linear"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:0.7rem;color:#666;font-weight:900">
+          <span id="videoSecsLeft">${video.min_watch_sec}</span>s para desbloquear
+        </div>
+        <button id="videoCancelBtn" onclick="_cancelVideo()"
+          style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);
+            border:1.5px solid rgba(255,255,255,0.1);border-radius:99px;
+            font-family:'Fredoka One',cursive;font-size:0.75rem;padding:6px 16px;cursor:pointer">
+          Cancelar
+        </button>
+      </div>
     </div>
   `;
   document.body.appendChild(overlay);
-  const adEmojis = ['📺','🎬','🎭','🎪','🎨'];
-  let t = 0;
-  requestAnimationFrame(() => { document.getElementById('adBar').style.width = '100%'; });
-  const iv = setInterval(() => {
-    t++;
-    secs--;
-    document.getElementById('adCount').textContent = secs;
-    document.getElementById('adEmoji').textContent = adEmojis[t % adEmojis.length];
-    if (secs <= 0) {
-      clearInterval(iv);
-      overlay.remove();
-      _watchAdActive = false;
-      G.lastAdTs = Date.now();
-      addGems(5);
-      saveGame();
-      notify('🎬 ¡Gracias por ver! +5 💎');
-      renderGemSources();
+
+  // Ajustar el player al tamaño disponible
+  const container = document.getElementById('ytPlayerContainer');
+  const playerEl  = document.getElementById('ytPlayer');
+  const h = container.clientHeight || Math.round(window.innerWidth * 0.5625);
+
+  // Crear el player de YouTube
+  _videoYTPlayer = new YT.Player(playerEl, {
+    height: h,
+    width:  '100%',
+    videoId: video.youtube_id,
+    playerVars: {
+      autoplay:       1,
+      controls:       1,    // mostrar controles pero no se puede saltar
+      rel:            0,
+      modestbranding: 1,
+      playsinline:    1,
+      fs:             0,    // sin fullscreen para evitar evasión
+    },
+    events: {
+      onReady:       _onYTReady,
+      onStateChange: _onYTStateChange,
+    }
+  });
+}
+
+function _onYTReady(e) {
+  e.target.playVideo();
+  _startWatchTimer();
+}
+
+function _onYTStateChange(e) {
+  // Si el usuario pausó, pausar el contador también
+  if (e.data === YT.PlayerState.PLAYING)  _startWatchTimer();
+  if (e.data === YT.PlayerState.PAUSED)   _pauseWatchTimer();
+  if (e.data === YT.PlayerState.ENDED)    _onVideoEnded();
+  if (e.data === YT.PlayerState.BUFFERING) {} // no hacer nada
+}
+
+function _startWatchTimer() {
+  if (_videoWatchIv) return; // ya corriendo
+  const minSecs = _videoCurrentData?.min_watch_sec || 15;
+  _videoWatchIv = setInterval(() => {
+    _videoSecsWatched++;
+    const pct = Math.min(100, (_videoSecsWatched / minSecs) * 100);
+    const secsLeft = Math.max(0, minSecs - _videoSecsWatched);
+    const bar = document.getElementById('videoProgressBar');
+    const lbl = document.getElementById('videoSecsLeft');
+    if (bar) bar.style.width = pct + '%';
+    if (lbl) lbl.textContent = secsLeft;
+
+    if (_videoSecsWatched >= minSecs) {
+      _pauseWatchTimer();
+      _onWatchComplete();
     }
   }, 1000);
+}
+
+function _pauseWatchTimer() {
+  if (_videoWatchIv) { clearInterval(_videoWatchIv); _videoWatchIv = null; }
+}
+
+function _onVideoEnded() {
+  _pauseWatchTimer();
+  if (_videoSecsWatched >= (_videoCurrentData?.min_watch_sec || 15)) {
+    _onWatchComplete();
+  } else {
+    // Terminó antes de tiempo — no dar gemas pero tampoco cancelar
+    notify('⚠️ El video terminó muy pronto — prueba otro');
+    _cleanupVideoOverlay();
+  }
+}
+
+function _onWatchComplete() {
+  const gems = _videoStreakGems(_videoStreak);
+  const isMaxStreak = _videoStreak >= 2;
+
+  // Dar gemas
+  addGems(gems);
+
+  // Actualizar estado
+  _videoStreak    = Math.min(_videoStreak + 1, 3);
+  _videoStreakTs  = Date.now();
+  if (isMaxStreak || _videoStreak >= 3) {
+    // Racha completada: iniciar cooldown de 1 hora
+    G.lastAdTs   = Date.now();
+    _videoStreak = 0;
+  }
+
+  // Log en Supabase si tiene cuenta
+  _logVideoView(gems);
+
+  saveGame();
+
+  // Mostrar celebración antes de cerrar
+  _showVideoReward(gems, isMaxStreak);
+}
+
+function _showVideoReward(gems, isMax) {
+  _cleanupVideoPlayer();
+  const overlay = document.getElementById('videoAdOverlay');
+  if (!overlay) return;
+
+  overlay.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:100%;gap:16px;padding:24px;text-align:center;animation:fadeInMs 0.4s ease">
+      <div style="font-size:4rem;animation:pulseMs 0.8s ease infinite">🎬</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:1.8rem;color:#D4A8FF">
+        ${isMax ? '🔥 ¡Racha Completa!' : '¡Gracias por ver!'}
+      </div>
+      <div style="font-family:'Fredoka One',cursive;font-size:3rem;color:#FFE135">
+        +${gems} 💎
+      </div>
+      <div style="font-size:0.8rem;color:rgba(255,255,255,0.5);font-weight:700">
+        ${isMax
+          ? 'Próxima sesión de videos en 1 hora'
+          : `Ver ${3 - Math.min(_videoStreak, 3) + (_videoStreak > 0 ? 0 : 0)} video${_videoStreak > 0 ? '' : 's'} más para racha completa`
+        }
+      </div>
+      <button onclick="_closeVideoOverlay()"
+        style="background:linear-gradient(135deg,#7B2FBE,#9B5DE5);color:white;
+          font-family:'Fredoka One',cursive;font-size:1.1rem;padding:14px 36px;
+          border:3px solid white;border-radius:99px;cursor:pointer;
+          box-shadow:0 6px 20px rgba(123,47,190,0.5);margin-top:8px">
+        ¡Genial! 🎉
+      </button>
+    </div>
+  `;
+
+  // Confetti pequeño
+  for (let i = 0; i < 30; i++) {
+    const c = document.createElement('div');
+    c.style.cssText = `position:fixed;z-index:9999;pointer-events:none;border-radius:50%;
+      width:${5+Math.random()*6}px;height:${5+Math.random()*6}px;
+      background:${['#D4A8FF','#FFE135','#2DC653','#FF6348'][Math.floor(Math.random()*4)]};
+      left:${10+Math.random()*80}vw;top:-10px;
+      animation:confettiFall ${1.2+Math.random()*1.5}s ease-in forwards;
+      animation-delay:${Math.random()*0.4}s`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 2500);
+  }
+
+  notify(`🎬 +${gems} 💎 ¡Video completado!`);
+  renderGemSources();
+}
+
+function _cancelVideo() {
+  _pauseWatchTimer();
+  notify('❌ Video cancelado — no se ganaron gemas');
+  _closeVideoOverlay();
+}
+
+function _closeVideoOverlay() {
+  _cleanupVideoPlayer();
+  _cleanupVideoOverlay();
+  _videoActive = false;
+  renderGemSources();
+}
+
+function _cleanupVideoPlayer() {
+  _pauseWatchTimer();
+  try { _videoYTPlayer?.destroy(); } catch(e) {}
+  _videoYTPlayer = null;
+}
+
+function _cleanupVideoOverlay() {
+  document.getElementById('videoAdOverlay')?.remove();
+}
+
+// Log en Supabase (silencioso, no bloquea)
+async function _logVideoView(gems) {
+  if (!_cloudClient || !_cloudUser) return;
+  try {
+    await _cloudClient.from('video_views').insert({
+      user_id:     _cloudUser.id,
+      video_id:    null, // los fallback no tienen ID de tabla
+      gems_earned: gems,
+      streak_day:  _videoStreak,
+    });
+  } catch(e) {}
+}
+
+// Cargar el pool de videos cuando el cloud esté listo
+// (se llama desde el initCloud existente)
+function _initVideoSystem() {
+  // Restaurar racha desde G si existe
+  if (G._videoStreak)   _videoStreak  = G._videoStreak;
+  if (G._videoStreakTs) _videoStreakTs = G._videoStreakTs;
+  // Expirar racha si pasaron más de 10 min
+  if ((Date.now() - _videoStreakTs) > _VIDEO_STREAK_WINDOW) _videoStreak = 0;
+  _loadVideoPool();
+}
+
+// Persistir racha en G para que sobreviva recargas
+const _origSaveGame = typeof saveGame !== 'undefined' ? saveGame : null;
+function _persistVideoStreak() {
+  G._videoStreak  = _videoStreak;
+  G._videoStreakTs = _videoStreakTs;
 }
 
 // ── Gem Sources Panel ─────────────────────────────────────────────────
@@ -1931,10 +2267,24 @@ function renderGemSources() {
       action: () => { closeGemSources(); startTrivia(); },
     },
     {
-      icon: '🎬', name: 'Ver un Video', desc: 'Mira 5 segundos y gana gemas',
-      gems: '+5 💎', id: 'ad',
-      cooldown: 30 * 60 * 1000,
-      last: G.lastAdTs || 0,
+      icon: '🎬',
+      name: 'Ver un Video',
+      desc: (() => {
+        const streakNow = _videoStreak || 0;
+        const gemsNow   = _videoStreakGems(streakNow);
+        if (streakNow === 0) return `Ver un video de YouTube · Gana ${gemsNow} 💎`;
+        if (streakNow === 1) return `🔥 Racha x2 · ¡Siguiente video vale ${gemsNow} 💎!`;
+        return `🔥🔥 Racha x3 · ¡Último video vale ${gemsNow} 💎!`;
+      })(),
+      gems: (() => {
+        const s = _videoStreak || 0;
+        return `+${_videoStreakGems(s)} 💎`;
+      })(),
+      id: 'ad',
+      cooldown: _VIDEO_COOLDOWN_MS,
+      last: (_videoStreak > 0 && (Date.now() - _videoStreakTs) < _VIDEO_STREAK_WINDOW)
+        ? 0  // hay racha activa — mostrar disponible
+        : G.lastAdTs || 0,
       action: () => { closeGemSources(); watchAd(); },
     },
     {
@@ -2549,7 +2899,6 @@ window.addEventListener('message', e => {
     if (earned > 0) {
       G.money += earned;
       G.totalEarned += earned;
-      _trackSessionEarned(earned); // logro oculto: $1M en 1 min de sesión
       G.dailyEarned = (G.dailyEarned || 0) + earned;
       addXP(xp || earned * 0.05);
       spawnParticles(earned);
@@ -2863,224 +3212,6 @@ function checkAchievements() {
     playSound('achieve');
     saveGame();
   });
-  // Logros ocultos
-  checkHiddenAchievements();
-  // Milestones de celebración
-  checkMilestones();
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MEJORA 2 — PANTALLA DE CELEBRACIÓN EN MILESTONES
-// ═══════════════════════════════════════════════════════════════════
-const MILESTONES = [
-  { id: 'ms_100k',   threshold: 100000,       icon: '💰', title: '¡$100 Mil!',        subtitle: 'El barrio ya te conoce', color: '#2DC653', gems: 5  },
-  { id: 'ms_1m',     threshold: 1000000,       icon: '🤑', title: '¡MILLONARIO!',      subtitle: 'De la nada al millón',   color: '#FFD700', gems: 15 },
-  { id: 'ms_10m',    threshold: 10000000,      icon: '💎', title: '¡$10 Millones!',    subtitle: 'El barrio es tuyo',      color: '#9B5DE5', gems: 30 },
-  { id: 'ms_100m',   threshold: 100000000,     icon: '👑', title: '¡$100 Millones!',   subtitle: 'Leyenda del barrio',     color: '#FF6348', gems: 60 },
-  { id: 'ms_1b',     threshold: 1000000000,    icon: '🏆', title: '¡MIL MILLONES!',    subtitle: 'Imperio absoluto',       color: '#FFE135', gems: 120},
-  { id: 'ms_prestige1', prestige: 1,           icon: '⭐', title: '¡Primer Prestige!', subtitle: 'Un nuevo comienzo',      color: '#5BC8F5', gems: 20 },
-  { id: 'ms_biz10',  bizCount: 10,             icon: '🏬', title: '¡10 Negocios!',     subtitle: 'Empresario del barrio',  color: '#FF4FAD', gems: 10 },
-  { id: 'ms_allbiz', bizAll: true,             icon: '🌎', title: '¡Imperio Completo!', subtitle: 'Todos los negocios',    color: '#2DC653', gems: 50 },
-];
-
-let _msQueue = [];
-let _msShowing = false;
-
-function checkMilestones() {
-  if (!G._msClaimed) G._msClaimed = {};
-  MILESTONES.forEach(ms => {
-    if (G._msClaimed[ms.id]) return;
-    let triggered = false;
-    if (ms.threshold && G.totalEarned >= ms.threshold) triggered = true;
-    if (ms.prestige   && G.prestigeStars >= ms.prestige) triggered = true;
-    if (ms.bizCount   && Object.values(G.businesses).filter(b => b.level > 0).length >= ms.bizCount) triggered = true;
-    if (ms.bizAll     && Object.values(G.businesses).filter(b => b.level > 0).length >= BUSINESSES.length) triggered = true;
-    if (!triggered) return;
-    G._msClaimed[ms.id] = true;
-    _msQueue.push(ms);
-  });
-  if (!_msShowing && _msQueue.length > 0) _showNextMilestone();
-}
-
-function _showNextMilestone() {
-  if (_msQueue.length === 0) { _msShowing = false; return; }
-  _msShowing = true;
-  const ms = _msQueue.shift();
-
-  // Dar gemas
-  addGems(ms.gems);
-
-  // Confetti burst
-  _milestoneConfetti(ms.color);
-
-  // Sonido especial
-  playSound('levelup');
-
-  // Construir modal
-  const existing = document.getElementById('milestoneModal');
-  if (existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'milestoneModal';
-  modal.style.cssText = `
-    position:fixed;inset:0;z-index:9990;display:flex;align-items:center;justify-content:center;
-    background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);padding:16px;animation:fadeInMs 0.3s ease;
-  `;
-  modal.innerHTML = `
-    <style>
-      @keyframes fadeInMs { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
-      @keyframes pulseMs  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
-      #milestoneModal .ms-icon { animation: pulseMs 0.8s ease infinite; display:inline-block; font-size:4rem; }
-    </style>
-    <div style="background:linear-gradient(145deg,#1a1a2e,#16213e);border:3px solid ${ms.color};border-radius:24px;
-      padding:32px 24px;max-width:340px;width:100%;text-align:center;
-      box-shadow:0 0 60px ${ms.color}44,0 20px 60px rgba(0,0,0,0.5);">
-      <div class="ms-icon">${ms.icon}</div>
-      <div style="font-family:'Fredoka One',cursive;font-size:2rem;color:${ms.color};margin:12px 0 4px;
-        text-shadow:0 0 20px ${ms.color}88">${ms.title}</div>
-      <div style="color:rgba(255,255,255,0.7);font-size:0.95rem;margin-bottom:16px">${ms.subtitle}</div>
-      <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 16px;margin-bottom:20px;
-        display:flex;align-items:center;justify-content:center;gap:8px">
-        <span style="font-size:1.4rem">💎</span>
-        <span style="font-family:'Fredoka One',cursive;color:#FFE135;font-size:1.2rem">+${ms.gems} Gemas</span>
-      </div>
-      <div style="display:flex;gap:10px">
-        <button onclick="_shareMilestone('${ms.id}','${ms.title}')"
-          style="flex:1;background:linear-gradient(135deg,${ms.color},${ms.color}cc);color:#fff;
-            font-family:'Fredoka One',cursive;font-size:0.95rem;padding:12px;border-radius:99px;
-            border:none;cursor:pointer;box-shadow:0 4px 15px ${ms.color}44">
-          📤 Compartir
-        </button>
-        <button onclick="_closeMilestone()"
-          style="flex:1;background:rgba(255,255,255,0.1);color:#fff;
-            font-family:'Fredoka One',cursive;font-size:0.95rem;padding:12px;border-radius:99px;
-            border:2px solid rgba(255,255,255,0.2);cursor:pointer">
-          ¡Genial! 🎉
-        </button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if (e.target === modal) _closeMilestone(); });
-}
-
-function _closeMilestone() {
-  const m = document.getElementById('milestoneModal');
-  if (m) m.remove();
-  _msShowing = false;
-  saveGame();
-  // Mostrar el siguiente si hay cola
-  setTimeout(() => { if (_msQueue.length > 0) _showNextMilestone(); }, 400);
-}
-
-function _shareMilestone(id, title) {
-  const txt = `🏘️ ¡Acabo de lograr "${title}" en Imperio del Barrio! 💰 ¿Puedes superarme? Juega gratis en https://www.imperiodelbarrio.com #ImperioDelBarrio`;
-  if (navigator.share) {
-    navigator.share({ title: 'Imperio del Barrio', text: txt, url: 'https://www.imperiodelbarrio.com' }).catch(() => {});
-  } else {
-    navigator.clipboard?.writeText(txt).catch(() => {});
-    notify('📋 ¡Logro copiado!');
-  }
-  _closeMilestone();
-}
-
-function _milestoneConfetti(color) {
-  const colors = [color, '#FFE135', '#ffffff', '#FF6348', '#2DC653'];
-  for (let i = 0; i < 80; i++) {
-    const c = document.createElement('div');
-    const col = colors[Math.floor(Math.random() * colors.length)];
-    const size = 6 + Math.random() * 8;
-    c.style.cssText = `
-      position:fixed;z-index:9999;pointer-events:none;border-radius:${Math.random()>0.5?'50%':'2px'};
-      width:${size}px;height:${size}px;background:${col};
-      left:${10 + Math.random() * 80}vw;top:-10px;
-      animation:confettiFall ${1.5 + Math.random() * 2}s ease-in forwards;
-      animation-delay:${Math.random() * 0.6}s;
-    `;
-    document.body.appendChild(c);
-    setTimeout(() => c.remove(), 3500);
-  }
-  // Inyectar animación si no existe
-  if (!document.getElementById('confettiStyle')) {
-    const s = document.createElement('style');
-    s.id = 'confettiStyle';
-    s.textContent = `@keyframes confettiFall {
-      0%   { transform: translateY(0) rotate(0deg)   scaleX(1);   opacity:1; }
-      50%  { transform: translateY(50vh) rotate(180deg) scaleX(0.6); opacity:1; }
-      100% { transform: translateY(105vh) rotate(360deg) scaleX(1);  opacity:0; }
-    }`;
-    document.head.appendChild(s);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MEJORA 3 — LOGROS OCULTOS
-// ═══════════════════════════════════════════════════════════════════
-const HIDDEN_ACHIEVEMENTS = [
-  { id:'h_madrugador',  icon:'🌅', name:'El Madrugador',       desc:'Jugaste antes de las 7am',                  check:()=>{ const h=new Date().getHours(); return h>=4&&h<7; },           reward:3 },
-  { id:'h_noctambulo',  icon:'🦉', name:'El Noctámbulo',       desc:'Jugaste después de medianoche',              check:()=>{ const h=new Date().getHours(); return h>=0&&h<4; },            reward:3 },
-  { id:'h_velocista',   icon:'⚡', name:'Velocista del Barrio', desc:'Compraste 5 mejoras en menos de 1 minuto',  check:()=>(G._quickUpgrades||0)>=5,                                        reward:5 },
-  { id:'h_millonario1min',icon:'💸',name:'Millón en un Minuto', desc:'Ganaste $1M en menos de 1 minuto de sesión',check:()=>(G._sessionEarned||0)>=1000000,                                  reward:10},
-  { id:'h_clic100',     icon:'👆', name:'Clic Addict',          desc:'Hiciste 100 clics en un negocio',           check:()=>(G._clickCount||0)>=100,                                         reward:5 },
-  { id:'h_multimillonario',icon:'🛳️',name:'Yate Propio',       desc:'Acumulaste $500M ganados',                  check:()=>G.totalEarned>=500000000,                                        reward:20},
-  { id:'h_combo3',      icon:'🔥', name:'Triple Combo',         desc:'Tienes 3 sinergias activas a la vez',       check:()=>BUSINESS_SYNERGIES.filter(s=>s.ids.every(id=>bizLevel(id)>0)).length>=3, reward:8 },
-  { id:'h_full_zone',   icon:'🗺️', name:'Explorador Total',    desc:'Visitaste todas las zonas del mapa',         check:()=>ZONES.every(z=>G.zoneHistory&&G.zoneHistory.includes(z.id)),    reward:10},
-  { id:'h_prestige3',   icon:'🌟', name:'Triple Prestigio',     desc:'Hiciste Prestige 3 veces',                  check:()=>G.prestigeStars>=3,                                              reward:15},
-  { id:'h_domenica',    icon:'😴', name:'El Domingo',           desc:'Jugaste un domingo',                        check:()=>new Date().getDay()===0,                                         reward:3 },
-  { id:'h_evento10',    icon:'🎪', name:'Alma del Festival',    desc:'Participaste en 10 eventos',                check:()=>(G.eventsParticipated||0)>=10,                                   reward:8 },
-  { id:'h_nego50',      icon:'🦈', name:'Tiburón Imparable',    desc:'Negociaste 50 veces',                       check:()=>(G.negotiateCount||0)>=50,                                       reward:12},
-];
-
-function checkHiddenAchievements() {
-  if (!G._hiddenAch) G._hiddenAch = {};
-  HIDDEN_ACHIEVEMENTS.forEach(ach => {
-    if (G._hiddenAch[ach.id]) return;
-    try { if (!ach.check()) return; } catch(e) { return; }
-    G._hiddenAch[ach.id] = true;
-    addGems(ach.reward);
-    saveGame();
-    _showHiddenAchToast(ach);
-  });
-}
-
-function _showHiddenAchToast(ach) {
-  const t = document.createElement('div');
-  t.style.cssText = `
-    position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
-    z-index:8000;background:linear-gradient(135deg,#1a1a2e,#2d1b69);
-    border:2px solid #9B5DE5;border-radius:16px;padding:12px 18px;
-    display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(155,93,229,0.4);
-    animation:slideUpHidden 0.4s ease forwards;min-width:260px;max-width:320px;
-  `;
-  t.innerHTML = `
-    <style>
-      @keyframes slideUpHidden { from{opacity:0;transform:translateX(-50%) translateY(20px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
-    </style>
-    <div style="font-size:2rem">${ach.icon}</div>
-    <div>
-      <div style="color:#9B5DE5;font-size:0.6rem;font-weight:900;letter-spacing:1px;text-transform:uppercase">🔮 Logro Secreto Desbloqueado</div>
-      <div style="color:#fff;font-family:'Fredoka One',cursive;font-size:0.95rem">${ach.name}</div>
-      <div style="color:rgba(255,255,255,0.6);font-size:0.7rem">${ach.desc}</div>
-      <div style="color:#FFE135;font-size:0.75rem;font-weight:900;margin-top:2px">💎 +${ach.reward} gemas</div>
-    </div>
-  `;
-  document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; setTimeout(() => t.remove(), 500); }, 4000);
-}
-
-// Trackers para logros ocultos (se llaman desde buyUpgrade/clicks)
-function _trackQuickUpgrade() {
-  if (!G._quickUpgrades) G._quickUpgrades = 0;
-  if (!G._quickUpgradeTs) G._quickUpgradeTs = Date.now();
-  const elapsed = Date.now() - G._quickUpgradeTs;
-  if (elapsed > 60000) { G._quickUpgrades = 1; G._quickUpgradeTs = Date.now(); }
-  else G._quickUpgrades++;
-}
-function _trackBizClick() {
-  G._clickCount = (G._clickCount || 0) + 1;
-}
-function _trackSessionEarned(amount) {
-  G._sessionEarned = (G._sessionEarned || 0) + amount;
 }
 
 function showAchToast(ach) {
@@ -3109,86 +3240,45 @@ function renderAchievements() {
 }
 
 // ═══════════════════════════════════════════════
-// MEJORA 5 — RACHA DE LOGIN CON RECOMPENSAS ESCALABLES
-// ═══════════════════════════════════════════════════════════════════
+// DAILY REWARD
+// ═══════════════════════════════════════════════
 function checkDaily() {
   const now = Date.now();
   const last = G.lastLogin || 0;
   const dayMs = 86400000;
   const diffDays = Math.floor((now - last) / dayMs);
-  if (diffDays === 0) return;
+  if (diffDays === 0) return; // already claimed today
   if (diffDays === 1) { G.loginStreak = (G.loginStreak || 0) + 1; }
-  else if (diffDays > 1) { G.loginStreak = 1; }
+  else if (diffDays > 1) { G.loginStreak = 1; } // reset streak
   G.lastLogin = now;
   showDailyPopup();
 }
 
-function _dailyStreakReward(streak) {
-  const lvlMult = 1 + (G.level || 0) * 0.2;
-  const base = [
-    { money: 500,    gems: 0,  bonus: null },
-    { money: 1500,   gems: 1,  bonus: null },
-    { money: 4000,   gems: 2,  bonus: null },
-    { money: 10000,  gems: 3,  bonus: '⚡ +velocidad 30min' },
-    { money: 25000,  gems: 5,  bonus: null },
-    { money: 60000,  gems: 8,  bonus: '💰 x2 ingresos 1h' },
-    { money: 150000, gems: 15, bonus: '🎊 RACHA COMPLETA' },
-  ];
-  const idx = Math.min(streak - 1, base.length - 1);
-  const r = base[idx];
-  return { money: Math.floor(r.money * lvlMult), gems: r.gems, bonus: r.bonus, day: idx + 1 };
-}
-
 function showDailyPopup() {
   const streak = G.loginStreak || 1;
-  const reward = _dailyStreakReward(streak);
-
-  const dayCards = Array.from({ length: 7 }, (_, i) => {
-    const r = _dailyStreakReward(i + 1);
-    const done = i < streak - 1;
-    const today = i === streak - 1;
-    return `<div style="flex:1;min-width:36px;border-radius:10px;padding:5px 3px;text-align:center;font-size:0.55rem;
-      background:${today?'rgba(255,225,53,0.2)':done?'rgba(45,198,83,0.15)':'rgba(255,255,255,0.04)'};
-      border:2px solid ${today?'#FFE135':done?'#2DC653':'rgba(255,255,255,0.1)'}">
-      <div style="font-size:1rem">${done?'✅':today?'⭐':`D${i+1}`}</div>
-      <div style="color:${today?'#FFE135':done?'#2DC653':'#666'};font-weight:900">${done||today?fmt(r.money):'?'}</div>
-      ${r.gems>0?`<div style="color:#A78BFA;font-size:0.5rem">+${r.gems}💎</div>`:''}
-    </div>`;
-  }).join('');
-
-  document.getElementById('dailyEmoji').textContent = streak>=7?'🎊':streak>=5?'🔥':streak>=3?'💫':'🎁';
+  const rewards = [1000, 2500, 5000, 10000, 20000, 50000, 100000];
+  const reward = rewards[Math.min(streak - 1, rewards.length - 1)];
+  const emojis = ['💰','💎','🌟','🚀','👑','🏆','🎊'];
+  document.getElementById('dailyEmoji').textContent = emojis[Math.min(streak-1,6)];
   document.getElementById('dailyStreakTxt').textContent = `Racha: ${streak} día${streak>1?'s':''} seguido${streak>1?'s':''}`;
-  document.getElementById('dailyRewardTxt').textContent = `+${fmt(reward.money)}${reward.gems>0?` · +${reward.gems}💎`:''}`;
-
+  document.getElementById('dailyRewardTxt').textContent = `+${fmt(reward)}`;
   const daysEl = document.getElementById('dailyDays');
-  daysEl.style.cssText = 'display:flex;gap:4px;margin:8px 0';
-  daysEl.innerHTML = dayCards;
-
-  let bonusEl = document.getElementById('dailyBonusLine');
-  if (!bonusEl) {
-    bonusEl = document.createElement('div');
-    bonusEl.id = 'dailyBonusLine';
-    bonusEl.style.cssText = 'text-align:center;font-size:0.75rem;font-weight:900;color:#FF6348;margin-top:4px;display:none';
-    daysEl.parentNode.insertBefore(bonusEl, daysEl.nextSibling);
-  }
-  bonusEl.style.display = reward.bonus ? 'block' : 'none';
-  if (reward.bonus) bonusEl.textContent = `🎁 Bonus: ${reward.bonus}`;
-
+  daysEl.innerHTML = Array.from({length:7},(_,i)=>{
+    const cls = i < streak-1 ? 'done' : i === streak-1 ? 'today' : '';
+    return `<div class="dd ${cls}">${cls==='done'?'✅':cls==='today'?'⭐':'D'+(i+1)}</div>`;
+  }).join('');
   window._dailyReward = reward;
   document.getElementById('dailyPopup').classList.add('open');
 }
 
 function claimDaily() {
-  const reward = window._dailyReward || { money: 1000, gems: 0, bonus: null };
-  G.money += reward.money;
-  G.totalEarned += reward.money;
-  if (reward.gems > 0) addGems(reward.gems);
-  if (reward.bonus && reward.bonus.includes('velocidad')) G.xpBoostEnd = Date.now() + 1800000;
-  if (reward.bonus && reward.bonus.includes('x2 ingresos')) G.gemBoostEnd = Date.now() + 3600000;
+  const reward = window._dailyReward || 1000;
+  G.money += reward;
+  G.totalEarned += reward;
   document.getElementById('dailyPopup').classList.remove('open');
-  notify(`🎁 ¡Día ${G.loginStreak}! +${fmt(reward.money)}${reward.gems>0?` +${reward.gems}💎`:''}`);
+  notify(`🎁 ¡Recompensa diaria! +${fmt(reward)}`);
   playSound('daily');
-  spawnParticles(reward.money);
+  spawnParticles(reward);
   checkAchievements();
   renderAll();
   saveGame();
@@ -4808,6 +4898,7 @@ runSplash(() => {
       if (offlineInc > 0) setTimeout(() => showOfflineModal(offlineInc, elapsed), 600);
     }
     setTimeout(() => checkDaily(), 1200);
+    setTimeout(() => _initVideoSystem(), 2000); // cargar pool de videos
   } else {
     if (!hadSave) G.money = 500;
     const obSeen = (() => { try { return !!localStorage.getItem('idb_ob_seen'); } catch(e){return false;} })();
@@ -5604,47 +5695,44 @@ if (_origSaveForGuild && !window._guildHookApplied) {
 
 
 // ═══════════════════════════════════════════════════════════════════
+// IMPROVED TUTORIAL SYSTEM (replaces old tooltip style)
 // ═══════════════════════════════════════════════════════════════════
-// MEJORA 4 — TUTORIAL NARRATIVO CON MISIÓN Y URGENCIA
-// ═══════════════════════════════════════════════════════════════════
+
 const TUTORIAL_V2 = [
   {
-    emoji: '🏚️',
-    title: '¡El Barrio te Necesita!',
-    msg: 'Don Beto quiere retirarse y vender su Colmado por solo $300. Pero primero necesitas capital — abre tu Barbería con los $500 que tienes. ¡Toca 🔓 Abrir ahora!',
-    urgent: true,
-    urgentMsg: '⏰ Don Beto espera...',
+    emoji: '👋',
+    title: '¡Bienvenido al Imperio!',
+    msg: 'Eres el nuevo dueño del barrio. Empieza abriendo tu primera barbería con los $500 que tienes. ¡Toca el botón 🔓 Abrir!',
   },
   {
     emoji: '💈',
-    title: 'La Barbería trabaja sola',
-    msg: 'Cada ciclo genera dinero automáticamente. Toca ⬆️ Mejorar para subir el nivel — a más nivel, más ganancias por ciclo. ¡Mejórala al menos 1 vez!',
-    urgent: false,
-  },
-  {
-    emoji: '🏪',
-    title: '¡Compra el Colmado de Don Beto!',
-    msg: 'Ya tienes suficiente capital. El Colmado genera 3x más que la Barbería y nunca cierra. ¡Ábrelo antes de que otro comprador llegue!',
-    urgent: true,
-    urgentMsg: '⏰ ¡Oferta por tiempo limitado!',
+    title: 'Tu primer negocio',
+    msg: 'La barbería produce dinero automáticamente cada pocos segundos. Mejórala con ⬆️ Mejorar para ganar más por ciclo.',
   },
   {
     emoji: '💎',
-    title: 'Las Gemas — tu moneda secreta',
-    msg: 'Las 💎 gemas se ganan gratis: completa logros, objetivos diarios, mini-juegos de negociación y compartiendo el juego con amigos.',
-    urgent: false,
+    title: 'Las Gemas',
+    msg: 'Las gemas 💎 son la moneda premium. Gánalas gratis completando logros, objetivos diarios, jugando mini-juegos y compartiendo el juego. ¡Toca ✨ Ganar!',
+  },
+  {
+    emoji: '🎮',
+    title: 'Mini-juegos de Negociación',
+    msg: 'Cada negocio tiene un botón 🎮 Jugar. Úsalo para acceder a 5 mini-juegos distintos que te dan dinero bonus según tu puntuación.',
+  },
+  {
+    emoji: '⬆️',
+    title: 'Sube de Nivel',
+    msg: 'Cada vez que gastas dinero en negocios y mejoras, ganas XP. Subir de nivel desbloquea nuevos negocios y zonas del mapa.',
   },
   {
     emoji: '🗺️',
-    title: 'Expande tu territorio',
-    msg: 'La Zona Sur da +20% ingresos, la Premium +550%. Cuanto más crezcas, más zonas se desbloquean. Ve a 🗺️ Ciudad para ver el mapa.',
-    urgent: false,
+    title: 'Zonas de la Ciudad',
+    msg: 'Hay 6 zonas con diferentes multiplicadores. La Zona Premium da 6.5x ingresos. Ve al tab 🗺️ Ciudad para explorar.',
   },
   {
-    emoji: '📈',
-    title: '¡El Barrio es tuyo!',
-    msg: 'Ahora ya sabes lo básico. Mejora negocios, colecciona sinergias entre ellos, y sube tu Ascenso Social para desbloquear multiplicadores brutales. ¡Que empiece el Imperio!',
-    urgent: false,
+    emoji: '🤝',
+    title: 'Clanes',
+    msg: '¡Crea o únete a un clan con amigos! Compitan en el ranking grupal. Ve a ⚙️ Más → Mi Clan para empezar.',
   },
 ];
 
@@ -5661,34 +5749,26 @@ function startTutorialV2() {
 function showTutorialV2Step() {
   const overlay = document.getElementById('tutorialOverlay');
   if (!overlay) return;
-  if (_tutV2Step >= TUTORIAL_V2.length) { endTutorialV2(); return; }
+  if (_tutV2Step >= TUTORIAL_V2.length) {
+    endTutorialV2(); return;
+  }
   const step = TUTORIAL_V2[_tutV2Step];
   overlay.style.display = 'block';
   document.getElementById('tutEmoji').textContent = step.emoji;
   document.getElementById('tutTitle').textContent = step.title;
   document.getElementById('tutMsg').textContent = step.msg;
-  document.getElementById('tutStep').textContent = `Paso ${_tutV2Step + 1} de ${TUTORIAL_V2.length}`;
-
-  // Mostrar badge de urgencia si aplica
-  let urgentEl = document.getElementById('tutUrgentBadge');
-  if (!urgentEl) {
-    urgentEl = document.createElement('div');
-    urgentEl.id = 'tutUrgentBadge';
-    urgentEl.style.cssText = `font-size:0.7rem;color:#FF6348;font-weight:900;letter-spacing:0.5px;
-      margin-bottom:6px;animation:pulseMs 0.8s ease infinite;display:none`;
-    const msgEl = document.getElementById('tutMsg');
-    if (msgEl) msgEl.parentNode.insertBefore(urgentEl, msgEl);
-  }
-  urgentEl.style.display = step.urgent ? 'block' : 'none';
-  if (step.urgent) urgentEl.textContent = step.urgentMsg || '⏰ ¡Actúa rápido!';
+  document.getElementById('tutStep').textContent = `Paso ${_tutV2Step+1} de ${TUTORIAL_V2.length}`;
 
   // Dots
-  document.getElementById('tutDots').innerHTML = TUTORIAL_V2.map((_, i) =>
+  document.getElementById('tutDots').innerHTML = TUTORIAL_V2.map((_,i) =>
     `<div style="width:6px;height:6px;border-radius:99px;background:${i===_tutV2Step?'#FFE135':'rgba(255,255,255,0.2)'}"></div>`
   ).join('');
 
+  // Last step: change button text
   const nextBtn = document.getElementById('tutNext');
   if (nextBtn) nextBtn.textContent = _tutV2Step === TUTORIAL_V2.length - 1 ? '¡Listo! 🎉' : 'Siguiente →';
+
+  // Reward gems on start
   if (_tutV2Step === 0) { addGems(5); notify('🎁 +5 💎 de bienvenida!'); }
 }
 
