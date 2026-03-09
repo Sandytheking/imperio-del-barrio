@@ -1893,9 +1893,10 @@ let _videoPool = [];
 
 // Cargar videos desde Supabase al iniciar
 async function _loadVideoPool() {
-  if (!_cloudClient) return;
+  const sb = _getCloud();
+  if (!sb) return;
   try {
-    const { data, error } = await _cloudClient
+    const { data, error } = await sb
       .from('promo_videos')
       .select('youtube_id, title, description, min_watch_sec, sponsor_name, weight')
       .eq('active', true)
@@ -2220,9 +2221,10 @@ function _cleanupVideoOverlay() {
 
 // Log en Supabase (silencioso, no bloquea)
 async function _logVideoView(gems) {
-  if (!_cloudClient || !_cloudUser) return;
+  const sb = _getCloud();
+  if (!sb || !_cloudUser) return;
   try {
-    await _cloudClient.from('video_views').insert({
+    await sb.from('video_views').insert({
       user_id:     _cloudUser.id,
       video_id:    null, // los fallback no tienen ID de tabla
       gems_earned: gems,
