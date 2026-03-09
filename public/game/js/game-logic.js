@@ -1,4 +1,4 @@
-    (function(){
+(function(){
       var seq = [
         {id:'ip0', delay:300},
         {id:'ip1', delay:1200},
@@ -1154,7 +1154,7 @@ function shareAscend(icon, stageName, stageIdx, preStats) {
     companyName: G.companyName || 'Mi Empresa',
   };
 
-  const url   = 'https://imperiodelbarrio.com';
+  const url   = 'https://www.imperiodelbarrio.com';
   const money = typeof fmt==='function' ? fmt(_stats.totalEarned) : '$?';
   const quote = [
     `${icon} ¡Ascendí a ${stageName} en Imperio del Barrio!`,
@@ -1180,8 +1180,8 @@ function shareAscend(icon, stageName, stageIdx, preStats) {
       .then(blob => {
         const file = new File([blob], 'mi-logro.png', {type:'image/png'});
         const canFile = navigator.canShare && navigator.canShare({files:[file]});
-        if(canFile) return navigator.share({title:'Imperio del Barrio', text:quote, files:[file]});
-        return navigator.share({title:'Imperio del Barrio', text:quote});
+        if(canFile) return navigator.share({title:'Imperio del Barrio', text:quote, url:'https://www.imperiodelbarrio.com', files:[file]});
+        return navigator.share({title:'Imperio del Barrio', text:quote, url:'https://www.imperiodelbarrio.com'});
       })
       .catch(() => {}); // Silent fail — modal is already showing
   }
@@ -1795,9 +1795,9 @@ function getMyReferralCode() {
 
 function copyReferralCode() {
   const code = getMyReferralCode();
-  const txt = `🏘️ ¡Juega Imperio del Barrio conmigo! Usa mi código ${code} al registrarte y ambos ganamos 💎 gemas. #ImperioDelBarrio`;
+  const txt = `🏘️ ¡Juega Imperio del Barrio conmigo! Usa mi código ${code} al registrarte y ambos ganamos 💎 gemas. Juega gratis en https://www.imperiodelbarrio.com #ImperioDelBarrio`;
   if (navigator.share) {
-    navigator.share({ title: 'Imperio del Barrio', text: txt }).catch(() => {});
+    navigator.share({ title: 'Imperio del Barrio', text: txt, url: 'https://www.imperiodelbarrio.com' }).catch(() => {});
   } else {
     navigator.clipboard?.writeText(txt).catch(() => {});
   }
@@ -1809,11 +1809,11 @@ function shareToNetwork(platform) {
   const openBiz = BUSINESSES.filter(b => bizLevel(b.id) > 0).length;
   const zone = ZONES.find(z => z.id === G.zone)?.name || 'el barrio';
   const company = G.companyName || 'Mi Imperio';
-  const txt = encodeURIComponent(`🏘️ "${company}" tiene ${openBiz} negocios y domina ${zone} en Imperio del Barrio 😎💰 #ImperioDelBarrio`);
-  const url = encodeURIComponent('https://imperiodelbarrio.com');
+  const txt = encodeURIComponent(`🏘️ "${company}" tiene ${openBiz} negocios y domina ${zone} en Imperio del Barrio 😎💰 Juega gratis en https://www.imperiodelbarrio.com #ImperioDelBarrio`);
+  const url = encodeURIComponent('https://www.imperiodelbarrio.com');
 
   const links = {
-    twitter:   `https://twitter.com/intent/tweet?text=${txt}`,
+    twitter:   `https://twitter.com/intent/tweet?text=${txt}&url=${url}`,
     facebook:  `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${txt}`,
     whatsapp:  `https://wa.me/?text=${txt}`,
     instagram: null, // Instagram no permite deep link de share, abrimos native share
@@ -1833,9 +1833,9 @@ function shareToNetwork(platform) {
       // native share para Instagram/TikTok
       const raw = decodeURIComponent(txt);
       if (navigator.share) {
-        navigator.share({ title: 'Imperio del Barrio', text: raw }).catch(() => {});
+        navigator.share({ title: 'Imperio del Barrio', text: raw, url: 'https://www.imperiodelbarrio.com' }).catch(() => {});
       } else {
-        navigator.clipboard?.writeText(raw).catch(() => {});
+        navigator.clipboard?.writeText(raw + '\nhttps://www.imperiodelbarrio.com').catch(() => {});
         notify('📋 Texto copiado — pégalo en ' + platform);
       }
     }
@@ -2751,9 +2751,9 @@ function checkStoryBanner() {
 // ═══════════════════════════════════════════════
 // ═══════════════════════════════════════════════
 function shareScore() {
-  const txt = `🏘️ ¡Mi Imperio del Barrio! 💰${fmt(G.totalEarned)} ganados | Nivel ${G.level+1} | ⭐${G.prestigeStars} prestigios | ${BUSINESSES.filter(b=>bizLevel(b.id)>0).length} negocios abiertos 🔥`;
+  const txt = `🏘️ ¡Mi Imperio del Barrio! 💰${fmt(G.totalEarned)} ganados | Nivel ${G.level+1} | ⭐${G.prestigeStars} prestigios | ${BUSINESSES.filter(b=>bizLevel(b.id)>0).length} negocios abiertos 🔥 Juega en https://www.imperiodelbarrio.com`;
   if (navigator.share) {
-    navigator.share({ title: 'Imperio del Barrio', text: txt }).catch(()=>{});
+    navigator.share({ title: 'Imperio del Barrio', text: txt, url: 'https://www.imperiodelbarrio.com' }).catch(()=>{});
   } else {
     navigator.clipboard?.writeText(txt).then(()=>notify('📋 ¡Score copiado!')).catch(()=>{
       prompt('Copia tu score:', txt);
@@ -5320,9 +5320,9 @@ async function leaveGuildAction() {
 }
 
 function copyGuildCode() {
-  const txt = `🤝 ¡Únete a mi clan "${G.guildName}" en Imperio del Barrio! Código: ${G.guildCode} #ImperioDelBarrio`;
+  const txt = `🤝 ¡Únete a mi clan "${G.guildName}" en Imperio del Barrio! Código: ${G.guildCode} — Juega gratis en https://www.imperiodelbarrio.com #ImperioDelBarrio`;
   if (navigator.share) {
-    navigator.share({ title: 'Imperio del Barrio', text: txt }).catch(() => {});
+    navigator.share({ title: 'Imperio del Barrio', text: txt, url: 'https://www.imperiodelbarrio.com' }).catch(() => {});
   } else {
     navigator.clipboard?.writeText(txt).catch(() => {});
     notify('📋 ¡Código copiado!');

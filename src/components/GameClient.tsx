@@ -118,6 +118,10 @@ export default function GameClient() {
     setMyRank(rank);
   }, []);
 
+  // Ref para que el postMessage handler siempre tenga la versión actualizada
+  const handleOpenLeaderboardRef = useRef(handleOpenLeaderboard);
+  useEffect(() => { handleOpenLeaderboardRef.current = handleOpenLeaderboard; }, [handleOpenLeaderboard]);
+
   // ── Listen for messages from the game iframe ───────────────
   useEffect(() => {
     const handle = async (e: MessageEvent) => {
@@ -125,7 +129,7 @@ export default function GameClient() {
       switch (e.data.type) {
 
         case 'OPEN_LEADERBOARD':
-          handleOpenLeaderboard();
+          handleOpenLeaderboardRef.current();
           break;
 
         case 'OPEN_AUTH':
@@ -176,7 +180,7 @@ export default function GameClient() {
 
     window.addEventListener('message', handle);
     return () => window.removeEventListener('message', handle);
-  }, [user, handleOpenLeaderboard]);
+  }, [user]);
 
   // ── Auth handlers ──────────────────────────────────────────
   const handleAuth = async (e: React.FormEvent) => {

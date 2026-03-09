@@ -72,7 +72,7 @@ export async function saveToCloud(G: Record<string, unknown>): Promise<boolean> 
       p_game_state:     G,
       p_save_version:   (G.saveVersion               as number) || SAVE_VERSION,
       p_social_stage:   (G.socialStage               as number) || 0,
-      p_influence:      Math.floor((G.totalInfluence as number) || 0),
+      p_influence:      Math.floor((G.influence as number) || 0),
       p_guild_code:     (G.guildCode                 as string) || null,
     });
 
@@ -91,7 +91,7 @@ export async function saveToCloud(G: Record<string, unknown>): Promise<boolean> 
         prestige_mult: (G.prestigeMult              as number) || 1,
         zone:          (G.zone                      as string) || 'centro',
         social_stage:  (G.socialStage               as number) || 0,
-        influence:     Math.floor((G.totalInfluence as number) || 0),
+        influence:     Math.floor((G.influence as number) || 0),
         guild_code:    (G.guildCode                 as string) || null,
         game_state:    G,
         save_version:  SAVE_VERSION,
@@ -297,7 +297,7 @@ export async function joinGuild(guildId: string, guildCode: string, G: Record<st
       total_earned: Math.floor((G.totalEarned    as number) || 0),
       level:        (G.level                     as number) || 0,
       social_stage: (G.socialStage               as number) || 0,
-      influence:    Math.floor((G.totalInfluence as number) || 0),
+      influence:    Math.floor((G.influence as number) || 0),
       last_seen:    new Date().toISOString(),
     }, { onConflict: 'guild_id,user_id' });
 
@@ -326,7 +326,7 @@ export async function syncGuildMember(G: Record<string, unknown>): Promise<void>
       total_earned: Math.floor((G.totalEarned    as number) || 0),
       level:        (G.level                     as number) || 0,
       social_stage: (G.socialStage               as number) || 0,
-      influence:    Math.floor((G.totalInfluence as number) || 0),
+      influence:    Math.floor((G.influence as number) || 0),
       last_seen:    new Date().toISOString(),
     }, { onConflict: 'guild_id,user_id' });
   } catch (e) {
