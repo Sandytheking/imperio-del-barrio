@@ -400,7 +400,7 @@ const ACHIEVEMENTS = [
   { id:'money1m',     icon:'🤑', name:'¡Millonario!',          desc:'Acumulaste $1,000,000',                    reward:100000, check:()=>G.totalEarned>=1000000 },
   { id:'lvl3',        icon:'📈', name:'Comerciante',           desc:'Llegaste a Nivel 3',                       reward:3000,   check:()=>G.level>=2 },
   { id:'lvl5',        icon:'🚀', name:'Magnate',               desc:'Llegaste a Nivel 5',                       reward:20000,  check:()=>G.level>=4 },
-  { id:'prestige1',   icon:'⭐', name:'Primer Prestigio',      desc:'Hiciste tu primer Prestigio',              reward:0,      check:()=>G.prestigeStars>=1 },
+  { id:'prestige1',   icon:'💠', name:'Primer Prestigio',      desc:'Hiciste tu primer Prestigio',              reward:0,      check:()=>G.prestigeStars>=1 },
   { id:'zone_sur',    icon:'🌴', name:'Zona Turística',        desc:'Te mudaste a la Zona Sur',                 reward:5000,   check:()=>G.zoneHistory&&G.zoneHistory.includes('sur') },
   { id:'zone_prem',   icon:'💎', name:'Zona Premium',          desc:'Llegaste a la Zona Premium',               reward:50000,  check:()=>G.zoneHistory&&G.zoneHistory.includes('premium') },
   { id:'negotiate5',  icon:'🤝', name:'Negociador',            desc:'Negociaste 5 veces',                       reward:2000,   check:()=>G.negotiateCount>=5 },
@@ -4919,7 +4919,7 @@ function renderPrestige() {
     return `<div class="inf-upgrade ${bought?'bought':''}" onclick="${bought?'':("buyInfluenceUpgrade('"+u.id+"')")}">
       <div class="inf-upgrade-icon">${u.icon}</div>
       <div class="inf-upgrade-info"><div class="inf-upgrade-name">${u.name}</div><div class="inf-upgrade-desc">${u.desc}</div></div>
-      <div class="inf-upgrade-cost">${bought?'✓':('⭐'+u.cost)}</div>
+      <div class="inf-upgrade-cost">${bought?'✓':('💠'+u.cost)}</div>
     </div>`;
   }).join('');
 
