@@ -61,6 +61,7 @@ const LEVEL_NAMES = [
 // ════════════════════════════════════════════════════════════
 export default function GameClient() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const handleOpenLeaderboardRef = useRef<() => void>(() => {});
   const [user, setUser] = useState<User | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
@@ -118,9 +119,10 @@ export default function GameClient() {
     setMyRank(rank);
   }, []);
 
-  // Ref para que el postMessage handler siempre tenga la versión actualizada
-  const handleOpenLeaderboardRef = useRef(handleOpenLeaderboard);
-  useEffect(() => { handleOpenLeaderboardRef.current = handleOpenLeaderboard; }, [handleOpenLeaderboard]);
+  // Mantener el ref siempre actualizado sin re-registrar el listener
+  useEffect(() => {
+    handleOpenLeaderboardRef.current = handleOpenLeaderboard;
+  }, [handleOpenLeaderboard]);
 
   // ── Listen for messages from the game iframe ───────────────
   useEffect(() => {
