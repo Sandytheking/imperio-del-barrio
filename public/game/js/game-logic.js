@@ -849,6 +849,7 @@ function buyBiz(id) {
   G.money -= cost;
   if (!G.businesses[id]) G.businesses[id] = { level: 0, progress: 0 };
   G.businesses[id].level++;
+  G.businesses[id]._baseBuyLevel = G.businesses[id].level; // nivel base sin animaciones
   addXP(cost * 0.3);
   const lvl = G.businesses[id].level;
   trackW('weeklyLevels');
@@ -2941,26 +2942,24 @@ window.addEventListener('message', e => {
     }
     if (G.money >= cost) {
       G.money -= cost;
-      // Persist upgrade level for this biz animation
+      // FIX: primera compra = 1, cada compra adicional +1 (antes arrancaba en 2)
       if (!G.bizUpgrades) G.bizUpgrades = {};
       if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
-      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
-      // The max level for an animation upgrade is 5, and there are 5 types of upgrades.
-      // So max total upgrades is 25. The business level should exactly equal the sum of these upgrades.
-      const upgradesObj = G.bizUpgrades[id];
-      let sumLevels = 0;
-      for (const key in upgradesObj) {
-        sumLevels += (upgradesObj[key] || 1); // If they bought it, the value is its level. Minimum 1 if property exists.
-      }
-      
-      // If none bought, it's level 1. If 1 upgrade is bought to lvl 2, it's level 2. 
-      // However, base levels start at 1. Since upgrades start at 1, total sum of 5 upgrades at start would be 5...
-      // Let's just use the user requested logic: total number of times ANY upgrade was purchased + 1 (base level).
+      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 0) + 1;
+
+      // Nivel = nivel base (de buyBiz) + total compras de animación
+      // 5 mejoras × 5 niveles = 25 compras → base(1) + 24 compras = Nv.25 exacto
       if (!G.businesses[id]) G.businesses[id] = { level: 1, progress: 0 };
-      
+      // Guardar base la primera vez que se hace una compra de animación
+      if (!G.businesses[id]._baseBuyLevel) {
+        G.businesses[id]._baseBuyLevel = G.businesses[id].level || 1;
+      }
+      const upgradesObj = G.bizUpgrades[id];
+      let totalAnimPurchases = 0;
+      for (const key in upgradesObj) totalAnimPurchases += (upgradesObj[key] || 0);
+      const baseBuyLevel = G.businesses[id]._baseBuyLevel || 1;
       const prevLvl = G.businesses[id].level || 1;
-      // New requested logic: 1 Upgrade bought = +1 Level
-      const newLvl = Math.min(prevLvl + 1, BIZ_MAX_LEVEL);
+      const newLvl = Math.min(baseBuyLevel + totalAnimPurchases, BIZ_MAX_LEVEL);
       
       let leveledUp = false;
       if (newLvl > prevLvl) {
