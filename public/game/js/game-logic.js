@@ -958,10 +958,10 @@ function showAscendModal() {
     <div style="font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--ink)">${next.name}</div>
     <div class="ascend-modal-sub">${next.label} · ${next.bonus}</div>
     <div class="ascend-keep-lose">
-      <div class="akl-box akl-keep"><div class="akl-title">✅ Conservas</div>⭐ Influencia<br>🏆 Logros<br>⚡ Bonos permanentes</div>
+      <div class="akl-box akl-keep"><div class="akl-title">✅ Conservas</div>💠 Influencia<br>🏆 Logros<br>⚡ Bonos permanentes</div>
       <div class="akl-box akl-lose"><div class="akl-title">❌ Se reinicia</div>💰 Dinero (empiezas con $5k)<br>🏪 Negocios<br>📈 Nivel XP</div>
     </div>
-    <div style="font-size:0.75rem;font-weight:700;color:#888;margin-bottom:16px">+${next.influenceReward||1} ⭐ Influencia al ascender</div>
+    <div style="font-size:0.75rem;font-weight:700;color:#888;margin-bottom:16px">+${next.influenceReward||1} 💠 Influencia al ascender</div>
     <div class="ascend-confirm-btns">
       <button class="btn-cancel-ascend" onclick="document.getElementById('ascendModalOverlay').remove()">Cancelar</button>
       <button class="btn-confirm-ascend" onclick="doAscend()">🔥 ¡Ascender!</button>
@@ -1004,7 +1004,7 @@ function doAscend() {
 function buyInfluenceUpgrade(id) {
   const u = INFLUENCE_UPGRADES.find(u => u.id === id);
   if (!u || G.influenceUpgrades?.[id]) return;
-  if ((G.influence||0) < u.cost) { notify(`⭐ Necesitas ${u.cost} de Influencia`); return; }
+  if ((G.influence||0) < u.cost) { notify(`💠 Necesitas ${u.cost} de Influencia`); return; }
   G.influence -= u.cost;
   if (!G.influenceUpgrades) G.influenceUpgrades = {};
   G.influenceUpgrades[id] = true;
@@ -3000,8 +3000,211 @@ function addGems(n) {
   notify(`💎 +${n} gema${n>1?'s':''}!`);
 }
 
+// ═══════════════════════════════════════════════════════════
+// TIENDA — SISTEMA DE INTERCAMBIO
+// Tasas: 💎→💰 10💎=$5M | 💰→💎 $500K=1💎 | 💠 1 influencia=2000💎
+// ═══════════════════════════════════════════════════════════
+
+const INFLUENCE_ICON = '💠'; // icono especial de influencia
+let _shopTab = 'powers';     // pestaña activa
+
+function switchShopTab(tab) {
+  _shopTab = tab;
+  const isPow = tab === 'powers';
+  document.getElementById('gemShopItems').style.display     = isPow ? 'block' : 'none';
+  document.getElementById('gemShopExchange').style.display  = isPow ? 'none'  : 'block';
+  // Estilo de pestañas
+  const tPow = document.getElementById('shopTabPowers');
+  const tExc = document.getElementById('shopTabExchange');
+  if (tPow) {
+    tPow.style.borderColor  = isPow ? '#D4A8FF' : 'rgba(255,255,255,0.1)';
+    tPow.style.background   = isPow ? 'rgba(212,168,255,0.15)' : 'transparent';
+    tPow.style.color        = isPow ? '#D4A8FF' : 'rgba(255,255,255,0.4)';
+  }
+  if (tExc) {
+    tExc.style.borderColor  = !isPow ? '#FFD700' : 'rgba(255,255,255,0.1)';
+    tExc.style.background   = !isPow ? 'rgba(255,215,0,0.1)' : 'transparent';
+    tExc.style.color        = !isPow ? '#FFD700' : 'rgba(255,255,255,0.4)';
+  }
+  if (!isPow) renderExchangeTab();
+}
+
+function renderExchangeTab() {
+  const gems  = G.gems  || 0;
+  const money = G.money || 0;
+  const inf   = G.influence || 0;
+
+  // Paquetes de conversión
+  const gemsToMoney = [
+    { gems:10,  money:5000000,   label:'Paquete Básico' },
+    { gems:25,  money:15000000,  label:'Paquete Medio' },
+    { gems:50,  money:35000000,  label:'Paquete Grande' },
+    { gems:100, money:80000000,  label:'Paquete VIP' },
+  ];
+  const moneyToGems = [
+    { money:500000,    gems:1,  label:'1 Gema' },
+    { money:2500000,   gems:6,  label:'6 Gemas (+1 bonus)' },
+    { money:5000000,   gems:13, label:'13 Gemas (+3 bonus)' },
+    { money:10000000,  gems:28, label:'28 Gemas (+8 bonus)' },
+  ];
+
+  const canBuyInf = gems >= 2000;
+  const el = document.getElementById('gemShopExchange');
+  el.innerHTML = `
+    <div style="overflow-y:auto;max-height:320px;display:flex;flex-direction:column;gap:14px;padding-right:2px">
+
+      <!-- 💎 → 💰 -->
+      <div>
+        <div style="font-size:0.6rem;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">
+          💎 Gemas → 💰 Dinero
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          ${gemsToMoney.map(p => {
+            const can = gems >= p.gems;
+            return `<div style="display:flex;align-items:center;justify-content:space-between;
+              padding:9px 12px;border-radius:12px;
+              background:${can ? 'rgba(45,198,83,0.08)' : 'rgba(255,255,255,0.03)'};
+              border:1px solid ${can ? 'rgba(45,198,83,0.2)' : 'rgba(255,255,255,0.06)'}">
+              <div>
+                <div style="font-family:'Fredoka One',cursive;font-size:0.85rem;color:${can ? '#2DC653' : '#555'}">${p.label}</div>
+                <div style="font-size:0.65rem;color:#666;margin-top:1px">${p.gems} 💎 → ${fmt(p.money)}</div>
+              </div>
+              <button onclick="exchangeGemsToMoney(${p.gems},${p.money})"
+                ${!can ? 'disabled' : ''}
+                style="background:${can ? 'linear-gradient(135deg,#2DC653,#1a9e3f)' : 'rgba(255,255,255,0.05)'};
+                  color:${can ? 'white' : '#444'};border:none;border-radius:99px;
+                  font-family:'Fredoka One',cursive;font-size:0.75rem;
+                  padding:6px 14px;cursor:${can ? 'pointer' : 'default'}">
+                Cambiar
+              </button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- 💰 → 💎 -->
+      <div>
+        <div style="font-size:0.6rem;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">
+          💰 Dinero → 💎 Gemas
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          ${moneyToGems.map(p => {
+            const can = money >= p.money;
+            return `<div style="display:flex;align-items:center;justify-content:space-between;
+              padding:9px 12px;border-radius:12px;
+              background:${can ? 'rgba(212,168,255,0.07)' : 'rgba(255,255,255,0.03)'};
+              border:1px solid ${can ? 'rgba(212,168,255,0.2)' : 'rgba(255,255,255,0.06)'}">
+              <div>
+                <div style="font-family:'Fredoka One',cursive;font-size:0.85rem;color:${can ? '#D4A8FF' : '#555'}">${p.label}</div>
+                <div style="font-size:0.65rem;color:#666;margin-top:1px">${fmt(p.money)} → ${p.gems} 💎</div>
+              </div>
+              <button onclick="exchangeMoneyToGems(${p.money},${p.gems})"
+                ${!can ? 'disabled' : ''}
+                style="background:${can ? 'linear-gradient(135deg,#9B5DE5,#7B2FBE)' : 'rgba(255,255,255,0.05)'};
+                  color:${can ? 'white' : '#444'};border:none;border-radius:99px;
+                  font-family:'Fredoka One',cursive;font-size:0.75rem;
+                  padding:6px 14px;cursor:${can ? 'pointer' : 'default'}">
+                Comprar
+              </button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- 💎 → 💠 Influencia -->
+      <div>
+        <div style="font-size:0.6rem;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">
+          💎 Gemas → ${INFLUENCE_ICON} Influencia
+        </div>
+        <div style="padding:12px 14px;border-radius:14px;
+          background:${canBuyInf ? 'rgba(255,215,0,0.08)' : 'rgba(255,255,255,0.03)'};
+          border:1px solid ${canBuyInf ? 'rgba(255,215,0,0.25)' : 'rgba(255,255,255,0.06)'}">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:${canBuyInf ? '#FFD700' : '#555'}">
+                ${INFLUENCE_ICON} 1 Influencia
+              </div>
+              <div style="font-size:0.65rem;color:#666;margin-top:2px">2,000 💎 · Poder permanente en el ranking</div>
+              <div style="font-size:0.6rem;color:#888;margin-top:1px">Tienes: ${inf} ${INFLUENCE_ICON} · ${gems} 💎 disponibles</div>
+            </div>
+            <button onclick="exchangeGemsToInfluence()"
+              ${!canBuyInf ? 'disabled' : ''}
+              style="background:${canBuyInf ? 'linear-gradient(135deg,#FFD700,#FFA500)' : 'rgba(255,255,255,0.05)'};
+                color:${canBuyInf ? '#1a1a00' : '#444'};border:none;border-radius:99px;
+                font-family:'Fredoka One',cursive;font-size:0.75rem;font-weight:900;
+                padding:8px 16px;cursor:${canBuyInf ? 'pointer' : 'default'}">
+              ${canBuyInf ? 'Obtener' : 'Sin gemas'}
+            </button>
+          </div>
+          ${canBuyInf ? `<div style="margin-top:8px;background:rgba(255,215,0,0.1);border-radius:8px;
+            padding:5px 8px;font-size:0.6rem;color:#FFD700;font-weight:900">
+            ⚠️ La Influencia aumenta tu posición en el Ranking del Barrio
+          </div>` : ''}
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function exchangeGemsToMoney(gems, money) {
+  if ((G.gems || 0) < gems) { notify('💎 No tienes suficientes gemas'); return; }
+  G.gems  -= gems;
+  G.money += money;
+  G.totalEarned += money;
+  document.getElementById('hdrGems').textContent  = G.gems;
+  document.getElementById('hdrMoney').textContent = fmt(G.money);
+  saveGame();
+  notify(`💰 +${fmt(money)} a cambio de ${gems} 💎`);
+  renderExchangeTab();
+  updateShopBalances();
+}
+
+function exchangeMoneyToGems(money, gems) {
+  if ((G.money || 0) < money) { notify('💸 No tienes suficiente dinero'); return; }
+  G.money -= money;
+  addGems(gems);
+  document.getElementById('hdrMoney').textContent = fmt(G.money);
+  saveGame();
+  notify(`💎 +${gems} gemas a cambio de ${fmt(money)}`);
+  renderExchangeTab();
+  updateShopBalances();
+}
+
+function exchangeGemsToInfluence() {
+  const cost = 2000;
+  if ((G.gems || 0) < cost) { notify('💎 Necesitas 2,000 gemas'); return; }
+  G.gems -= cost;
+  G.influence = (G.influence || 0) + 1;
+  G.totalInfluence = (G.totalInfluence || 0) + 1;
+  document.getElementById('hdrGems').textContent = G.gems;
+  saveGame();
+  notify(`${INFLUENCE_ICON} ¡+1 Influencia! Ahora tienes ${G.influence} ${INFLUENCE_ICON}`);
+  spawnParticles(999999);
+  renderExchangeTab();
+  updateShopBalances();
+}
+
+function updateShopBalances() {
+  const gb = document.getElementById('gemBalance');
+  const ib = document.getElementById('shopInfluenceBalance');
+  if (gb) gb.textContent = `${G.gems || 0} 💎`;
+  if (ib) ib.textContent = `${G.influence || 0} ${INFLUENCE_ICON}`;
+}
+
 function openGemShop() {
-  document.getElementById('gemBalance').textContent = `${G.gems || 0} 💎`;
+  updateShopBalances();
+  // Siempre abrir en pestaña de poderes
+  _shopTab = 'powers';
+  const _si = document.getElementById('gemShopItems');
+  const _se = document.getElementById('gemShopExchange');
+  if (_si) _si.style.display = 'block';
+  if (_se) _se.style.display = 'none';
+  // Resetear estilos de pestañas
+  const tPow = document.getElementById('shopTabPowers');
+  const tExc = document.getElementById('shopTabExchange');
+  if (tPow) { tPow.style.borderColor='#D4A8FF'; tPow.style.background='rgba(212,168,255,0.15)'; tPow.style.color='#D4A8FF'; }
+  if (tExc) { tExc.style.borderColor='rgba(255,255,255,0.1)'; tExc.style.background='transparent'; tExc.style.color='rgba(255,255,255,0.4)'; }
   const list = document.getElementById('gemShopItems');
   list.innerHTML = GEM_ITEMS.map(item => {
     const canAfford = (G.gems || 0) >= item.cost;
@@ -4950,13 +5153,7 @@ async function openRankingBarrio() {
 
   const modal = document.createElement('div');
   modal.id = 'rankingBarrioModal';
-  modal.style.cssText = [
-    'position:fixed;inset:0;z-index:9000;',
-    'background:rgba(0,0,0,0.85);',
-    'display:flex;align-items:center;justify-content:center;',
-    'padding:16px;font-family:Nunito,sans-serif;'
-  ].join('');
-
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Nunito,sans-serif;';
   modal.innerHTML = `
     <div style="background:#1a1a2e;border:2px solid rgba(255,225,53,0.3);border-radius:20px;
       width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;
@@ -4980,14 +5177,14 @@ async function openRankingBarrio() {
         <span>#</span><span></span><span>Empresa</span>
         <span style="text-align:right">Ganado</span>
         <span style="text-align:right">Nivel</span>
-        <span style="text-align:right">⭐</span>
+        <span style="text-align:right">💠</span>
       </div>
       <div id="rankingRows" style="overflow-y:auto;flex:1;padding:0 8px 8px;display:flex;flex-direction:column;gap:3px">
         <div style="text-align:center;padding:40px;color:#444;font-size:13px">⏳ Cargando ranking...</div>
       </div>
       <div style="text-align:center;padding:10px;color:#444;font-size:10px;font-weight:900;flex-shrink:0;
         border-top:1px solid rgba(255,255,255,0.05)">
-        Ordenado por ⭐ Influencia · Top 100 jugadores
+        Ordenado por 💠 Influencia · Top 100 jugadores
       </div>
     </div>
   `;
@@ -5017,7 +5214,6 @@ async function openRankingBarrio() {
     const miEntry = miId ? data.find(p => p.user_id === miId) : null;
     if (miEntry && miEntry.rank > 3) {
       const miPosEl = document.getElementById('rankingMiPos');
-      miPosEl.style.display = 'flex';
       miPosEl.style.display = 'flex';
       miPosEl.innerHTML = [
         '<span style="font-family:Fredoka One,cursive;color:#FFE135;font-size:1.1rem">#' + miEntry.rank + '</span>',
@@ -5050,16 +5246,16 @@ async function openRankingBarrio() {
         '</div>',
         '<span style="text-align:right;font-family:Fredoka One,cursive;color:#2DC653;font-size:12px">' + fmt(p.total_earned) + '</span>',
         '<span style="text-align:right;color:#888;font-size:11px;font-weight:900">Nv.' + ((p.level || 0) + 1) + '</span>',
-        '<span style="text-align:right;color:' + (inf > 0 ? '#FFD700' : '#444') + ';font-size:12px;font-weight:900">' + (inf > 0 ? '⭐' + inf : '—') + '</span>'
+        '<span style="text-align:right;color:' + (inf > 0 ? '#00B4D8' : '#444') + ';font-size:12px;font-weight:900">' + (inf > 0 ? '💠' + inf : '—') + '</span>'
       ].join('');
       rowsEl.appendChild(row);
     });
+
   } catch(e) {
     document.getElementById('rankingRows').innerHTML =
       '<div style="text-align:center;padding:40px;color:#555;font-size:13px">❌ Error: ' + e.message + '</div>';
   }
 }
-
 function updateSoundBtn() {
   const lbl = document.getElementById('secSoundLabel');
   if (lbl) lbl.textContent = G.soundOn ? 'Sonido activado' : 'Sonido desactivado';
@@ -5412,7 +5608,7 @@ const STORY_MISSIONS = [
   { id:'s16', icon:'✈️', title:'El Jet Privado',        desc:'Alcanza el Penthouse (5to ascenso)',           check: g => (g.socialStage||0) >= 5, reward:{ money:10000000, gems:60 }, story:'Un jet privado. Ya no esperas por nadie. El mundo entero es tu barrio.' },
   { id:'s17', icon:'🌍', title:'Imperio Global',         desc:'Abre la Corporación Global',                  check: g => g.businesses?.corporacion?.level > 0, reward:{ money:20000000, gems:75 }, story:'Tu corporación opera en tres continentes. Todo empezó con $500.' },
   { id:'s18', icon:'🎯', title:'El Nivel 25',            desc:'Llega al Nivel 25',                           check: g => g.level >= 24, reward:{ money:30000000, gems:80 }, story:'Nivel 25. Eres uno de los pocos que llegó hasta aquí. El barrio te rinde homenaje.' },
-  { id:'s19', icon:'🔱', title:'Rey Absoluto',           desc:'6 Ascensos + Nivel 25',                       check: g => (g.socialStage||0) >= 6 && g.level >= 24, reward:{ money:50000000, gems:100 }, story:'El máximo ascenso. La Corporación Global. Tu nombre es sinónimo de poder.' },
+  { id:'s19', icon:'💠', title:'Rey Absoluto',           desc:'6 Ascensos + Nivel 25',                       check: g => (g.socialStage||0) >= 6 && g.level >= 24, reward:{ money:50000000, gems:100 }, story:'El máximo ascenso. La Corporación Global. Tu nombre es sinónimo de poder.' },
   { id:'s20', icon:'🌈', title:'La Historia Completa',   desc:'Completa las 19 misiones anteriores',         check: g => g.storyClaimed && Object.keys(g.storyClaimed).filter(k=>k!=='s20').length >= 19, reward:{ money:100000000, gems:150 }, story:'De $500 a un Imperio. Esta es la historia que le contarás a tus hijos. Eres la Leyenda del Barrio.' },
 ];
 

@@ -440,10 +440,30 @@
 <!-- Gem Shop Overlay -->
 <div id="gemShopOverlay" onclick="if(event.target===this)document.getElementById('gemShopOverlay').classList.remove('open')">
   <div class="gem-shop-card">
-    <div class="gem-shop-title">💎 Tienda de Gemas</div>
-    <div id="gemBalance" style="font-family:'Fredoka One',cursive;font-size:0.9rem;color:#00C9A7;margin-bottom:12px">0 💎</div>
+    <!-- Header con balances -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="gem-shop-title" style="margin-bottom:0">🏪 Tienda</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="gemBalance" style="font-family:'Fredoka One',cursive;font-size:0.85rem;color:#D4A8FF;background:rgba(212,168,255,0.1);padding:4px 10px;border-radius:99px;border:1px solid rgba(212,168,255,0.25)">0 💎</div>
+        <div id="shopInfluenceBalance" style="font-family:'Fredoka One',cursive;font-size:0.85rem;color:#00B4D8;background:rgba(0,180,216,0.1);padding:4px 10px;border-radius:99px;border:1px solid rgba(0,180,216,0.25)">0 💠</div>
+      </div>
+    </div>
+    <!-- Pestañas -->
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button id="shopTabPowers" onclick="switchShopTab('powers')"
+        style="flex:1;padding:8px;border-radius:10px;font-family:'Fredoka One',cursive;font-size:0.8rem;cursor:pointer;border:2px solid #D4A8FF;background:rgba(212,168,255,0.15);color:#D4A8FF">
+        ✨ Poderes
+      </button>
+      <button id="shopTabExchange" onclick="switchShopTab('exchange')"
+        style="flex:1;padding:8px;border-radius:10px;font-family:'Fredoka One',cursive;font-size:0.8rem;cursor:pointer;border:2px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4)">
+        🔄 Intercambio
+      </button>
+    </div>
+    <!-- Contenido pestañas -->
     <div id="gemShopItems"></div>
-    <button onclick="document.getElementById('gemShopOverlay').classList.remove('open')" style="margin-top:12px;flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:2px solid rgba(255,255,255,0.1);border-radius:12px;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px;cursor:pointer;width:100%">Cerrar</button>
+    <div id="gemShopExchange" style="display:none"></div>
+    <button onclick="document.getElementById('gemShopOverlay').classList.remove('open')"
+      style="margin-top:12px;flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:2px solid rgba(255,255,255,0.1);border-radius:12px;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px;cursor:pointer;width:100%">Cerrar</button>
   </div>
 </div>
 
