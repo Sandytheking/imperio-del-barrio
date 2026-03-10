@@ -1121,7 +1121,7 @@ function generateShareCard(stageIdx, preStats) {
   const money = typeof fmt==='function' ? fmt(_s.totalEarned) : '$0';
   const stats = [
     ['💰 Ganado', money],
-    ['⭐ Influencia', String(_s.totalInfluence)],
+    ['💠 Influencia', String(_s.totalInfluence)],
     ['🏆 Nivel', String(_s.level)],
     ['🏢 Empresa', _s.companyName],
   ];
@@ -1159,7 +1159,7 @@ function shareAscend(icon, stageName, stageIdx, preStats) {
   const money = typeof fmt==='function' ? fmt(_stats.totalEarned) : '$?';
   const quote = [
     `${icon} ¡Ascendí a ${stageName} en Imperio del Barrio!`,
-    `💰 Ganado: ${money} · ⭐ Influencia: ${_stats.totalInfluence} · Nivel: ${_stats.level}`,
+    `💰 Ganado: ${money} · 💠 Influencia: ${_stats.totalInfluence} · Nivel: ${_stats.level}`,
     `🏢 ${_stats.companyName} — ¿Puedes superarme? 👉 ${url}`,
   ].join('\n');
 
@@ -4939,12 +4939,12 @@ function renderPrestige() {
       <div class="scene-bg"></div>
       ${buildPropertyScene(stageIdx)}
       <div class="scene-label">${stage.name}</div>
-      <div class="scene-influence">⭐ ${G.influence||0}</div>
+      <div class="scene-influence">💠 ${G.influence||0}</div>
       <div style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,0.6);color:white;font-family:'Fredoka One',cursive;font-size:0.7rem;padding:3px 10px;border-radius:99px;pointer-events:none">${nextStage ? '🚀 Ascender' : '👑 Máximo'}</div>
     </div>
     <div class="influence-panel">
-      <div class="influence-title">⭐ Influencia — Mejoras Permanentes</div>
-      <div style="font-size:0.78rem;opacity:0.8;margin-bottom:10px">⭐ Tienes <strong>${G.influence||0}</strong> · Total acumulado: ${G.totalInfluence||0}</div>
+      <div class="influence-title">💠 Influencia — Mejoras Permanentes</div>
+      <div style="font-size:0.78rem;opacity:0.8;margin-bottom:10px">💠 Tienes <strong>${G.influence||0}</strong> · Total acumulado: ${G.totalInfluence||0}</div>
       <div class="influence-upgrades">${infUpgrades}</div>
     </div>
     <div style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--ink);margin-bottom:10px">🏆 Progresión Social</div>
@@ -5591,7 +5591,7 @@ const STORY_MISSIONS = [
   { id:'s3',  icon:'💪', title:'El Barrio Habla',    desc:'Llega a Nivel 3',                              check: g => g.level >= 2, reward:{ money:5000, gems:5  }, story:'Tu nombre empieza a sonar en el vecindario. La gente confía en ti.' },
   { id:'s4',  icon:'🏪', title:'Cinco Negocios',     desc:'Ten 5 negocios activos',                       check: g => Object.values(g.businesses).filter(b=>b.level>0).length >= 5, reward:{ money:15000, gems:8 }, story:'Con 5 negocios en pie, el barrio entero es tu oficina.' },
   { id:'s5',  icon:'🗺️', title:'Nuevos Horizontes',  desc:'Múdate a la Zona Norte o Sur',                check: g => g.zoneHistory?.some(z => z==='norte'||z==='sur'), reward:{ money:25000, gems:10 }, story:'El barrio ya es pequeño. Es hora de expandir el Imperio.' },
-  { id:'s6',  icon:'⭐', title:'Primera Influencia', desc:'Haz tu primer Ascenso Social',                check: g => (g.socialStage||0) >= 1, reward:{ money:50000, gems:15 }, story:'Ascendiste. Ahora tienes Influencia: el poder invisible del barrio.' },
+  { id:'s6',  icon:'💠', title:'Primera Influencia', desc:'Haz tu primer Ascenso Social',                check: g => (g.socialStage||0) >= 1, reward:{ money:50000, gems:15 }, story:'Ascendiste. Ahora tienes Influencia: el poder invisible del barrio.' },
   { id:'s7',  icon:'🏆', title:'El Millonario',      desc:'Acumula $1,000,000 en total',                 check: g => g.totalEarned >= 1000000, reward:{ money:100000, gems:20 }, story:'Un millón de pesos. La gente ya te llama "Don". Tu legado comienza.' },
   { id:'s8',  icon:'🌟', title:'La Zona Premium',    desc:'Llega a la Zona Premium',                     check: g => g.zoneHistory?.includes('premium'), reward:{ money:250000, gems:25 }, story:'La élite de la ciudad te abre las puertas. Ahora eres de los grandes.' },
   { id:'s9',  icon:'🛩️', title:'El Imperio Total',   desc:'Ten todos los negocios abiertos',             check: g => typeof BUSINESSES!=='undefined' && Object.values(g.businesses).filter(b=>b.level>0).length >= BUSINESSES.length, reward:{ money:5000, gems:35 }, story:'Cada rincón del barrio lleva tu nombre. Eres el dueño del territorio.' },
@@ -5600,7 +5600,7 @@ const STORY_MISSIONS = [
   // ── ARC 2: El Magnate ──────────────────────────────────────────
   { id:'s11', icon:'🏦', title:'El Primer Banco',      desc:'Abre el Banco del Barrio',                    check: g => g.businesses?.banco?.level > 0, reward:{ money:500000, gems:20 }, story:'El barrio ya tiene su propio banco. Tú controlas el flujo del dinero.' },
   { id:'s12', icon:'🌆', title:'La Plaza',              desc:'Abre la Plaza Comercial',                     check: g => g.businesses?.plaza?.level > 0, reward:{ money:800000, gems:25 }, story:'Una plaza entera con tu nombre. Los turistas vienen a verte.' },
-  { id:'s13', icon:'⭐', title:'Tercer Ascenso',        desc:'Alcanza la Villa (3er ascenso)',               check: g => (g.socialStage||0) >= 3, reward:{ money:2000000, gems:30 }, story:'Villa con piscina. Tu infancia fue humilde — tu presente es extraordinario.' },
+  { id:'s13', icon:'💠', title:'Tercer Ascenso',        desc:'Alcanza la Villa (3er ascenso)',               check: g => (g.socialStage||0) >= 3, reward:{ money:2000000, gems:30 }, story:'Villa con piscina. Tu infancia fue humilde — tu presente es extraordinario.' },
   { id:'s14', icon:'💎', title:'Coleccionista',         desc:'Compra 10 mejoras permanentes de Influencia',  check: g => Object.keys(g.influenceUpgrades||{}).length >= 10, reward:{ money:3000000, gems:35 }, story:'Cada mejora es una pieza del puzzle. El Imperio se fortalece desde adentro.' },
   { id:'s15', icon:'🏙️', title:'Banco Central',         desc:'Abre el Banco Central',                       check: g => g.businesses?.banco_central?.level > 0, reward:{ money:5000000, gems:40 }, story:'Ya no eres del barrio. El barrio es tuyo. El banco central lo certifica.' },
 
