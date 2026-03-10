@@ -849,7 +849,6 @@ function buyBiz(id) {
   G.money -= cost;
   if (!G.businesses[id]) G.businesses[id] = { level: 0, progress: 0 };
   G.businesses[id].level++;
-  G.businesses[id]._baseBuyLevel = G.businesses[id].level; // nivel base sin animaciones
   addXP(cost * 0.3);
   const lvl = G.businesses[id].level;
   trackW('weeklyLevels');
@@ -2942,24 +2941,26 @@ window.addEventListener('message', e => {
     }
     if (G.money >= cost) {
       G.money -= cost;
-      // FIX: primera compra = 1, cada compra adicional +1 (antes arrancaba en 2)
+      // Persist upgrade level for this biz animation
       if (!G.bizUpgrades) G.bizUpgrades = {};
       if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
-      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 0) + 1;
-
-      // Nivel = nivel base (de buyBiz) + total compras de animación
-      // 5 mejoras × 5 niveles = 25 compras → base(1) + 24 compras = Nv.25 exacto
-      if (!G.businesses[id]) G.businesses[id] = { level: 1, progress: 0 };
-      // Guardar base la primera vez que se hace una compra de animación
-      if (!G.businesses[id]._baseBuyLevel) {
-        G.businesses[id]._baseBuyLevel = G.businesses[id].level || 1;
-      }
+      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
+      // The max level for an animation upgrade is 5, and there are 5 types of upgrades.
+      // So max total upgrades is 25. The business level should exactly equal the sum of these upgrades.
       const upgradesObj = G.bizUpgrades[id];
-      let totalAnimPurchases = 0;
-      for (const key in upgradesObj) totalAnimPurchases += (upgradesObj[key] || 0);
-      const baseBuyLevel = G.businesses[id]._baseBuyLevel || 1;
+      let sumLevels = 0;
+      for (const key in upgradesObj) {
+        sumLevels += (upgradesObj[key] || 1); // If they bought it, the value is its level. Minimum 1 if property exists.
+      }
+      
+      // If none bought, it's level 1. If 1 upgrade is bought to lvl 2, it's level 2. 
+      // However, base levels start at 1. Since upgrades start at 1, total sum of 5 upgrades at start would be 5...
+      // Let's just use the user requested logic: total number of times ANY upgrade was purchased + 1 (base level).
+      if (!G.businesses[id]) G.businesses[id] = { level: 1, progress: 0 };
+      
       const prevLvl = G.businesses[id].level || 1;
-      const newLvl = Math.min(baseBuyLevel + totalAnimPurchases, BIZ_MAX_LEVEL);
+      // New requested logic: 1 Upgrade bought = +1 Level
+      const newLvl = Math.min(prevLvl + 1, BIZ_MAX_LEVEL);
       
       let leveledUp = false;
       if (newLvl > prevLvl) {
@@ -4934,6 +4935,131 @@ function openSecondaryPanel() {
 function closeSecondaryPanel() {
   document.getElementById('secondaryPanel').classList.remove('open');
 }
+
+// ═══════════════════════════════════════════════════════════
+// RANKING DEL BARRIO — lee directo de Supabase
+// ═══════════════════════════════════════════════════════════
+async function openRankingBarrio() {
+  closeSecondaryPanel();
+  document.getElementById('rankingBarrioModal')?.remove();
+
+  const ZONE_NAMES = {
+    centro:'🏙️ Centro', este:'🌴 Este', norte:'🏔️ Norte',
+    sur:'🌊 Sur', premium:'💎 Premium'
+  };
+
+  const modal = document.createElement('div');
+  modal.id = 'rankingBarrioModal';
+  modal.style.cssText = [
+    'position:fixed;inset:0;z-index:9000;',
+    'background:rgba(0,0,0,0.85);',
+    'display:flex;align-items:center;justify-content:center;',
+    'padding:16px;font-family:Nunito,sans-serif;'
+  ].join('');
+
+  modal.innerHTML = `
+    <div style="background:#1a1a2e;border:2px solid rgba(255,225,53,0.3);border-radius:20px;
+      width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;
+      box-shadow:0 20px 60px rgba(0,0,0,0.8)">
+      <div style="padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,0.08);
+        display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div>
+          <div style="font-family:'Fredoka One',cursive;font-size:1.4rem;color:#FFE135">🏆 Ranking del Barrio</div>
+          <div id="rankingSubtitle" style="font-size:0.65rem;color:#888;font-weight:900;margin-top:2px">Cargando...</div>
+        </div>
+        <button onclick="document.getElementById('rankingBarrioModal').remove()"
+          style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+            color:#aaa;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer">✕</button>
+      </div>
+      <div id="rankingMiPos" style="display:none;margin:10px 14px 0;padding:10px 14px;
+        background:rgba(255,225,53,0.1);border:1.5px solid rgba(255,225,53,0.3);border-radius:12px;
+        align-items:center;gap:10px"></div>
+      <div style="display:grid;grid-template-columns:44px 34px 1fr 88px 54px 46px;
+        gap:6px;padding:8px 14px 4px;flex-shrink:0;
+        color:#555;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.5px">
+        <span>#</span><span></span><span>Empresa</span>
+        <span style="text-align:right">Ganado</span>
+        <span style="text-align:right">Nivel</span>
+        <span style="text-align:right">⭐</span>
+      </div>
+      <div id="rankingRows" style="overflow-y:auto;flex:1;padding:0 8px 8px;display:flex;flex-direction:column;gap:3px">
+        <div style="text-align:center;padding:40px;color:#444;font-size:13px">⏳ Cargando ranking...</div>
+      </div>
+      <div style="text-align:center;padding:10px;color:#444;font-size:10px;font-weight:900;flex-shrink:0;
+        border-top:1px solid rgba(255,255,255,0.05)">
+        Ordenado por ⭐ Influencia · Top 100 jugadores
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+  try {
+    const sb = _getCloud();
+    if (!sb) throw new Error('Sin conexión a Supabase');
+
+    const { data, error } = await sb
+      .from('leaderboard_ranked')
+      .select('*')
+      .order('rank', { ascending: true })
+      .limit(100);
+
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      document.getElementById('rankingRows').innerHTML =
+        '<div style="text-align:center;padding:40px;color:#555;font-size:13px">No hay jugadores aún 🏘️</div>';
+      return;
+    }
+
+    document.getElementById('rankingSubtitle').textContent = data.length + ' empresarios compitiendo';
+
+    const miId = _cloudUser?.id;
+    const miEntry = miId ? data.find(p => p.user_id === miId) : null;
+    if (miEntry && miEntry.rank > 3) {
+      const miPosEl = document.getElementById('rankingMiPos');
+      miPosEl.style.display = 'flex';
+      miPosEl.style.display = 'flex';
+      miPosEl.innerHTML = [
+        '<span style="font-family:Fredoka One,cursive;color:#FFE135;font-size:1.1rem">#' + miEntry.rank + '</span>',
+        '<span style="font-size:1.2rem">' + (miEntry.avatar || '😎') + '</span>',
+        '<span style="color:white;font-weight:900;font-size:13px;flex:1">' + miEntry.username + '</span>',
+        '<span style="color:#2DC653;font-family:Fredoka One,cursive;font-size:13px">' + fmt(miEntry.total_earned) + '</span>'
+      ].join('');
+    }
+
+    const rowsEl = document.getElementById('rankingRows');
+    rowsEl.innerHTML = '';
+    data.forEach(function(p, i) {
+      const isMe = miId && p.user_id === miId;
+      const medals = ['🥇','🥈','🥉'];
+      const medal = i < 3 ? medals[i] : null;
+      const inf = p.influence || 0;
+      const zoneName = ZONE_NAMES[p.zone] || p.zone || '';
+      const row = document.createElement('div');
+      row.style.cssText =
+        'display:grid;grid-template-columns:44px 34px 1fr 88px 54px 46px;' +
+        'gap:6px;padding:8px 6px;border-radius:10px;align-items:center;' +
+        'background:' + (isMe ? 'rgba(255,225,53,0.1)' : i < 3 ? 'rgba(255,255,255,0.04)' : 'transparent') + ';' +
+        'border:1px solid ' + (isMe ? 'rgba(255,225,53,0.35)' : 'transparent') + ';';
+      row.innerHTML = [
+        '<span style="font-family:Fredoka One,cursive;color:' + (i < 3 ? '#FFE135' : '#555') + ';font-size:13px">' + (medal || '#' + p.rank) + '</span>',
+        '<span style="font-size:1.25rem">' + (p.avatar || '😎') + '</span>',
+        '<div>' +
+          '<div style="color:' + (isMe ? '#FFE135' : 'white') + ';font-weight:900;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">' + p.username + '</div>' +
+          '<div style="color:#555;font-size:10px">' + zoneName + '</div>' +
+        '</div>',
+        '<span style="text-align:right;font-family:Fredoka One,cursive;color:#2DC653;font-size:12px">' + fmt(p.total_earned) + '</span>',
+        '<span style="text-align:right;color:#888;font-size:11px;font-weight:900">Nv.' + ((p.level || 0) + 1) + '</span>',
+        '<span style="text-align:right;color:' + (inf > 0 ? '#FFD700' : '#444') + ';font-size:12px;font-weight:900">' + (inf > 0 ? '⭐' + inf : '—') + '</span>'
+      ].join('');
+      rowsEl.appendChild(row);
+    });
+  } catch(e) {
+    document.getElementById('rankingRows').innerHTML =
+      '<div style="text-align:center;padding:40px;color:#555;font-size:13px">❌ Error: ' + e.message + '</div>';
+  }
+}
+
 function updateSoundBtn() {
   const lbl = document.getElementById('secSoundLabel');
   if (lbl) lbl.textContent = G.soundOn ? 'Sonido activado' : 'Sonido desactivado';
