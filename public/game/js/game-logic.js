@@ -3172,8 +3172,8 @@ function exchangeMoneyToGems(money, gems) {
 }
 
 function exchangeGemsToInfluence() {
-  const cost = 2000;
-  if ((G.gems || 0) < cost) { notify('💎 Necesitas 2,000 gemas'); return; }
+  const cost = 1000;
+  if ((G.gems || 0) < cost) { notify('💎 Necesitas 1,000 gemas'); return; }
   G.gems -= cost;
   G.influence = (G.influence || 0) + 1;
   G.totalInfluence = (G.totalInfluence || 0) + 1;
