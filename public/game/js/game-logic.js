@@ -3124,7 +3124,7 @@ function renderExchangeTab() {
               <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:${canBuyInf ? '#FFD700' : '#555'}">
                 ${INFLUENCE_ICON} 1 Influencia
               </div>
-              <div style="font-size:0.65rem;color:#666;margin-top:2px">2,000 💎 · Poder permanente en el ranking</div>
+              <div style="font-size:0.65rem;color:#666;margin-top:2px">1,000 💎 · Poder permanente en el ranking</div>
               <div style="font-size:0.6rem;color:#888;margin-top:1px">Tienes: ${inf} ${INFLUENCE_ICON} · ${gems} 💎 disponibles</div>
             </div>
             <button onclick="exchangeGemsToInfluence()"
