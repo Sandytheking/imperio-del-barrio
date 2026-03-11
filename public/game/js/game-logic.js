@@ -991,6 +991,8 @@ function doAscend() {
   G.level = 0;
   G.businesses = {};
   G.upgrades = {};
+  G.bizUpgrades = {};
+  G.bizUpgradeCount = {};
   G.zone = 'centro';
   G.zoneHistory = ['centro'];
   showAscendCelebration(next, _preAscendStats);
