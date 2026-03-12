@@ -2,7 +2,7 @@
   "name": "Imperio del Barrio",
   "short_name": "Imperio",
   "description": "El tycoon dominicano — construye tu imperio desde el barrio",
-  "start_url": "/?source=pwa",
+  "start_url": "https://imperiodelbarrio.com/",
   "display": "standalone",
   "background_color": "#1E1B2E",
   "theme_color": "#FFE135",
@@ -67,5 +67,6 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
+  "scope": "https://imperiodelbarrio.com/",
   "prefer_related_applications": false
 }
