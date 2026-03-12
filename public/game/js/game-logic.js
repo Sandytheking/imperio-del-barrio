@@ -169,7 +169,7 @@ const UPGRADES = [
   { id: 'wifi',       name: 'WiFi del Barrio 📶',        icon: '📶', bg: '#E2D9F3',
     desc: 'Todos los negocios x1.5',           cost: 15000,     mult: 1.5, target: 'all' },
   { id: 'offlineBoost',name:'Modo 24/7 🌙',              icon: '🌙', bg: '#F0E8FF',
-    desc: '100% offline earnings',             cost: 60000,    mult: 1,   target: 'none' },
+    desc: '100% offline earnings',             cost: 6000000,    mult: 1,   target: 'none' },
   { id: 'marca',      name: 'Tu Propia Marca 👑',        icon: '👑', bg: '#FFF3CD',
     desc: 'Todo el barrio x1.5',               cost: 120000,    mult: 1.5, target: 'all' },
   { id: 'empire',     name: 'Imperio Total 🌟',          icon: '🌟', bg: '#F5F0FF',
