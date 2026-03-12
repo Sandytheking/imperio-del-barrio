@@ -65,46 +65,46 @@ const BUSINESSES = [
   { id: 'barberia',    name: 'Barbería Los Manos',       icon: '💈', color: '#FF6348', bg: '#FFF0EC',
     desc: 'Cortes clásicos del barrio',           baseCost: 50,          baseIncome: 10,    baseCycle: 4,  unlockLevel: 0 },
   { id: 'colmado',     name: 'Colmado Don Beto',          icon: '🏪', color: '#FFD200', bg: '#FFFCE0',
-    desc: 'El alma del barrio 24/7',              baseCost: 300,         baseIncome: 20,    baseCycle: 6,  unlockLevel: 1 },
+    desc: 'El alma del barrio 24/7',              baseCost: 300,         baseIncome: 8,    baseCycle: 6,  unlockLevel: 1 },
   { id: 'salon',       name: 'Salón Bella Imagen',        icon: '💇', color: '#FF4FAD', bg: '#FFF0F8',
-    desc: 'Belleza dominicana de verdad',         baseCost: 1200,        baseIncome: 30,     baseCycle: 8,  unlockLevel: 2 },
+    desc: 'Belleza dominicana de verdad',         baseCost: 1200,        baseIncome: 9,     baseCycle: 8,  unlockLevel: 2 },
   { id: 'motoconcho',  name: 'Mototaxi Express',          icon: '🛵', color: '#2DC653', bg: '#F0FFF4',
-    desc: 'El transporte del pueblo',             baseCost: 4000,        baseIncome: 40,     baseCycle: 10, unlockLevel: 3 },
+    desc: 'El transporte del pueblo',             baseCost: 4000,        baseIncome: 10,     baseCycle: 10, unlockLevel: 3 },
   { id: 'cafeteria',   name: 'Cafetín del Barrio',        icon: '☕', color: '#C47A3A', bg: '#FFF8F0',
-    desc: 'Café, mangú y chistes locales',        baseCost: 8000,       baseIncome: 50,    baseCycle: 9,  unlockLevel: 3 },
+    desc: 'Café, mangú y chistes locales',        baseCost: 8000,       baseIncome: 12,    baseCycle: 9,  unlockLevel: 3 },
   { id: 'taller',      name: 'Taller Mecánico El Gordo',  icon: '🔧', color: '#5BC8F5', bg: '#F0FAFF',
-    desc: 'Los carros no mienten',                baseCost: 15000,       baseIncome: 60,    baseCycle: 15, unlockLevel: 4 },
+    desc: 'Los carros no mienten',                baseCost: 15000,       baseIncome: 15,    baseCycle: 15, unlockLevel: 4 },
   { id: 'farmacia',    name: 'Farmacia San Rafael',       icon: '💊', color: '#E74C3C', bg: '#FFF0EE',
-    desc: 'Salud para el barrio entero',          baseCost: 25000,       baseIncome: 70,    baseCycle: 12, unlockLevel: 4 },
+    desc: 'Salud para el barrio entero',          baseCost: 25000,       baseIncome: 20,    baseCycle: 12, unlockLevel: 4 },
   { id: 'gym',         name: 'Gym Poder Total 💪',        icon: '💪', color: '#E74C3C', bg: '#FFF0EE',
-    desc: 'Hierro, sudor y resultados',           baseCost: 40000,       baseIncome: 80,    baseCycle: 18, unlockLevel: 4 },
+    desc: 'Hierro, sudor y resultados',           baseCost: 40000,       baseIncome: 25,    baseCycle: 18, unlockLevel: 4 },
   { id: 'restaurante', name: 'Restaurante La Mamá',       icon: '🍽️', color: '#FF8C42', bg: '#FFF5EE',
-    desc: 'Sancocho y sazón artesanal',           baseCost: 70000,      baseIncome: 90,    baseCycle: 20, unlockLevel: 5 },
+    desc: 'Sancocho y sazón artesanal',           baseCost: 70000,      baseIncome: 30,    baseCycle: 20, unlockLevel: 5 },
   { id: 'lavado',      name: 'Lavado de Carros Shine',    icon: '🚗', color: '#3498DB', bg: '#EAF4FB',
-    desc: 'Brillante como nuevo',                 baseCost: 150000,      baseIncome: 100,   baseCycle: 22, unlockLevel: 5 },
+    desc: 'Brillante como nuevo',                 baseCost: 150000,      baseIncome: 40,   baseCycle: 22, unlockLevel: 5 },
   { id: 'ferreteria',  name: 'Ferretería El Maestro',     icon: '🏗️', color: '#A8DADC', bg: '#F0FAFA',
-    desc: "Todo pa' la construcción",             baseCost: 250000,      baseIncome: 130,   baseCycle: 25, unlockLevel: 6 },
+    desc: "Todo pa' la construcción",             baseCost: 250000,      baseIncome: 45,   baseCycle: 25, unlockLevel: 6 },
   { id: 'discoteca',   name: 'Discoteca El Callejón',     icon: '🎵', color: '#B24BF3', bg: '#F5F0FF',
-    desc: 'La mejor noche del barrio',            baseCost: 600000,     baseIncome: 160,   baseCycle: 28, unlockLevel: 6 },
+    desc: 'La mejor noche del barrio',            baseCost: 600000,     baseIncome: 50,   baseCycle: 28, unlockLevel: 6 },
   { id: 'bambu',       name: 'Bar El Bambú VIP',          icon: '🍻', color: '#9B5DE5', bg: '#F5F0FF',
-    desc: 'Frío, música y negocios',              baseCost: 1000000,     baseIncome: 190,   baseCycle: 30, unlockLevel: 7 },
+    desc: 'Frío, música y negocios',              baseCost: 1000000,     baseIncome: 55,   baseCycle: 30, unlockLevel: 7 },
   { id: 'supermercado',name: 'Supermercado La Nacional',  icon: '🛒', color: '#00B4D8', bg: '#E8F8FF',
-    desc: 'Suple a todo el vecindario',           baseCost: 2500000,     baseIncome: 220,  baseCycle: 35, unlockLevel: 7 },
+    desc: 'Suple a todo el vecindario',           baseCost: 2500000,     baseIncome: 60,  baseCycle: 35, unlockLevel: 7 },
   { id: 'hotelito',    name: 'Hotel & Spa Coral',         icon: '🏨', color: '#F4A261', bg: '#FFF8F0',
-    desc: 'Turismo de lujo en el barrio',         baseCost: 6000000,    baseIncome: 250,  baseCycle: 40, unlockLevel: 8 },
+    desc: 'Turismo de lujo en el barrio',         baseCost: 6000000,    baseIncome: 65,  baseCycle: 40, unlockLevel: 8 },
   { id: 'plaza',       name: 'Plaza Comercial Imperio',   icon: '🏬', color: '#2DC653', bg: '#F0FFF4',
-    desc: 'Tu propio mini-mall',                  baseCost: 18000000,    baseIncome: 280, baseCycle: 50, unlockLevel: 9 },
+    desc: 'Tu propio mini-mall',                  baseCost: 18000000,    baseIncome: 75, baseCycle: 50, unlockLevel: 9 },
   { id: 'banco',       name: 'Banco del Barrio',          icon: '🏦', color: '#FFD700', bg: '#FFFBDE',
-    desc: '💰 El dinero trabaja para ti',         baseCost: 50000000,   baseIncome: 310, baseCycle: 60, unlockLevel: 10 },
+    desc: '💰 El dinero trabaja para ti',         baseCost: 50000000,   baseIncome: 100, baseCycle: 60, unlockLevel: 10 },
   { id: 'banco_central',name:'Banco Central Imperio',     icon: '🏛️', color: '#C9A200', bg: '#FFFDE0',
-    desc: '👑 El pináculo financiero',            baseCost: 200000000,   baseIncome: 600,baseCycle: 90, unlockLevel: 12 },
+    desc: '👑 El pináculo financiero',            baseCost: 200000000,   baseIncome: 200,baseCycle: 90, unlockLevel: 12 },
   // ── Late game / Endgame ────────────────────────────────────────────
   { id: 'crypto',      name: 'Exchange de Cripto 🪙',     icon: '🪙', color: '#F7931A', bg: '#FFF8EE',
-    desc: '💹 El futuro del dinero',              baseCost: 800000000,  baseIncome: 1000,baseCycle: 120,unlockLevel: 18 },
+    desc: '💹 El futuro del dinero',              baseCost: 800000000,  baseIncome: 400,baseCycle: 120,unlockLevel: 18 },
   { id: 'aereolinea',  name: 'Aerolínea Imperio ✈️',      icon: '🛫', color: '#0077B6', bg: '#E8F4FF',
-    desc: '🌎 Vuelos nacionales e internacionales',baseCost: 3000000000, baseIncome:2000,baseCycle: 180,unlockLevel: 22 },
+    desc: '🌎 Vuelos nacionales e internacionales',baseCost: 3000000000, baseIncome:600,baseCycle: 180,unlockLevel: 22 },
   { id: 'isla',        name: 'Isla Privada 🏝️',           icon: '🏝️', color: '#00B4A0', bg: '#E8FFFC',
-    desc: '👑 Tu propio paraíso caribeño',        baseCost:15000000000,  baseIncome:5000,baseCycle:300,unlockLevel: 26 },
+    desc: '👑 Tu propio paraíso caribeño',        baseCost:15000000000,  baseIncome:1000,baseCycle:300,unlockLevel: 26 },
 ];
 
 // ═══════════════════════════════════════════════
@@ -991,8 +991,6 @@ function doAscend() {
   G.level = 0;
   G.businesses = {};
   G.upgrades = {};
-  G.bizUpgrades = {};
-  G.bizUpgradeCount = {};
   G.zone = 'centro';
   G.zoneHistory = ['centro'];
   showAscendCelebration(next, _preAscendStats);
@@ -2855,10 +2853,10 @@ function openBizAnim(id) {
       // Generic: send all stored upgrade levels for this biz
       ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
       // Backwards compat keys
-      chairLevel:     upgrades.sillas    || 1,
-      speedLevel:     upgrades.velocidad || 1,
-      priceLevel:     upgrades.precio    || 1,
-      marketingLevel: upgrades.marketing || 1,
+      chairLevel:     upgrades.sillas    || 0,
+      speedLevel:     upgrades.velocidad || 0,
+      priceLevel:     upgrades.precio    || 0,
+      marketingLevel: upgrades.marketing || 0,
     }, '*');
   };
 }
@@ -2896,10 +2894,10 @@ window.addEventListener('message', e => {
       type: 'bizInit',
       money: G.money,
       ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
-      chairLevel:     upgrades.sillas    || 1,
-      speedLevel:     upgrades.velocidad || 1,
-      priceLevel:     upgrades.precio    || 1,
-      marketingLevel: upgrades.marketing || 1,
+      chairLevel:     upgrades.sillas    || 0,
+      speedLevel:     upgrades.velocidad || 0,
+      priceLevel:     upgrades.precio    || 0,
+      marketingLevel: upgrades.marketing || 0,
     }, '*');
   }
 
@@ -2930,7 +2928,7 @@ window.addEventListener('message', e => {
         G.money -= cost;
         if (!G.bizUpgrades) G.bizUpgrades = {};
         if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
-        G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
+        G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 0) + 1;
         iframe?.contentWindow?.postMessage({ type:'purchaseOk', upg, newMoney:G.money }, '*');
         document.getElementById('hdrMoney').textContent = fmt(G.money);
         notify(`✅ ¡${upg} mejorado! -${fmt(cost)}`);
@@ -2946,7 +2944,7 @@ window.addEventListener('message', e => {
       // Persist upgrade level for this biz animation
       if (!G.bizUpgrades) G.bizUpgrades = {};
       if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
-      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
+      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 0) + 1;
       // The max level for an animation upgrade is 5, and there are 5 types of upgrades.
       // So max total upgrades is 25. The business level should exactly equal the sum of these upgrades.
       const upgradesObj = G.bizUpgrades[id];
@@ -3050,7 +3048,7 @@ function renderExchangeTab() {
     { money:10000000,  gems:28, label:'28 Gemas (+8 bonus)' },
   ];
 
-  const canBuyInf = gems >= 1000;
+  const canBuyInf = gems >= 2000;
   const el = document.getElementById('gemShopExchange');
   el.innerHTML = `
     <div style="overflow-y:auto;max-height:320px;display:flex;flex-direction:column;gap:14px;padding-right:2px">
