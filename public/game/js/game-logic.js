@@ -3048,7 +3048,7 @@ function renderExchangeTab() {
     { money:10000000,  gems:28, label:'28 Gemas (+8 bonus)' },
   ];
 
-  const canBuyInf = gems >= 2000;
+  const canBuyInf = gems >= 1000;
   const el = document.getElementById('gemShopExchange');
   el.innerHTML = `
     <div style="overflow-y:auto;max-height:320px;display:flex;flex-direction:column;gap:14px;padding-right:2px">
