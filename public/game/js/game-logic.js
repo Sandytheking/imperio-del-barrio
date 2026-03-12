@@ -2363,9 +2363,9 @@ function renderGemSources() {
 
   // ── SOCIAL ───────────────────────────────────────────────────────
   const NETWORKS = [
-    { id:'whatsapp', icon:'💬', name:'WhatsApp', desc:'Comparte con tus contactos', gems:'+5 💎', reward:5 },
-    { id:'twitter',  icon:'🐦', name:'X / Twitter', desc:'Tuitea tu Imperio', gems:'+3 💎', reward:3 },
-    { id:'facebook', icon:'📘', name:'Facebook', desc:'Publica en tu muro', gems:'+3 💎', reward:3 },
+    { id:'whatsapp', icon:'💬', name:'WhatsApp', desc:'Comparte con tus contactos', gems:'+10 💎', reward:10 },
+    { id:'twitter',  icon:'🐦', name:'X / Twitter', desc:'Tuitea tu Imperio', gems:'+10 💎', reward:10 },
+    { id:'facebook', icon:'📘', name:'Facebook', desc:'Publica en tu muro', gems:'+10 💎', reward:10 },
     { id:'instagram',icon:'📷', name:'Instagram', desc:'Copia texto para stories/bio', gems:'+3 💎', reward:3 },
     { id:'tiktok',   icon:'🎵', name:'TikTok', desc:'Comparte tu progreso', gems:'+3 💎', reward:3 },
   ];
