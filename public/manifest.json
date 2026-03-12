@@ -2,7 +2,8 @@
   "name": "Imperio del Barrio",
   "short_name": "Imperio",
   "description": "El tycoon dominicano — construye tu imperio desde el barrio",
-  "start_url": "https://imperiodelbarrio.com/",
+  "start_url": "/game/imperio-del-barrio-v8.html",
+  "scope": "/game/",
   "display": "standalone",
   "background_color": "#1E1B2E",
   "theme_color": "#FFE135",
@@ -35,38 +36,21 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshots/screen1.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Pantalla principal del barrio"
-    },
-    {
-      "src": "/screenshots/screen2.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Ranking del Barrio"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Ranking del Barrio",
       "short_name": "Ranking",
       "description": "Ver el ranking de jugadores",
-      "url": "/?shortcut=ranking",
+      "url": "/game/imperio-del-barrio-v8.html?shortcut=ranking",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Mis Negocios",
       "short_name": "Negocios",
       "description": "Ver mis negocios",
-      "url": "/?shortcut=negocios",
+      "url": "/game/imperio-del-barrio-v8.html?shortcut=negocios",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
-  "scope": "https://imperiodelbarrio.com/",
   "prefer_related_applications": false
 }
