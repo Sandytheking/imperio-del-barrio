@@ -169,7 +169,7 @@ const UPGRADES = [
   { id: 'wifi',       name: 'WiFi del Barrio 📶',        icon: '📶', bg: '#E2D9F3',
     desc: 'Todos los negocios x1.5',           cost: 15000,     mult: 1.5, target: 'all' },
   { id: 'offlineBoost',name:'Modo 24/7 🌙',              icon: '🌙', bg: '#F0E8FF',
-    desc: '100% offline earnings',             cost: 6000000,    mult: 1,   target: 'none' },
+    desc: '100% offline earnings',             cost: 60000,    mult: 1,   target: 'none' },
   { id: 'marca',      name: 'Tu Propia Marca 👑',        icon: '👑', bg: '#FFF3CD',
     desc: 'Todo el barrio x1.5',               cost: 120000,    mult: 1.5, target: 'all' },
   { id: 'empire',     name: 'Imperio Total 🌟',          icon: '🌟', bg: '#F5F0FF',
@@ -1155,7 +1155,7 @@ function shareAscend(icon, stageName, stageIdx, preStats) {
     companyName: G.companyName || 'Mi Empresa',
   };
 
-  const url   = 'https://imperiodelbarrio.com';
+  const url   = 'https://www.imperiodelbarrio.com/game/imperio-del-barrio-v8.html';
   const money = typeof fmt==='function' ? fmt(_stats.totalEarned) : '$?';
   const quote = [
     `${icon} ¡Ascendí a ${stageName} en Imperio del Barrio!`,
@@ -1796,9 +1796,10 @@ function getMyReferralCode() {
 
 function copyReferralCode() {
   const code = getMyReferralCode();
-  const txt = `🏘️ ¡Juega Imperio del Barrio conmigo! Usa mi código ${code} al registrarte y ambos ganamos 💎 gemas. #ImperioDelBarrio`;
+  const gameUrl = 'https://www.imperiodelbarrio.com/game/imperio-del-barrio-v8.html';
+  const txt = `🏘️ ¡Juega Imperio del Barrio conmigo! Usa mi código ${code} al registrarte y ambos ganamos 💎 gemas.\n👉 ${gameUrl} #ImperioDelBarrio`;
   if (navigator.share) {
-    navigator.share({ title: 'Imperio del Barrio', text: txt }).catch(() => {});
+    navigator.share({ title: 'Imperio del Barrio', text: txt, url: gameUrl }).catch(() => {});
   } else {
     navigator.clipboard?.writeText(txt).catch(() => {});
   }
@@ -1810,11 +1811,12 @@ function shareToNetwork(platform) {
   const openBiz = BUSINESSES.filter(b => bizLevel(b.id) > 0).length;
   const zone = ZONES.find(z => z.id === G.zone)?.name || 'el barrio';
   const company = G.companyName || 'Mi Imperio';
-  const txt = encodeURIComponent(`🏘️ "${company}" tiene ${openBiz} negocios y domina ${zone} en Imperio del Barrio 😎💰 #ImperioDelBarrio`);
-  const url = encodeURIComponent('https://imperiodelbarrio.com');
+  const gameUrl = 'https://www.imperiodelbarrio.com/game/imperio-del-barrio-v8.html';
+  const txt = encodeURIComponent(`🏘️ "${company}" tiene ${openBiz} negocios y domina ${zone} en Imperio del Barrio 😎💰\n👉 ${gameUrl} #ImperioDelBarrio`);
+  const url = encodeURIComponent(gameUrl);
 
   const links = {
-    twitter:   `https://twitter.com/intent/tweet?text=${txt}`,
+    twitter:   `https://twitter.com/intent/tweet?text=${txt}&url=${url}`,
     facebook:  `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${txt}`,
     whatsapp:  `https://wa.me/?text=${txt}`,
     instagram: null, // Instagram no permite deep link de share, abrimos native share
@@ -2853,10 +2855,10 @@ function openBizAnim(id) {
       // Generic: send all stored upgrade levels for this biz
       ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
       // Backwards compat keys
-      chairLevel:     upgrades.sillas    || 0,
-      speedLevel:     upgrades.velocidad || 0,
-      priceLevel:     upgrades.precio    || 0,
-      marketingLevel: upgrades.marketing || 0,
+      chairLevel:     upgrades.sillas    || 1,
+      speedLevel:     upgrades.velocidad || 1,
+      priceLevel:     upgrades.precio    || 1,
+      marketingLevel: upgrades.marketing || 1,
     }, '*');
   };
 }
@@ -2894,10 +2896,10 @@ window.addEventListener('message', e => {
       type: 'bizInit',
       money: G.money,
       ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
-      chairLevel:     upgrades.sillas    || 0,
-      speedLevel:     upgrades.velocidad || 0,
-      priceLevel:     upgrades.precio    || 0,
-      marketingLevel: upgrades.marketing || 0,
+      chairLevel:     upgrades.sillas    || 1,
+      speedLevel:     upgrades.velocidad || 1,
+      priceLevel:     upgrades.precio    || 1,
+      marketingLevel: upgrades.marketing || 1,
     }, '*');
   }
 
@@ -2928,7 +2930,7 @@ window.addEventListener('message', e => {
         G.money -= cost;
         if (!G.bizUpgrades) G.bizUpgrades = {};
         if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
-        G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 0) + 1;
+        G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
         iframe?.contentWindow?.postMessage({ type:'purchaseOk', upg, newMoney:G.money }, '*');
         document.getElementById('hdrMoney').textContent = fmt(G.money);
         notify(`✅ ¡${upg} mejorado! -${fmt(cost)}`);
@@ -2944,7 +2946,7 @@ window.addEventListener('message', e => {
       // Persist upgrade level for this biz animation
       if (!G.bizUpgrades) G.bizUpgrades = {};
       if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
-      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 0) + 1;
+      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
       // The max level for an animation upgrade is 5, and there are 5 types of upgrades.
       // So max total upgrades is 25. The business level should exactly equal the sum of these upgrades.
       const upgradesObj = G.bizUpgrades[id];
@@ -3314,9 +3316,10 @@ function checkStoryBanner() {
 // ═══════════════════════════════════════════════
 // ═══════════════════════════════════════════════
 function shareScore() {
-  const txt = `🏘️ ¡Mi Imperio del Barrio! 💰${fmt(G.totalEarned)} ganados | Nivel ${G.level+1} | ⭐${G.prestigeStars} prestigios | ${BUSINESSES.filter(b=>bizLevel(b.id)>0).length} negocios abiertos 🔥`;
+  const gameUrl = 'https://www.imperiodelbarrio.com/game/imperio-del-barrio-v8.html';
+  const txt = `🏘️ ¡Mi Imperio del Barrio! 💰${fmt(G.totalEarned)} ganados | Nivel ${G.level+1} | ⭐${G.prestigeStars} prestigios | ${BUSINESSES.filter(b=>bizLevel(b.id)>0).length} negocios abiertos 🔥\n👉 ${gameUrl}`;
   if (navigator.share) {
-    navigator.share({ title: 'Imperio del Barrio', text: txt }).catch(()=>{});
+    navigator.share({ title: 'Imperio del Barrio', text: txt, url: gameUrl }).catch(()=>{});
   } else {
     navigator.clipboard?.writeText(txt).then(()=>notify('📋 ¡Score copiado!')).catch(()=>{
       prompt('Copia tu score:', txt);
