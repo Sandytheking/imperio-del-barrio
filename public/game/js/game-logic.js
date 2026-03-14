@@ -63,9 +63,9 @@ const LEVELS = [
 
 const BUSINESSES = [
   { id: 'barberia',    name: 'Barbería Los Manos',       icon: '💈', color: '#FF6348', bg: '#FFF0EC',
-    desc: 'Cortes clásicos del barrio',           baseCost: 50,          baseIncome: 10,    baseCycle: 4,  unlockLevel: 0 },
+    desc: 'Cortes clásicos del barrio',           baseCost: 50,          baseIncome: 3,    baseCycle: 4,  unlockLevel: 0 },
   { id: 'colmado',     name: 'Colmado Don Beto',          icon: '🏪', color: '#FFD200', bg: '#FFFCE0',
-    desc: 'El alma del barrio 24/7',              baseCost: 300,         baseIncome: 8,    baseCycle: 6,  unlockLevel: 1 },
+    desc: 'El alma del barrio 24/7',              baseCost: 300,         baseIncome: 5,    baseCycle: 6,  unlockLevel: 1 },
   { id: 'salon',       name: 'Salón Bella Imagen',        icon: '💇', color: '#FF4FAD', bg: '#FFF0F8',
     desc: 'Belleza dominicana de verdad',         baseCost: 1200,        baseIncome: 9,     baseCycle: 8,  unlockLevel: 2 },
   { id: 'motoconcho',  name: 'Mototaxi Express',          icon: '🛵', color: '#2DC653', bg: '#F0FFF4',
@@ -991,6 +991,8 @@ function doAscend() {
   G.level = 0;
   G.businesses = {};
   G.upgrades = {};
+  G.bizUpgrades = {};
+  G.bizUpgradeCount = {};
   G.zone = 'centro';
   G.zoneHistory = ['centro'];
   showAscendCelebration(next, _preAscendStats);
@@ -1031,209 +1033,12 @@ function showAscendCelebration(stage, preStats) {
     <div style="font-size:5rem;margin:12px 0">${stage.icon}</div>
     <div class="ascend-cel-sub">${stage.name}</div>
     <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button id="ascendShareBtn" style="background:linear-gradient(135deg,#1877F2,#0a5dc9);border:3px solid white;border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-        📤 ¡Compartir logro!
-      </button>
       <button onclick="document.getElementById('ascendCelPanel')?.remove()" style="background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.4);border-radius:14px;color:white;font-family:'Fredoka One',cursive;font-size:0.9rem;padding:10px 16px;cursor:pointer;">
         Continuar →
       </button>
     </div>`;
-  // Attach share button safely after DOM insert (avoids emoji/quote issues in onclick)
-  setTimeout(() => {
-    const btn = document.getElementById('ascendShareBtn');
-    if (btn) btn.addEventListener('click', () => shareAscend(stage.icon, stage.name, stage.id, preStats));
-  }, 50);
+
   document.body.appendChild(cel);
-}
-
-// ── Share Card Generator ─────────────────────────────────────────────────
-// Real game image for share card bg
-const _SHARE_BG_B64 = '/images/splash.jpg';
-function generateShareCard(stageIdx, preStats) {
-  const stage = SOCIAL_STAGES[stageIdx] || SOCIAL_STAGES[G.socialStage||0];
-  const _s = preStats || { totalEarned: G.totalEarned||0, totalInfluence: G.totalInfluence||0, level: (G.level||0)+1, companyName: G.companyName||'Mi Empresa' };
-  const c = document.createElement('canvas');
-  c.width = 1200; c.height = 630;
-  const x = c.getContext('2d');
-
-  const bgs = {
-    0:['#8B7355','#c8963c'], 1:['#2d6a4f','#52b788'], 2:['#1a3a6a','#4a90d9'],
-    3:['#006994','#48cae4'], 4:['#020412','#14143a'], 5:['#0a1628','#e8853a'], 6:['#000000','#0a0010'],
-  };
-  const [c1,c2] = bgs[stageIdx] || bgs[0];
-  const grad = x.createLinearGradient(0,0,1200,630);
-  grad.addColorStop(0,c1); grad.addColorStop(1,c2);
-  x.fillStyle=grad; x.fillRect(0,0,1200,630);
-
-  // Real game illustration as bg
-  try {
-    const bgImg = new Image();
-    bgImg.src = _SHARE_BG_B64;
-    if(bgImg.complete) {
-      x.globalAlpha = 0.18;
-      x.drawImage(bgImg, 0, 0, 1200, 630);
-      x.globalAlpha = 1;
-    }
-  } catch(e) {}
-
-  // Stars for dark stages
-  if(stageIdx >= 4) {
-    for(let i=0;i<100;i++){
-      x.globalAlpha=0.2+Math.random()*0.6;
-      x.beginPath();x.arc(Math.random()*1200,Math.random()*400,1+Math.random()*2,0,Math.PI*2);
-      x.fillStyle='#fff';x.fill();
-    }
-    x.globalAlpha=1;
-  }
-
-  // Darken bottom
-  const ov=x.createLinearGradient(0,0,0,630);
-  ov.addColorStop(0,'rgba(0,0,0,0)'); ov.addColorStop(1,'rgba(0,0,0,0.65)');
-  x.fillStyle=ov; x.fillRect(0,0,1200,630);
-
-  const accent = [,'#52b788','#4a90d9','#48cae4','#c9a96e','#e8c547','#FFD700'][stageIdx] || '#52b788';
-
-  // Accent bars
-  x.fillStyle=accent; x.fillRect(0,0,1200,10); x.fillRect(0,620,1200,10);
-
-  // Game logo
-  x.font='bold 20px sans-serif'; x.fillStyle='rgba(255,255,255,0.55)';
-  x.textAlign='left'; x.textBaseline='top'; x.fillText('IMPERIO DEL BARRIO',40,28);
-
-  // Stage icon
-  x.font='150px serif'; x.textAlign='center'; x.textBaseline='middle';
-  x.fillText(stage.icon, 600, 210);
-
-  // Stage name
-  x.font='bold 68px sans-serif'; x.fillStyle=accent;
-  x.textAlign='center'; x.textBaseline='middle';
-  x.fillText(stage.name, 600, 340);
-
-  // Subtitle
-  x.font='28px sans-serif'; x.fillStyle='rgba(255,255,255,0.85)';
-  x.fillText('¡Ascendí a este nivel en Imperio del Barrio!', 600, 400);
-
-  // Stats bar
-  x.fillStyle='rgba(0,0,0,0.45)';
-  x.beginPath(); x.roundRect(60,440,1080,110,14); x.fill();
-  x.strokeStyle=accent; x.lineWidth=2; x.stroke();
-
-  const money = typeof fmt==='function' ? fmt(_s.totalEarned) : '$0';
-  const stats = [
-    ['💰 Ganado', money],
-    ['💠 Influencia', String(_s.totalInfluence)],
-    ['🏆 Nivel', String(_s.level)],
-    ['🏢 Empresa', _s.companyName],
-  ];
-  stats.forEach(([label,val],i)=>{
-    const sx = 160 + i*270;
-    x.font='bold 13px sans-serif'; x.fillStyle='rgba(255,255,255,0.5)';
-    x.textAlign='center'; x.textBaseline='top'; x.fillText(label, sx, 455);
-    x.font='bold 24px sans-serif'; x.fillStyle='#fff';
-    x.fillText(val, sx, 478);
-  });
-
-  // URL
-  x.font='16px sans-serif'; x.fillStyle='rgba(255,255,255,0.35)';
-  x.textAlign='right'; x.textBaseline='bottom';
-  x.fillText('imperiodelbarrio.com', 1155, 618);
-
-  return c.toDataURL('image/png');
-}
-
-function shareAscend(icon, stageName, stageIdx, preStats) {
-  if(stageIdx === undefined) {
-    stageIdx = SOCIAL_STAGES.findIndex(s=>s.name===stageName);
-    if(stageIdx < 0) stageIdx = G.socialStage || 0;
-  }
-
-  // Use pre-reset stats if available, otherwise fall back to current
-  const _stats = preStats || {
-    totalEarned: G.totalEarned || 0,
-    totalInfluence: G.totalInfluence || 0,
-    level: (G.level||0) + 1,
-    companyName: G.companyName || 'Mi Empresa',
-  };
-
-  const url   = 'https://www.imperiodelbarrio.com/game/imperio-del-barrio-v8.html';
-  const money = typeof fmt==='function' ? fmt(_stats.totalEarned) : '$?';
-  const quote = [
-    `${icon} ¡Ascendí a ${stageName} en Imperio del Barrio!`,
-    `💰 Ganado: ${money} · 💠 Influencia: ${_stats.totalInfluence} · Nivel: ${_stats.level}`,
-    `🏢 ${_stats.companyName} — ¿Puedes superarme? 👉 ${url}`,
-  ].join('\n');
-
-  // Generate image synchronously (canvas, no fetch needed)
-  let imgData = null;
-  try { imgData = generateShareCard(stageIdx, _stats); } catch(e) { console.warn('Card gen failed', e); }
-
-  // Always show modal first (card preview + download + Facebook)
-  if(imgData) {
-    _showShareModal(imgData, quote, url, icon, stageName, stageIdx);
-  } else {
-    _openFacebook(url, quote);
-  }
-
-  // Additionally attempt native Web Share API in parallel (mobile)
-  if(imgData && navigator.share) {
-    fetch(imgData)
-      .then(r => r.blob())
-      .then(blob => {
-        const file = new File([blob], 'mi-logro.png', {type:'image/png'});
-        const canFile = navigator.canShare && navigator.canShare({files:[file]});
-        if(canFile) return navigator.share({title:'Imperio del Barrio', text:quote, files:[file]});
-        return navigator.share({title:'Imperio del Barrio', text:quote});
-      })
-      .catch(() => {}); // Silent fail — modal is already showing
-  }
-}
-
-function _openFacebook(url, quote) {
-  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(quote)}`;
-  window.open(fbUrl, '_blank', 'width=600,height=500,noopener');
-}
-
-function _closeShareModal() {
-  const m = document.getElementById('shareCardModal');
-  if(m) m.remove();
-  const p = document.getElementById('ascendCelPanel');
-  if(p) p.remove();
-}
-
-function _showShareModal(imgData, quote, url, icon, stageName, stageIdx) {
-  const existing = document.getElementById('shareCardModal');
-  if(existing) existing.remove();
-
-  const stage   = SOCIAL_STAGES[stageIdx] || {};
-  const accent  = [,'#52b788','#4a90d9','#48cae4','#c9a96e','#e8c547','#FFD700'][stageIdx] || '#c9a96e';
-  // Facebook sharer — use only the URL, quote as separate param (FB ignores quote on mobile but URL always works)
-  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-  const dlName  = `logro-${(stageName||'').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9-]/g,'')}.png`;
-
-  const modal = document.createElement('div');
-  modal.id = 'shareCardModal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);padding:16px';
-  modal.innerHTML = `
-    <div style="background:#1a1a2e;border-radius:20px;border:2px solid ${accent}44;padding:20px;max-width:540px;width:100%;text-align:center;box-shadow:0 0 60px ${accent}22">
-      <div style="font-family:'Fredoka One',cursive;font-size:1.15rem;color:${accent};margin-bottom:12px">${icon} ¡Comparte tu logro!</div>
-      <img src="${imgData}" style="width:100%;border-radius:12px;border:2px solid ${accent}44;margin-bottom:14px;display:block" />
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-        <a href="${imgData}" download="${dlName}"
-           style="background:linear-gradient(135deg,#2d6a4f,#52b788);color:#fff;font-family:'Fredoka One',cursive;font-size:.9rem;padding:10px 18px;border-radius:99px;text-decoration:none;border:2px solid rgba(255,255,255,.15)">
-          📥 Guardar imagen
-        </a>
-        <button onclick="window.open('${fbShareUrl}','_blank','noopener,noreferrer')"
-           style="background:linear-gradient(135deg,#1877F2,#0a5dc9);color:#fff;font-family:'Fredoka One',cursive;font-size:.9rem;padding:10px 18px;border-radius:99px;border:2px solid rgba(255,255,255,.15);cursor:pointer">
-          📘 Compartir en Facebook
-        </button>
-        <button onclick="_closeShareModal()"
-           style="background:rgba(255,255,255,.08);color:#fff;font-family:'Fredoka One',cursive;font-size:.9rem;padding:10px 18px;border-radius:99px;border:2px solid rgba(255,255,255,.12);cursor:pointer">
-          ✕ Cerrar
-        </button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if(e.target===modal) _closeShareModal(); });
 }
 
 function doPrestige() { showAscendModal(); }
@@ -2855,10 +2660,10 @@ function openBizAnim(id) {
       // Generic: send all stored upgrade levels for this biz
       ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
       // Backwards compat keys
-      chairLevel:     upgrades.sillas    || 1,
-      speedLevel:     upgrades.velocidad || 1,
-      priceLevel:     upgrades.precio    || 1,
-      marketingLevel: upgrades.marketing || 1,
+      chairLevel:     upgrades.sillas    || 0,
+      speedLevel:     upgrades.velocidad || 0,
+      priceLevel:     upgrades.precio    || 0,
+      marketingLevel: upgrades.marketing || 0,
     }, '*');
   };
 }
@@ -2896,10 +2701,10 @@ window.addEventListener('message', e => {
       type: 'bizInit',
       money: G.money,
       ...Object.fromEntries(Object.entries(upgrades).map(([k,v]) => [k+'Level', v])),
-      chairLevel:     upgrades.sillas    || 1,
-      speedLevel:     upgrades.velocidad || 1,
-      priceLevel:     upgrades.precio    || 1,
-      marketingLevel: upgrades.marketing || 1,
+      chairLevel:     upgrades.sillas    || 0,
+      speedLevel:     upgrades.velocidad || 0,
+      priceLevel:     upgrades.precio    || 0,
+      marketingLevel: upgrades.marketing || 0,
     }, '*');
   }
 
@@ -2930,7 +2735,7 @@ window.addEventListener('message', e => {
         G.money -= cost;
         if (!G.bizUpgrades) G.bizUpgrades = {};
         if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
-        G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
+        G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 0) + 1;
         iframe?.contentWindow?.postMessage({ type:'purchaseOk', upg, newMoney:G.money }, '*');
         document.getElementById('hdrMoney').textContent = fmt(G.money);
         notify(`✅ ¡${upg} mejorado! -${fmt(cost)}`);
@@ -2946,13 +2751,13 @@ window.addEventListener('message', e => {
       // Persist upgrade level for this biz animation
       if (!G.bizUpgrades) G.bizUpgrades = {};
       if (!G.bizUpgrades[id]) G.bizUpgrades[id] = {};
-      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 1) + 1;
+      G.bizUpgrades[id][upg] = (G.bizUpgrades[id][upg] || 0) + 1;
       // The max level for an animation upgrade is 5, and there are 5 types of upgrades.
       // So max total upgrades is 25. The business level should exactly equal the sum of these upgrades.
       const upgradesObj = G.bizUpgrades[id];
       let sumLevels = 0;
       for (const key in upgradesObj) {
-        sumLevels += (upgradesObj[key] || 1); // If they bought it, the value is its level. Minimum 1 if property exists.
+        sumLevels += (upgradesObj[key] || 0);
       }
       
       // If none bought, it's level 1. If 1 upgrade is bought to lvl 2, it's level 2. 
